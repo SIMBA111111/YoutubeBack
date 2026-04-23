@@ -4,26 +4,30 @@ import fs from 'fs'
 import { Request, Response } from 'express';
 
 import { exec } from "child_process";
-import { pool } from '../utils/pg.ts';
-import {getVideoDuration} from '../utils/getVideoDuration.ts'
-import {createSrtSubtitleFile} from '../services/video/createSrtFile.ts'
-import {convertSrtToVTTAndCreateM3U8} from '../services/video/convertSrtToVTT.ts'
-import {createMasterM3U8File} from '../services/video/createMasterM3U8File.ts'
-import { videosData } from '../../public/videos/videosData.ts';
+import { pool } from '../utils/pg';
+import {getVideoDuration} from '../utils/getVideoDuration'
+import {createSrtSubtitleFile} from '../services/video/createSrtFile'
+import {convertSrtToVTTAndCreateM3U8} from '../services/video/convertSrtToVTT'
+import {createMasterM3U8File} from '../services/video/createMasterM3U8File'
+import { videosData } from '../../public/videos/videosData';
 
 export const getVideos = async (req: Request, res: Response) => {
     try {
-        const { page = 1, limit = 20 } = req.query;
+        // Преобразуем query параметры в числа
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 20;
+        
         const startIndex = (page - 1) * limit;
         const endIndex = page * limit;
         
-        const response = await pool.query('select * from videos')
-        const videos = response.rows
+        const response = await pool.query('SELECT * FROM videos');
+        const videos = response.rows;
+        
         const result = {
             videos: videos.slice(startIndex, endIndex),
-            total: videosData.length,
-            page: parseInt(page),
-            totalPages: Math.ceil(videosData.length / limit)
+            total: videos.length,  // используем длину из БД, а не из videosData
+            page: page,
+            totalPages: Math.ceil(videos.length / limit)
         };
         
         res.json(result);

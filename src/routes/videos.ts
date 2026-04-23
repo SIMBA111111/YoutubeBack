@@ -1,6 +1,6 @@
 // routes/videos.js
 import express from 'express'
-import { getVideos, getVideoById, createVideo } from '../controllers/video-controller.js';
+import { getVideos, getVideoById } from '../controllers/video-controller'
 // import { upload } from '../middleware/upload.js';
 
 const router = express.Router();
