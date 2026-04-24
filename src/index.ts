@@ -6,7 +6,7 @@ import fs from 'fs';
 import cors from 'cors';
 
 import routesVideo from './routes/videos';
-import {router as RouterAuth} from './routes/routes-auth'
+import {router as RouterAuth} from './routes/auth'
 import cookieParser from 'cookie-parser';
 
 
@@ -14,8 +14,8 @@ const app = express();
 const port = 8080;
 
 app.use(cors({
-  origin: 'http://localhost:3000', // Replace with your frontend URL
-  credentials: true, // Allow credentials (cookies)
+  origin: 'http://localhost:3000',
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));

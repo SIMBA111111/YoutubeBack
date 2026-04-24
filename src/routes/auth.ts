@@ -1,6 +1,6 @@
 // routes/videos.js
 import express from 'express'
-import  { login, register, logout } from '../controllers/auth-controller'
+import  { login, register, logout } from '../controllers/auth'
 
 export const router = express.Router()
 

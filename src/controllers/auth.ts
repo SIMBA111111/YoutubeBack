@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import {createChannel, usernameIsExist, emailIsExist} from '../repositories/auth-repository'
+import {createChannel, usernameIsExist, emailIsExist} from '../repositories/auth'
 import {cryptPassword, checkPassword, createToken} from '../services/auth-service'
 
 

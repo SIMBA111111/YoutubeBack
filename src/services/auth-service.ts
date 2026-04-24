@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 
-import {createTokenRepo} from '../repositories/auth-repository'
+import {createTokenRepo} from '../repositories/auth'
 import { IChannel } from '../types/channel'
 
 const SECRET_KEY = 'klsfjgdnkjlSDHBKjgfbskjdhfbksdbf'
