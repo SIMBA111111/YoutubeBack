@@ -9,20 +9,59 @@ import {getVideoDuration} from '../utils/getVideoDuration'
 import {createSrtSubtitleFile} from '../services/video/createSrtFile'
 import {convertSrtToVTTAndCreateM3U8} from '../services/video/convertSrtToVTT'
 import {createMasterM3U8File} from '../services/video/createMasterM3U8File'
+import { getTagById } from "../repositories/video";
+
+
+export const getTags = async (req: Request, res: Response) => {
+    console.log('getTags');
+    try {
+        const response = await pool.query('SELECT * FROM tags');
+        const result = {
+            tags: response.rows,
+            total: response.rows.length,
+        };
+        
+        res.json(result);
+    } catch (error) {
+        console.error('Error getVideos:', error);
+        res.status(500).json({ error: 'Internal server error1' });
+    }
+};
 
 export const getVideos = async (req: Request, res: Response) => {
     console.log('getVideos');
     try {
-        console.log(req.body);
-        
+        const tagId = req.query.tagId
+        const cookies = JSON.parse(req.cookies.channelData || '')
+        const channelId = cookies.id
+
         // Преобразуем query параметры в числа
         // const page = parseInt(req.query.page as string) || 1;
         // const limit = parseInt(req.query.limit as string) || 20;
         
         // const startIndex = (page - 1) * limit;
         // const endIndex = page * limit;
+
+        const tag = await getTagById(tagId as string)
         
-        const response = await pool.query('SELECT * FROM videos');
+        let response
+
+        if(tag.name === 'fresh') {
+            response = await pool.query('SELECT * FROM videos ORDER BY date_publication DESC');
+        } else if ( tag.name === 'newForMe') {
+            response = await pool.query(`
+                SELECT v.* 
+                FROM videos v
+                JOIN subscriptions s ON v.channel_id = s.channel_id
+                WHERE s.follower_channel_id = $1
+                ORDER BY v.date_publication DESC 
+                `, [channelId]);
+        } else if (tag.name === 'viewed') {
+            response = await pool.query('SELECT * FROM videos WHERE $1 = ANY (tags)', [tagId]);
+        } else {
+            response = await pool.query('SELECT * FROM videos WHERE $1 = ANY (tags)', [tagId]);
+        }
+
         const videos = response.rows;
         
         // const result = {
