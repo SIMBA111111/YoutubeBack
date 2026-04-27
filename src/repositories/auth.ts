@@ -25,26 +25,25 @@ export const emailIsExist = async (email : string) => {
 }
 
 export const createChannel = async (
-    fullname: string, 
     username: string, 
+    name: string, 
     hashedPassword: string, 
     email: string, 
-    phoneNumber: string
 ) => {
     try {
-        const res = await pool.query('INSERT INTO channels (fullname, username, password, email, phone_number) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-            [fullname, username, hashedPassword, email, phoneNumber]
+        const res = await pool.query('INSERT INTO channels (username, name, password, email) VALUES ($1, $2, $3, $4) RETURNING *',
+            [username, name, hashedPassword, email]
         )
-        const createdUser = res.rows[0]
-        return createdUser 
+        const createdChannel = res.rows[0]
+        return createdChannel 
     } catch (error) {
-        throw new Error(`Error createUser: ${error}`)
+        throw new Error(`Error createChannel: ${error}`)
     }
 }
 
 export const createTokenRepo = async (channelId: string, token: string) => {
     try {
-        const res = await pool.query('INSERT INTO tokens (channelId, token) VALUES ($1, $2) RETURNING *',
+        const res = await pool.query('INSERT INTO tokens (channel_id, token) VALUES ($1, $2) RETURNING *',
             [channelId, token]
         )
         const createdToken = res.rows[0]

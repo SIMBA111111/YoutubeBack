@@ -18,13 +18,15 @@ export const login = async (req: Request, res: Response) => {
 
         const token = await createToken(user.id)
 
-        res.cookie('channelData', JSON.stringify({username: user.username, email: user.email, phoneNumber: user.phone_number}))
-        res.cookie('channelId', user.id, {
-            httpOnly:  true,
-            // secure: true // только для https
-        })
+        res.cookie('channelData', JSON.stringify({
+            id: user.id, 
+            name: user.name, 
+            username: user.username,
+            avatarUrl: user.avatar_url, 
+            email: user.email
+        }))
         res.cookie('jwt', token.token, {
-            httpOnly:  true,
+            // httpOnly:  true,
             // secure: true // только для https
         })
         return res.status(201).json({ message: 'Авторизация успешна'})
@@ -33,13 +35,12 @@ export const login = async (req: Request, res: Response) => {
     }
 }
 
-
 export const register = async (req: Request, res: Response) => {
     if (req.method === 'POST') {
         const data = req.body
         
-        const user = await usernameIsExist(data.username)
-        if(user)
+        const username = await usernameIsExist(data.username)
+        if(username)
             return res.json({result: `Username ${data.username} занят`})
         
         const email = await emailIsExist(data.email)
@@ -47,14 +48,31 @@ export const register = async (req: Request, res: Response) => {
             return res.json({result: `Email ${data.email} занят`})
 
         const hashedPassword = await cryptPassword(data.password)
-        const createdUser = await createChannel(data.fullname, data.username, hashedPassword, data.email, data.phoneNumber)
+        const createdChannel = await createChannel(data.username, data.name, hashedPassword, data.email)
 
-        res.status(201).json({ message: 'Успешно', result: createdUser })
+        if(createdChannel) {
+            const token = await createToken(createdChannel.id)
+            res.cookie('channelData', JSON.stringify({
+                id: createdChannel.id, 
+                name: createdChannel.id, 
+                username: createdChannel.username,
+                avatarUrl: createdChannel.avatar_url, 
+                email: createdChannel.email
+            }))
+            res.cookie('jwt', token.token, {
+                httpOnly:  true,
+                // secure: true // только для https
+            })
+            return res.status(201).json({ message: 'Успешная регистрация!'})
+        } else {
+            res.status(503).json({ message: 'Ошибка регистрации', result: false })
+        }
+
+        // res.status(201).json({ message: 'Успешно', result: createdChannel })
     } else {
         res.status(405).json({ message: 'Method Not Allowed' })
     }
 }
-
 
 export const logout = async (req: Request, res: Response) => {
     if (req.method === 'POST') {
