@@ -84,3 +84,14 @@ export const getCommentsByVideoHash = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 };
+
+
+export const createComment = async (req: Request, res: Response) => {
+    console.log('createComment');
+    try {
+        res.status(201);
+    } catch (error) {
+        console.error('Error createComment:', error);
+        res.status(500).json({ error: 'Internal server error2' });
+    }
+};

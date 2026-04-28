@@ -187,6 +187,74 @@ export const getVideoListByName = async (req: Request, res: Response) => {
     }
 };
 
+export const markVideo = async (req: Request, res: Response) => {
+    console.log('markVideo');
+    try {
+        console.log('req.params ==== ', req.params);
+        console.log('req.body ==== ', req.body);
+        
+        const { videoId } = req.params;
+        const { userId, isLiked, isDisliked } = req.body;
+
+        // Проверяем, существует ли запись статистики для этого видео и пользователя
+        const videoStatRes = await pool.query(
+            `SELECT * FROM stat_of_videos WHERE channel_id = $1 AND video_id = $2`,
+            [userId, videoId]
+        );
+
+        if (videoStatRes.rows.length > 0) {
+            // Обновляем существующую запись
+            await pool.query(
+                `UPDATE stat_of_videos 
+                 SET liked = $1, disliked = $2 
+                 WHERE channel_id = $3 AND video_id = $4`,
+                [isLiked, isDisliked, userId, videoId]
+            );
+        } else {
+            // Создаем новую запись
+            await pool.query(
+                `INSERT INTO stat_of_videos (channel_id, video_id, liked, disliked) 
+                 VALUES ($1, $2, $3, $4)`,
+                [userId, videoId, isLiked, isDisliked]
+            );
+        }
+
+        // Возвращаем обновленную статистику
+        const updatedStats = await pool.query(
+            `SELECT liked, disliked FROM stat_of_videos 
+             WHERE channel_id = $1 AND video_id = $2`,
+            [userId, videoId]
+        );
+
+        res.status(200).json({ 
+            success: true, 
+            stats: updatedStats.rows[0] 
+        });
+        
+    } catch (error) {
+        console.error('Error markVideo:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+export const viewVideo = async (req: Request, res: Response) => {
+    console.log('viewVideo');
+    try {
+        const videoId = req.params.id;
+        const response = await pool.query('select * from videos where id=$1', [videoId])        
+        const video = response.rows[0]
+
+        if (!video) {
+            return res.status(404).json({ error: 'Video not found' });
+        }
+        
+        res.json(video);
+    } catch (error) {
+        console.error('Error viewVideo:', error);
+        res.status(500).json({ error: 'Internal server error2' });
+    }
+};
+
 // controllers/video-controller.js
 // export const createVideo = async (req: Request, res: Response) => {
 //   const videoId = req.videoId;
