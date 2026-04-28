@@ -77,8 +77,6 @@ export const getCommentsByVideoHash = async (req: Request, res: Response) => {
             offset,
             limit
         };
-
-        console.log('result ==== ', JSON.stringify(result, null , 5));
         
         res.status(200).json(result);
     } catch (error) {
