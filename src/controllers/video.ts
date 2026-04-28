@@ -157,8 +157,8 @@ export const getVideoByHash = async (req: Request, res: Response) => {
         const isSubscribed = isSubRes.rows[0]    
 
         const statRes = await pool.query(`SELECT * FROM stat_of_videos WHERE video_id = $1 AND channel_id = $2`, [video.id, channelId])
-        const stat = statRes.rows[0]    
-
+        const stat = statRes.rows[0] 
+        
         res.status(200).json({video: video, channel: channel, isSubscribed: isSubscribed, stat: stat});
     } catch (error) {
         console.error('Error getVideoByHash:', error);
@@ -187,22 +187,27 @@ export const getVideoListByName = async (req: Request, res: Response) => {
     }
 };
 
+
 export const markVideo = async (req: Request, res: Response) => {
     console.log('markVideo');
     try {
-        console.log('req.params ==== ', req.params);
-        console.log('req.body ==== ', req.body);
-        
         const { videoId } = req.params;
         const { userId, isLiked, isDisliked } = req.body;
 
-        // Проверяем, существует ли запись статистики для этого видео и пользователя
+        // Проверяем, существует ли запись статистики
         const videoStatRes = await pool.query(
             `SELECT * FROM stat_of_videos WHERE channel_id = $1 AND video_id = $2`,
             [userId, videoId]
         );
+        const oldStat = videoStatRes.rows[0];
 
-        if (videoStatRes.rows.length > 0) {
+        let oldLiked = false;
+        let oldDisliked = false;
+
+        if (oldStat) {
+            oldLiked = oldStat.liked;
+            oldDisliked = oldStat.disliked;
+            
             // Обновляем существующую запись
             await pool.query(
                 `UPDATE stat_of_videos 
@@ -219,16 +224,36 @@ export const markVideo = async (req: Request, res: Response) => {
             );
         }
 
-        // Возвращаем обновленную статистику
-        const updatedStats = await pool.query(
+        // Обновляем счетчики видео
+        // Сначала обрабатываем лайки
+        if (oldLiked !== isLiked) {
+            if (isLiked) {
+                await pool.query(`UPDATE videos SET likes_count = likes_count + 1 WHERE id = $1`, [videoId]);
+            } else {
+                await pool.query(`UPDATE videos SET likes_count = likes_count - 1 WHERE id = $1`, [videoId]);
+            }
+        }
+
+        // Обрабатываем дизлайки
+        if (oldDisliked !== isDisliked) {
+            if (isDisliked) {
+                await pool.query(`UPDATE videos SET dislikes_count = dislikes_count + 1 WHERE id = $1`, [videoId]);
+            } else {
+                await pool.query(`UPDATE videos SET dislikes_count = dislikes_count - 1 WHERE id = $1`, [videoId]);
+            }
+        }
+
+        // Получаем обновленную статистику для ответа
+        const updatedStatsRes = await pool.query(
             `SELECT liked, disliked FROM stat_of_videos 
              WHERE channel_id = $1 AND video_id = $2`,
             [userId, videoId]
         );
+        const updatedStats = updatedStatsRes.rows[0];
 
         res.status(200).json({ 
             success: true, 
-            stats: updatedStats.rows[0] 
+            stats: updatedStats 
         });
         
     } catch (error) {
@@ -237,18 +262,34 @@ export const markVideo = async (req: Request, res: Response) => {
     }
 };
 
+
 export const viewVideo = async (req: Request, res: Response) => {
     console.log('viewVideo');
     try {
-        const videoId = req.params.id;
+        const videoId = req.params.videoId;
+        const { userId } = req.query;
+        
         const response = await pool.query('select * from videos where id=$1', [videoId])        
         const video = response.rows[0]
 
         if (!video) {
             return res.status(404).json({ error: 'Video not found' });
         }
+    
+        await pool.query('UPDATE videos SET viewers_count = viewers_count + 1 WHERE id = $1', [videoId]);      
+
+        if(userId) {
+            const statRes = await pool.query('SELECT * FROM stat_of_videos WHERE channel_id = $1 AND video_id = $2', [userId, videoId]);      
+            
+            if(statRes.rows[0]) {
+                await pool.query('UPDATE stat_of_videos SET views_count = views_count + 1, updated_date = now() WHERE channel_id = $1 AND video_id = $2', [userId, videoId]);      
+            } else {
+                await pool.query('INSERT INTO stat_of_videos (channel_id, video_id, views_count) VALUES ($1, $2, 1)', [userId, videoId]);      
+            }
+            
+        }
         
-        res.json(video);
+        res.status(203).json('Updated succesfully')
     } catch (error) {
         console.error('Error viewVideo:', error);
         res.status(500).json({ error: 'Internal server error2' });

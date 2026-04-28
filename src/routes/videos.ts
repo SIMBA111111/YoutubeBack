@@ -13,7 +13,7 @@ router.get('/videos/search/:name', getVideoListByName);
 router.get('/videos/:id', getVideoById);
 
 router.post('/mark/video/:videoId', markVideo);
-router.patch('/view/video/:videoId', viewVideo);
+router.get('/view/video/:videoId', viewVideo);
 
 
 // router.post('/videos/create', upload, createVideo);

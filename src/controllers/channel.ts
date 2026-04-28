@@ -40,11 +40,10 @@ export const subscribeChannel = async (req: Request, res: Response) => {
                 isSubscribed: false 
             });
         } else {
-            await pool.query(
-                `INSERT INTO subscriptions (follower_channel_id, channel_id, notification_settings) 
-                 VALUES ($1, $2, true)
-                 ON CONFLICT (follower_channel_id, channel_id) DO NOTHING`,
-                [userId, channelId]
+            await pool.query(`
+                INSERT INTO subscriptions (follower_channel_id, channel_id, notification_settings) 
+                VALUES ($1, $2, true)
+            `, [userId, channelId]
             );
             return res.status(200).json({ 
                 message: 'Subscribed successfully',
@@ -63,15 +62,16 @@ export const notifSetting = async (req: Request, res: Response) => {
     try {
         const { channelId, userId, isNotifSetting } = req.body;
 
-        // Устанавливаем значение в зависимости от isNotifSetting
-        const notificationValue = !isNotifSetting; // если isNotifSetting true → false, если false → true
+        console.log('userId = ', userId);
+        console.log('channelId = ', channelId);
+        
 
         const result = await pool.query(
             `UPDATE subscriptions
              SET notification_settings = $1
              WHERE follower_channel_id = $2 AND channel_id = $3
              RETURNING notification_settings`,
-            [notificationValue, userId, channelId]
+            [isNotifSetting, userId, channelId]
         );
 
         if (result.rowCount === 0) {
@@ -79,8 +79,8 @@ export const notifSetting = async (req: Request, res: Response) => {
         }
 
         return res.status(200).json({ 
-            message: `Notification settings ${notificationValue ? 'enabled' : 'disabled'} successfully`,
-            isNotifSetting: notificationValue
+            message: `Notification settings ${isNotifSetting ? 'enabled' : 'disabled'} successfully`,
+            isNotifSetting: isNotifSetting
         });
 
     } catch (error) {
