@@ -28,12 +28,13 @@ export const getTags = async (req: Request, res: Response) => {
     }
 };
 
+// надо будеть еще добавить обработку запросов к бд на случай, если юзер не атворизован (нет channel_id) 
 export const getVideos = async (req: Request, res: Response) => {
     console.log('getVideos');
     try {
         const tagId = req.query.tagId
-        const cookies = JSON.parse(req.cookies.channelData || '')
-        const channelId = cookies.id
+        const channelData = JSON.parse(req.cookies.channelData || '')
+        const channelId = channelData.id
 
         // Преобразуем query параметры в числа
         // const page = parseInt(req.query.page as string) || 1;
@@ -55,11 +56,18 @@ export const getVideos = async (req: Request, res: Response) => {
                 JOIN subscriptions s ON v.channel_id = s.channel_id
                 WHERE s.follower_channel_id = $1
                 ORDER BY v.date_publication DESC 
-                `, [channelId]);
+            `, [channelId]);
         } else if (tag.name === 'viewed') {
-            response = await pool.query('SELECT * FROM videos WHERE $1 = ANY (tags)', [tagId]);
+            response = await pool.query(`
+                SELECT v.* 
+                FROM videos v
+                JOIN stat_of_videos sov ON v.id = sov.video_id
+                WHERE sov.views_count > 0 AND sov.channel_id = $1
+            `, [channelId]);
+        } else if(tag.name === 'all') {
+            response = await pool.query('SELECT * FROM videos');
         } else {
-            response = await pool.query('SELECT * FROM videos WHERE $1 = ANY (tags)', [tagId]);
+            response = await pool.query('SELECT * FROM videos WHERE $1 = ANY (tags)', [tag.id]);
         }
 
         const videos = response.rows;
@@ -83,6 +91,27 @@ export const getVideos = async (req: Request, res: Response) => {
     }
 };
 
+export const getRecommendedVideos = async (req: Request, res: Response) => {
+    console.log('getRecommendedVideos');
+    try {
+        const videoHash = req.params.videoHash
+        const { offset, limit } = req.query
+        const { myChannelId } = req.body
+
+        const response = await pool.query('select * from videos OFFSET $1 LIMIT $2', [offset, limit])        
+
+        const result = {
+            videos: response.rows || [],
+            total: response.rows?.length || 0,
+        };
+
+        res.status(200).json(result);
+    } catch (error) {
+        console.error('Error getRecommendedVideos:', error);
+        res.status(500).json({ error: 'Internal server error1' });
+    }
+};
+
 export const getVideoById = async (req: Request, res: Response) => {
     console.log('getVideoById');
     try {
@@ -97,6 +126,42 @@ export const getVideoById = async (req: Request, res: Response) => {
         res.json(video);
     } catch (error) {
         console.error('Error getVideoById:', error);
+        res.status(500).json({ error: 'Internal server error2' });
+    }
+};
+
+export const getVideoByHash = async (req: Request, res: Response) => {
+    console.log('getVideoByHash');
+    try {
+        const { channelId } = req.body;
+        const { hash: videoHash } = req.params;
+
+        const videoRes = await pool.query(`
+            SELECT * FROM videos WHERE video_hash = $1
+        `, [videoHash])        
+        const video = videoRes.rows[0]
+
+        if (!video) {
+            return res.status(404).json({ error: 'Video not found' });
+        }
+
+        const channelRes = await pool.query(`
+            SELECT ch.* 
+            FROM videos v 
+            JOIN channels ch ON v.channel_id = ch.id
+            WHERE video_hash = $1
+        `, [videoHash])        
+        const channel = channelRes.rows[0]
+
+        const isSubRes = await pool.query(`SELECT * FROM subscriptions WHERE follower_channel_id = $1 AND channel_id = $2`, [channelId, channel.id])
+        const isSubscribed = isSubRes.rows[0]    
+
+        const statRes = await pool.query(`SELECT * FROM stat_of_videos WHERE video_id = $1 AND channel_id = $2`, [video.id, channelId])
+        const stat = statRes.rows[0]    
+
+        res.status(200).json({video: video, channel: channel, isSubscribed: isSubscribed, stat: stat});
+    } catch (error) {
+        console.error('Error getVideoByHash:', error);
         res.status(500).json({ error: 'Internal server error2' });
     }
 };

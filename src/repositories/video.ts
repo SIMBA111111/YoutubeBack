@@ -11,3 +11,15 @@ export const getTagById = async (tagId: string) => {
         throw new Error(`Error getVideoById repository: ${error}`)
     }
 }
+
+export const getVideoByHash = async (videoHash: string) => {
+    try {
+        const res = await pool.query('SELECT * FROM videos WHERE video_hash = $1', [videoHash])
+        if (res.rows[0]) 
+            return res.rows[0]
+
+        return false
+    } catch (error) {
+        throw new Error(`Error getVideoByHash repository: ${error}`)
+    }
+}
