@@ -19,3 +19,20 @@ export const getChannelsByUser = async (userId: string, offset: number, limit: n
         throw new Error(`Error getChannelsByUser repository: ${error}`)
     }
 }
+
+export const getChannelsByUsername = async (username: string) => {
+    try {
+        const res = await pool.query(`
+            SELECT * 
+            FROM channels
+            WHERE username = $1
+        `, [username])
+        
+        if (res.rows.length > 0) 
+            return res.rows[0]
+
+        return false
+    } catch (error) {
+        throw new Error(`Error getChannelsByChannelHash repository: ${error}`)
+    }
+}

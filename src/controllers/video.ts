@@ -10,6 +10,7 @@ import {createSrtSubtitleFile} from '../services/video/createSrtFile'
 import {convertSrtToVTTAndCreateM3U8} from '../services/video/convertSrtToVTT'
 import {createMasterM3U8File} from '../services/video/createMasterM3U8File'
 import { getTagById } from "../repositories/video";
+import { json } from "stream/consumers";
 
 
 export const getTags = async (req: Request, res: Response) => {
@@ -90,6 +91,60 @@ export const getVideos = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Internal server error1' });
     }
 };
+
+export const getVideosByChannelUsername = async (req: Request, res: Response) => {
+    console.log('getVideosByChannelUsername');
+    try {
+        const { channelUsername } = req.params
+        const { limit, offset } = req.query
+
+        const response = await pool.query(`
+            SELECT v.* 
+            FROM videos v
+            JOIN channels ch ON ch.id = v.channel_id
+            WHERE ch.username = $1 
+            OFFSET $2 LIMIT $3
+        `, [channelUsername, offset, limit])        
+            
+        const result = {
+            videos: response.rows,
+            total: response.rows.length
+        }
+
+        return res.status(200).json(result)
+    } catch (error) {
+        console.error('Error getVideosByChannelUsername:', error);
+        res.status(500).json({ error: 'Internal server error1' });
+    }
+}
+
+
+export const getShortVideosByChannelUsername = async (req: Request, res: Response) => {
+    console.log('getShortVideosByChannelUsername');
+    try {
+        const { channelUsername } = req.params
+        const { limit, offset } = req.query
+
+        const response = await pool.query(`
+            SELECT v.* 
+            FROM videos v
+            JOIN channels ch ON ch.id = v.channel_id
+            WHERE ch.username = $1 AND v.is_short = true
+            OFFSET $2 LIMIT $3
+        `, [channelUsername, offset, limit])        
+            
+        const result = {
+            videos: response.rows,
+            total: response.rows.length
+        }
+
+        return res.status(200).json(result)
+    } catch (error) {
+        console.error('Error getShortVideosByChannelUsername:', error);
+        res.status(500).json({ error: 'Internal server error1' });
+    }
+}
+
 
 export const getRecommendedVideos = async (req: Request, res: Response) => {
     console.log('getRecommendedVideos');
@@ -217,10 +272,10 @@ export const markVideo = async (req: Request, res: Response) => {
             );
         } else {
             // Создаем новую запись
-            await pool.query(
-                `INSERT INTO stat_of_videos (channel_id, video_id, liked, disliked) 
-                 VALUES ($1, $2, $3, $4)`,
-                [userId, videoId, isLiked, isDisliked]
+            await pool.query(`
+                INSERT INTO stat_of_videos (channel_id, video_id, liked, disliked) 
+                VALUES ($1, $2, $3, $4)
+            `, [userId, videoId, isLiked, isDisliked]
             );
         }
 

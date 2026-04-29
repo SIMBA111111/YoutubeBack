@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import {getChannelsByUser} from '../repositories/channel'
+import {getChannelsByUser, getChannelsByUsername} from '../repositories/channel'
 import { pool } from '../utils/pg';
 
 export const getMyChannels = async (req: Request, res: Response) => {
@@ -24,6 +24,24 @@ export const getMyChannels = async (req: Request, res: Response) => {
     }
 }
 
+
+export const getChannelInfo = async (req: Request, res: Response) => {
+    console.log('getChannelInfo');
+    try {
+        const { channelUsername } = req.params
+
+        const channel = await getChannelsByUsername(channelUsername as string)
+        if(!channel)
+            return res.status(404).json({result: `Нет ни одного канала`})
+
+        return res.status(200).json(channel)    
+    } catch (error) {
+        console.error('Error getChannelInfo: ', error);
+        return res.status(500).json({ message: 'Internal server error getChannelInfo'})    
+    }
+}
+
+
 export const subscribeChannel = async (req: Request, res: Response) => {
     console.log('subscribeChannel');
     try {
@@ -35,6 +53,12 @@ export const subscribeChannel = async (req: Request, res: Response) => {
                  WHERE follower_channel_id = $1 AND channel_id = $2`,
                 [userId, channelId]
             );
+
+            await pool.query(
+                `UPDATE channels SET subscribers_count = subscribers_count - 1 WHERE id = $1`,
+                [channelId]
+            );
+
             return res.status(200).json({ 
                 message: 'Unsubscribed successfully',
                 isSubscribed: false 
@@ -45,6 +69,12 @@ export const subscribeChannel = async (req: Request, res: Response) => {
                 VALUES ($1, $2, true)
             `, [userId, channelId]
             );
+
+            await pool.query(
+                `UPDATE channels SET subscribers_count = subscribers_count + 1 WHERE id = $1`,
+                [channelId]
+            );
+
             return res.status(200).json({ 
                 message: 'Subscribed successfully',
                 isSubscribed: true 

@@ -1,12 +1,25 @@
 // routes/videos.js
 import express from 'express'
-import { getVideos, getVideoById, getVideoByHash, getRecommendedVideos, getVideoListByName, getTags, viewVideo, markVideo } from '../controllers/video'
+import { 
+    getVideos, 
+    getVideoById, 
+    getVideoByHash, 
+    getRecommendedVideos, 
+    getVideoListByName, 
+    getTags, 
+    viewVideo, 
+    markVideo,
+    getVideosByChannelUsername,
+    getShortVideosByChannelUsername
+} from '../controllers/video'
 // import { upload } from '../middleware/upload.js';
 
 const router = express.Router();
 
 router.get('/tags', getTags);
 router.get('/videos', getVideos);
+router.get('/channel-videos/:channelUsername', getVideosByChannelUsername);
+router.get('/channel-short-videos/:channelUsername', getShortVideosByChannelUsername);
 router.post('/video/:hash', getVideoByHash);
 router.post('/recommended-videos/:hash', getRecommendedVideos);
 router.get('/videos/search/:name', getVideoListByName);
