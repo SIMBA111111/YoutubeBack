@@ -3,12 +3,11 @@ import {getChannelsByUser, getChannelsByUsername} from '../repositories/channel'
 import { pool } from '../utils/pg';
 
 export const getMyChannels = async (req: Request, res: Response) => {
-    console.log('getMyChannels');
     try {
-        const data = JSON.parse(req.cookies.channelData || '')
+        const { meId } = req.params
         const { offset, limit } = req.query
 
-        const channels = await getChannelsByUser(data.id, Number(offset) | 0, Number(limit) || 20)
+        const channels = await getChannelsByUser(meId as string, Number(offset) | 0, Number(limit) || 20)
         if(!channels)
             return res.json({result: `Нет ни одной подписки`})
 
@@ -26,7 +25,6 @@ export const getMyChannels = async (req: Request, res: Response) => {
 
 
 export const getChannelInfo = async (req: Request, res: Response) => {
-    console.log('getChannelInfo');
     try {
         const { channelUsername } = req.params
 
@@ -43,7 +41,6 @@ export const getChannelInfo = async (req: Request, res: Response) => {
 
 
 export const subscribeChannel = async (req: Request, res: Response) => {
-    console.log('subscribeChannel');
     try {
         const { channelId, userId, isSubscribed } = req.body;
 
@@ -88,13 +85,8 @@ export const subscribeChannel = async (req: Request, res: Response) => {
 };
 
 export const notifSetting = async (req: Request, res: Response) => {
-    console.log('notifSetting');
     try {
         const { channelId, userId, isNotifSetting } = req.body;
-
-        console.log('userId = ', userId);
-        console.log('channelId = ', channelId);
-        
 
         const result = await pool.query(
             `UPDATE subscriptions

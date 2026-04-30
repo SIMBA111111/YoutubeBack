@@ -11,6 +11,7 @@ import {convertSrtToVTTAndCreateM3U8} from '../services/video/convertSrtToVTT'
 import {createMasterM3U8File} from '../services/video/createMasterM3U8File'
 import { getTagById } from "../repositories/video";
 import { json } from "stream/consumers";
+import { mapVideosToIVideo } from "../utils/maps/mapVideo";
 
 
 export const getTags = async (req: Request, res: Response) => {
@@ -34,7 +35,7 @@ export const getVideos = async (req: Request, res: Response) => {
     console.log('getVideos');
     try {
         const tagId = req.query.tagId
-        const channelData = JSON.parse(req.cookies.channelData || '')
+        const channelData = JSON.parse(req.cookies?.channelData || '')
         const channelId = channelData.id
 
         // Преобразуем query параметры в числа
@@ -91,6 +92,45 @@ export const getVideos = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Internal server error1' });
     }
 };
+
+export const getVideosMySubs = async (req: Request, res: Response) => {
+    try {
+        const { meId } = req.params
+        const { offset, limit, onlyShorts, onlyFull } = req.query
+
+        let videosRes
+
+        if (onlyShorts === onlyFull) {
+            videosRes = await pool.query(`
+                SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl
+                FROM videos v
+                JOIN channels ch ON ch.id = v.channel_id   
+                JOIN subscriptions s ON s.channel_id = ch.id
+                WHERE s.follower_channel_id = $1
+                OFFSET $2 LIMIT $3   
+            `, [meId, offset, limit])
+        } else {
+            videosRes = await pool.query(`
+                SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl
+                FROM videos v
+                JOIN channels ch ON ch.id = v.channel_id   
+                JOIN subscriptions s ON s.channel_id = ch.id
+                WHERE s.follower_channel_id = $1 AND v.is_short=$2
+                OFFSET $3 LIMIT $4   
+            `, [meId, onlyShorts, offset, limit])
+        }
+
+        const result = {
+            videos: mapVideosToIVideo(videosRes.rows)
+        }
+
+        return res.status(200).json(result)
+    } catch (error) {
+        console.error('Error getVideosMySubs: ', error)
+        return res.status(500)
+    }    
+}
+
 
 export const getVideosByChannelUsername = async (req: Request, res: Response) => {
     console.log('getVideosByChannelUsername');

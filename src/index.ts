@@ -12,6 +12,7 @@ import {router as RouterChannel} from './routes/channel'
 import {router as RouterComments} from './routes/comments'
 import {router as RouterPosts} from './routes/posts'
 import {router as RouterPlaylists} from './routes/playlists'
+import {router as RouterMe} from './routes/me'
 import { authCheck } from './middleware';
 
 
@@ -27,7 +28,7 @@ app.use((req, res, next) => {
 
 // CORS
 app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'],
     credentials: true,
 }));
 
@@ -44,6 +45,7 @@ app.use('/api', RouterChannel);
 app.use('/api', RouterComments);
 app.use('/api', RouterPosts);
 app.use('/api', RouterPlaylists);
+app.use('/api', RouterMe);
 app.use('/api/auth', RouterAuth);
 
 // Запуск сервера

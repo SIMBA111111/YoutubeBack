@@ -2,6 +2,7 @@
 import express from 'express'
 import { 
     getVideos, 
+    getVideosMySubs,
     getVideoById, 
     getVideoByHash, 
     getRecommendedVideos, 
@@ -18,6 +19,7 @@ const router = express.Router();
 
 router.get('/tags', getTags);
 router.get('/videos', getVideos);
+router.get('/videos/my-subs/:meId', getVideosMySubs);
 router.get('/channel-videos/:channelUsername', getVideosByChannelUsername);
 router.get('/channel-short-videos/:channelUsername', getShortVideosByChannelUsername);
 router.post('/video/:hash', getVideoByHash);
