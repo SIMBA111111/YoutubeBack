@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { pool } from "../utils/pg";
 import { getVideoByHashRepo } from "../repositories/video";
 import { mapCommentsToIComment } from "../utils/maps/mapComment";
+import { crateCommentRepo, getCommentsByParentCommentId, getCommentsByVideoHashRepo } from "../repositories/comment";
 
 export const getCommentsByVideoHash = async (req: Request, res: Response) => {
     console.log('getCommentsByVideoHash');
@@ -11,74 +12,30 @@ export const getCommentsByVideoHash = async (req: Request, res: Response) => {
         const offset = parseInt(req.query.offset as string) || 0;
         const limit = parseInt(req.query.limit as string) || 20;
 
-        let query = '';
-        let countQuery = '';
-        let params: any[] = [];
+        let comments = []
 
         if (parentCommentId) {
             // Получаем комментарии с подсчетом дочерних и информацией о канале
-            query = `
-                SELECT 
-                    c.*,
-                    (
-                        SELECT COUNT(*) 
-                        FROM comments 
-                        WHERE parent_comment_id = c.id
-                    ) as "repliesCount",
-                    jsonb_build_object(
-                        'id', ch.id,
-                        'name', ch.name,
-                        'username', ch.username,
-                        'avatar_url', ch.avatar_url
-                    ) as channel
-                FROM comments c
-                LEFT JOIN channels ch ON c.user_id = ch.id
-                WHERE c.parent_comment_id = $1
-                ORDER BY c.created_date ASC
-                LIMIT $2 OFFSET $3
-            `;
-            params = [parentCommentId, limit, offset];
+            comments = await getCommentsByParentCommentId(parentCommentId, offset, limit);
+
         } else {
             const video = await getVideoByHashRepo(videoHash as string);
             if (!video) {
                 return res.status(404).json({ error: 'Video not found' });
             }
-            
-            query = `
-                SELECT 
-                    c.*,
-                    (
-                        SELECT COUNT(*) 
-                        FROM comments 
-                        WHERE parent_comment_id = c.id
-                    ) as "repliesCount",
-                    jsonb_build_object(
-                        'id', ch.id,
-                        'name', ch.name,
-                        'avatar_url', ch.avatar_url
-                    ) as channel
-                FROM comments c
-                LEFT JOIN channels ch ON c.channel_id = ch.id
-                WHERE c.video_id = $1
-                ORDER BY c.created_date ASC
-                LIMIT $2 OFFSET $3
-            `;
-            params = [video.id, limit, offset];
+
+            comments = await getCommentsByVideoHashRepo(video.id, offset, limit);
         }
 
-        // Выполняем запросы параллельно
-        const [commentsResult] = await Promise.all([
-            pool.query(query, params),
-        ]);
-
         const result = {
-            comments: mapCommentsToIComment(commentsResult.rows),
-            total: commentsResult.rows.length,
+            comments: mapCommentsToIComment(comments),
+            total: comments.length,
             offset,
             limit
         };
-        
+
         res.status(200).json(result);
+
     } catch (error) {
         console.error('Error getCommentsByVideoHash:', error);
         res.status(500).json({ error: 'Internal server error' });
@@ -89,15 +46,16 @@ export const getCommentsByVideoHash = async (req: Request, res: Response) => {
 export const getRepliesComment = async (req: Request, res: Response) => {
     console.log('getRepliesComment');
     try {
-        const { parentCommentId } = req.params
+        const { parentCommentId } = req.body;
+        const offset = parseInt(req.query.offset as string) || 0;
+        const limit = parseInt(req.query.limit as string) || 20;
 
-        const response = await pool.query(`
-            SELECT * FROM comments WHERE parent_comment_id = $1  
-        `, [parentCommentId])
+        const response = await getCommentsByParentCommentId(parentCommentId as string, offset, limit);
+
 
         const result = {
-            comments: response.rows,
-            total: response.rows.length
+            comments: response,
+            total: response.length
         }
 
         return res.status(200).json(result);
@@ -115,10 +73,7 @@ export const createComment = async (req: Request, res: Response) => {
         const { commentText, userId } = req.body
         const cookies = req.cookies
 
-        const response = await pool.query(`
-            INSERT INTO comments (text, video_id, channel_id)
-            VALUES ($1, $2, $3)
-        `, [commentText, videoId, userId])
+        const response = await crateCommentRepo(commentText, videoId as string, userId)
 
         return res.status(201).json('comment added');
     } catch (error) {
