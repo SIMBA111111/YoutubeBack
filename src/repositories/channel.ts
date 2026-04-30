@@ -33,6 +33,24 @@ export const getChannelsByUsername = async (username: string) => {
 
         return false
     } catch (error) {
-        throw new Error(`Error getChannelsByChannelHash repository: ${error}`)
+        throw new Error(`Error getChannelsByUsername repository: ${error}`)
+    }
+}
+
+export const getChannelByVideoHash = async (videoHash: string) => {
+    try {
+        const res = await pool.query(`
+            SELECT ch.* 
+            FROM videos v 
+            JOIN channels ch ON v.channel_id = ch.id
+            WHERE video_hash = $1
+        `, [videoHash])       
+        
+        if (res.rows.length > 0) 
+            return res.rows[0]
+
+        return {}
+    } catch (error) {
+        throw new Error(`Error getChannelByVideoHash repository: ${error}`)
     }
 }

@@ -9,23 +9,43 @@ import {getVideoDuration} from '../utils/getVideoDuration'
 import {createSrtSubtitleFile} from '../services/video/createSrtFile'
 import {convertSrtToVTTAndCreateM3U8} from '../services/video/convertSrtToVTT'
 import {createMasterM3U8File} from '../services/video/createMasterM3U8File'
-import { getTagById } from "../repositories/video";
-import { json } from "stream/consumers";
+import { 
+    getOrderedVideoList, 
+    getRecommendedVideosRepo, 
+    getShortVideoListByUsername, 
+    getTagById, 
+    getTagList, 
+    getVideoByHashRepo, 
+    getVideoByIdRepo, 
+    getVideoList, 
+    getVideoListByNameRepo, 
+    getVideoListBySubs, 
+    getVideoListBySubsIsShorts, 
+    getVideoListByTag, 
+    getVideoListByUsername, 
+    getVideosFollowedChannels, 
+    getViewedVideosByChannelId, 
+    updateVideoDislikes, 
+    updateVideoLikes, 
+    updateVideoViews} from "../repositories/video";
 import { mapVideosToIVideo } from "../utils/maps/mapVideo";
+import { getChannelByVideoHash } from "../repositories/channel";
+import { getIsSubscribedChannel } from "../repositories/subscriptions";
+import { createStatOfVideoForUser, getStatOfVideoForUser, updateStatOfVideoForUser, updateStatOfVideoViewsCount } from "../repositories/stats";
 
 
 export const getTags = async (req: Request, res: Response) => {
     console.log('getTags');
     try {
-        const response = await pool.query('SELECT * FROM tags');
+        const response = await getTagList();
         const result = {
-            tags: response.rows,
-            total: response.rows.length,
+            tags: response,
+            total: response.length,
         };
         
         res.json(result);
     } catch (error) {
-        console.error('Error getVideos:', error);
+        console.error('Error getTags:', error);
         res.status(500).json({ error: 'Internal server error1' });
     }
 };
@@ -50,29 +70,18 @@ export const getVideos = async (req: Request, res: Response) => {
         let response
 
         if(tag.name === 'fresh') {
-            response = await pool.query('SELECT * FROM videos ORDER BY date_publication DESC');
+            response = await getOrderedVideoList("DESC");
         } else if ( tag.name === 'newForMe') {
-            response = await pool.query(`
-                SELECT v.* 
-                FROM videos v
-                JOIN subscriptions s ON v.channel_id = s.channel_id
-                WHERE s.follower_channel_id = $1
-                ORDER BY v.date_publication DESC 
-            `, [channelId]);
+            response = await getVideosFollowedChannels(channelId)
         } else if (tag.name === 'viewed') {
-            response = await pool.query(`
-                SELECT v.* 
-                FROM videos v
-                JOIN stat_of_videos sov ON v.id = sov.video_id
-                WHERE sov.views_count > 0 AND sov.channel_id = $1
-            `, [channelId]);
+            response = await getViewedVideosByChannelId(channelId)
         } else if(tag.name === 'all') {
-            response = await pool.query('SELECT * FROM videos');
+            response = await getVideoList();
         } else {
-            response = await pool.query('SELECT * FROM videos WHERE $1 = ANY (tags)', [tag.id]);
+            response = await getVideoListByTag(tag.id)
         }
 
-        const videos = response.rows;
+        const videos = response;
         
         // const result = {
         //     videos: videos.slice(startIndex, endIndex),
@@ -98,30 +107,16 @@ export const getVideosMySubs = async (req: Request, res: Response) => {
         const { meId } = req.params
         const { offset, limit, onlyShorts, onlyFull } = req.query
 
-        let videosRes
+        let videos
 
         if (onlyShorts === onlyFull) {
-            videosRes = await pool.query(`
-                SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl
-                FROM videos v
-                JOIN channels ch ON ch.id = v.channel_id   
-                JOIN subscriptions s ON s.channel_id = ch.id
-                WHERE s.follower_channel_id = $1
-                OFFSET $2 LIMIT $3   
-            `, [meId, offset, limit])
+            videos = await getVideoListBySubs(meId as string, offset as string, limit as string)
         } else {
-            videosRes = await pool.query(`
-                SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl
-                FROM videos v
-                JOIN channels ch ON ch.id = v.channel_id   
-                JOIN subscriptions s ON s.channel_id = ch.id
-                WHERE s.follower_channel_id = $1 AND v.is_short=$2
-                OFFSET $3 LIMIT $4   
-            `, [meId, onlyShorts, offset, limit])
+            videos = await getVideoListBySubsIsShorts(meId as string, onlyShorts, offset as string, limit as string)
         }
 
         const result = {
-            videos: mapVideosToIVideo(videosRes.rows)
+            videos: mapVideosToIVideo(videos)
         }
 
         return res.status(200).json(result)
@@ -138,17 +133,11 @@ export const getVideosByChannelUsername = async (req: Request, res: Response) =>
         const { channelUsername } = req.params
         const { limit, offset } = req.query
 
-        const response = await pool.query(`
-            SELECT v.* 
-            FROM videos v
-            JOIN channels ch ON ch.id = v.channel_id
-            WHERE ch.username = $1 
-            OFFSET $2 LIMIT $3
-        `, [channelUsername, offset, limit])        
+        const response = await getVideoListByUsername(channelUsername as string, offset as string, limit as string)       
             
         const result = {
-            videos: response.rows,
-            total: response.rows.length
+            videos: response,
+            total: response.length
         }
 
         return res.status(200).json(result)
@@ -159,23 +148,18 @@ export const getVideosByChannelUsername = async (req: Request, res: Response) =>
 }
 
 
+// TO DO точно ли нужен этот эндпоинт ???? Выше по сути аналогичные есть
 export const getShortVideosByChannelUsername = async (req: Request, res: Response) => {
     console.log('getShortVideosByChannelUsername');
     try {
         const { channelUsername } = req.params
         const { limit, offset } = req.query
 
-        const response = await pool.query(`
-            SELECT v.* 
-            FROM videos v
-            JOIN channels ch ON ch.id = v.channel_id
-            WHERE ch.username = $1 AND v.is_short = true
-            OFFSET $2 LIMIT $3
-        `, [channelUsername, offset, limit])        
+        const response = await getShortVideoListByUsername(channelUsername as string, offset as string, limit as string)       
             
         const result = {
-            videos: response.rows,
-            total: response.rows.length
+            videos: response,
+            total: response.length
         }
 
         return res.status(200).json(result)
@@ -186,6 +170,7 @@ export const getShortVideosByChannelUsername = async (req: Request, res: Respons
 }
 
 
+// TO DO рекомендации привязать в channelId и videoId
 export const getRecommendedVideos = async (req: Request, res: Response) => {
     console.log('getRecommendedVideos');
     try {
@@ -193,11 +178,11 @@ export const getRecommendedVideos = async (req: Request, res: Response) => {
         const { offset, limit } = req.query
         const { myChannelId } = req.body
 
-        const response = await pool.query('select * from videos OFFSET $1 LIMIT $2', [offset, limit])        
+        const response = await getRecommendedVideosRepo(offset as string, limit as string)        
 
         const result = {
-            videos: response.rows || [],
-            total: response.rows?.length || 0,
+            videos: response|| [],
+            total: response.length || 0,
         };
 
         res.status(200).json(result);
@@ -211,8 +196,7 @@ export const getVideoById = async (req: Request, res: Response) => {
     console.log('getVideoById');
     try {
         const videoId = req.params.id;
-        const response = await pool.query('select * from videos where id=$1', [videoId])        
-        const video = response.rows[0]
+        const video = await getVideoByIdRepo(videoId as string)        
 
         if (!video) {
             return res.status(404).json({ error: 'Video not found' });
@@ -231,28 +215,17 @@ export const getVideoByHash = async (req: Request, res: Response) => {
         const { channelId } = req.body;
         const { hash: videoHash } = req.params;
 
-        const videoRes = await pool.query(`
-            SELECT * FROM videos WHERE video_hash = $1
-        `, [videoHash])        
-        const video = videoRes.rows[0]
+        const video = await getVideoByHashRepo(videoHash as string)
 
         if (!video) {
             return res.status(404).json({ error: 'Video not found' });
         }
 
-        const channelRes = await pool.query(`
-            SELECT ch.* 
-            FROM videos v 
-            JOIN channels ch ON v.channel_id = ch.id
-            WHERE video_hash = $1
-        `, [videoHash])        
-        const channel = channelRes.rows[0]
+        const channel = await getChannelByVideoHash(videoHash as string)
 
-        const isSubRes = await pool.query(`SELECT * FROM subscriptions WHERE follower_channel_id = $1 AND channel_id = $2`, [channelId, channel.id])
-        const isSubscribed = isSubRes.rows[0]    
+        const isSubscribed = await getIsSubscribedChannel(channelId, channel.id)
 
-        const statRes = await pool.query(`SELECT * FROM stat_of_videos WHERE video_id = $1 AND channel_id = $2`, [video.id, channelId])
-        const stat = statRes.rows[0] 
+        const stat = await getStatOfVideoForUser(video.id, channelId)
         
         res.status(200).json({video: video, channel: channel, isSubscribed: isSubscribed, stat: stat});
     } catch (error) {
@@ -265,11 +238,7 @@ export const getVideoListByName = async (req: Request, res: Response) => {
     console.log('getVideoListByName');
     try {
         const videoName = req.params.name;
-        const response = await pool.query(
-            'select id, name from videos where name ilike $1',
-            [`%${videoName}%`]
-        );      
-        const video = response.rows
+        const video = await getVideoListByNameRepo(videoName as string)
 
         if (!video) {
             return res.status(404).json({ error: 'Video not found' });
@@ -290,11 +259,7 @@ export const markVideo = async (req: Request, res: Response) => {
         const { userId, isLiked, isDisliked } = req.body;
 
         // Проверяем, существует ли запись статистики
-        const videoStatRes = await pool.query(
-            `SELECT * FROM stat_of_videos WHERE channel_id = $1 AND video_id = $2`,
-            [userId, videoId]
-        );
-        const oldStat = videoStatRes.rows[0];
+        const oldStat = await getStatOfVideoForUser(videoId as string, userId)
 
         let oldLiked = false;
         let oldDisliked = false;
@@ -304,47 +269,33 @@ export const markVideo = async (req: Request, res: Response) => {
             oldDisliked = oldStat.disliked;
             
             // Обновляем существующую запись
-            await pool.query(
-                `UPDATE stat_of_videos 
-                 SET liked = $1, disliked = $2 
-                 WHERE channel_id = $3 AND video_id = $4`,
-                [isLiked, isDisliked, userId, videoId]
-            );
+            await updateStatOfVideoForUser(videoId as string, userId, isDisliked, isLiked)
         } else {
             // Создаем новую запись
-            await pool.query(`
-                INSERT INTO stat_of_videos (channel_id, video_id, liked, disliked) 
-                VALUES ($1, $2, $3, $4)
-            `, [userId, videoId, isLiked, isDisliked]
-            );
+            await createStatOfVideoForUser(videoId as string, userId, isDisliked, isLiked)
         }
 
         // Обновляем счетчики видео
         // Сначала обрабатываем лайки
         if (oldLiked !== isLiked) {
             if (isLiked) {
-                await pool.query(`UPDATE videos SET likes_count = likes_count + 1 WHERE id = $1`, [videoId]);
+                await updateVideoLikes(videoId as string, 'inc')
             } else {
-                await pool.query(`UPDATE videos SET likes_count = likes_count - 1 WHERE id = $1`, [videoId]);
+                await updateVideoLikes(videoId as string, 'decr')
             }
         }
 
         // Обрабатываем дизлайки
         if (oldDisliked !== isDisliked) {
             if (isDisliked) {
-                await pool.query(`UPDATE videos SET dislikes_count = dislikes_count + 1 WHERE id = $1`, [videoId]);
+                await updateVideoDislikes(videoId as string, 'inc')
             } else {
-                await pool.query(`UPDATE videos SET dislikes_count = dislikes_count - 1 WHERE id = $1`, [videoId]);
+                await updateVideoDislikes(videoId as string, 'inc')
             }
         }
 
         // Получаем обновленную статистику для ответа
-        const updatedStatsRes = await pool.query(
-            `SELECT liked, disliked FROM stat_of_videos 
-             WHERE channel_id = $1 AND video_id = $2`,
-            [userId, videoId]
-        );
-        const updatedStats = updatedStatsRes.rows[0];
+        const updatedStats = await getStatOfVideoForUser(videoId as string, userId)
 
         res.status(200).json({ 
             success: true, 
@@ -364,24 +315,23 @@ export const viewVideo = async (req: Request, res: Response) => {
         const videoId = req.params.videoId;
         const { userId } = req.query;
         
-        const response = await pool.query('select * from videos where id=$1', [videoId])        
-        const video = response.rows[0]
+        const video = await getVideoByIdRepo(videoId as string)
 
         if (!video) {
             return res.status(404).json({ error: 'Video not found' });
         }
     
-        await pool.query('UPDATE videos SET viewers_count = viewers_count + 1 WHERE id = $1', [videoId]);      
+        await updateVideoViews(videoId as string);      
 
         if(userId) {
-            const statRes = await pool.query('SELECT * FROM stat_of_videos WHERE channel_id = $1 AND video_id = $2', [userId, videoId]);      
+            const statRes = await getStatOfVideoForUser(userId as string, videoId as string);      
             
             if(statRes.rows[0]) {
-                await pool.query('UPDATE stat_of_videos SET views_count = views_count + 1, updated_date = now() WHERE channel_id = $1 AND video_id = $2', [userId, videoId]);      
+                await updateStatOfVideoViewsCount(videoId as string, userId as string)      
             } else {
-                await pool.query('INSERT INTO stat_of_videos (channel_id, video_id, views_count) VALUES ($1, $2, 1)', [userId, videoId]);      
+                // await pool.query('INSERT INTO stat_of_videos (channel_id, video_id, views_count) VALUES ($1, $2, 1)', [userId, videoId]);  
+                await createStatOfVideoForUser(videoId as string, userId as string, false, false, true)    
             }
-            
         }
         
         res.status(203).json('Updated succesfully')
