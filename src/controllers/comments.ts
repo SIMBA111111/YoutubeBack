@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { pool } from "../utils/pg";
-import { getVideoByHash } from "../repositories/video";
+import { getVideoByHashRepo } from "../repositories/video";
 import { mapCommentsToIComment } from "../utils/maps/mapComment";
 
 export const getCommentsByVideoHash = async (req: Request, res: Response) => {
@@ -39,7 +39,7 @@ export const getCommentsByVideoHash = async (req: Request, res: Response) => {
             `;
             params = [parentCommentId, limit, offset];
         } else {
-            const video = await getVideoByHash(videoHash as string);
+            const video = await getVideoByHashRepo(videoHash as string);
             if (!video) {
                 return res.status(404).json({ error: 'Video not found' });
             }

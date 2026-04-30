@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
-import {getChannelsByUser, getChannelsByUsername} from '../repositories/channel'
+import {getChannelByUsername, getChannelsByUser, updateSubsCountChannel} from '../repositories/channel'
 import { pool } from '../utils/pg';
+import { createSubscribeChannel, createSubscription, updateSubscriptionNotifSettings } from '../repositories/subscriptions';
 
 export const getMyChannels = async (req: Request, res: Response) => {
     try {
@@ -28,9 +29,9 @@ export const getChannelInfo = async (req: Request, res: Response) => {
     try {
         const { channelUsername } = req.params
 
-        const channel = await getChannelsByUsername(channelUsername as string)
+        const channel = await getChannelByUsername(channelUsername as string)
         if(!channel)
-            return res.status(404).json({result: `Нет ни одного канала`})
+            return res.status(404).json({result: `Нет канала`})
 
         return res.status(200).json(channel)    
     } catch (error) {
@@ -45,32 +46,18 @@ export const subscribeChannel = async (req: Request, res: Response) => {
         const { channelId, userId, isSubscribed } = req.body;
 
         if (isSubscribed) {
-            await pool.query(
-                `DELETE FROM subscriptions 
-                 WHERE follower_channel_id = $1 AND channel_id = $2`,
-                [userId, channelId]
-            );
+            await createSubscribeChannel(channelId, userId)
 
-            await pool.query(
-                `UPDATE channels SET subscribers_count = subscribers_count - 1 WHERE id = $1`,
-                [channelId]
-            );
+            await updateSubsCountChannel(channelId, 'decr')
 
             return res.status(200).json({ 
                 message: 'Unsubscribed successfully',
                 isSubscribed: false 
             });
         } else {
-            await pool.query(`
-                INSERT INTO subscriptions (follower_channel_id, channel_id, notification_settings) 
-                VALUES ($1, $2, true)
-            `, [userId, channelId]
-            );
+            await createSubscription(channelId, userId)
 
-            await pool.query(
-                `UPDATE channels SET subscribers_count = subscribers_count + 1 WHERE id = $1`,
-                [channelId]
-            );
+            await updateSubsCountChannel(channelId, 'inc')
 
             return res.status(200).json({ 
                 message: 'Subscribed successfully',
@@ -84,21 +71,11 @@ export const subscribeChannel = async (req: Request, res: Response) => {
     }
 };
 
-export const notifSetting = async (req: Request, res: Response) => {
+export const updateNotifSetting = async (req: Request, res: Response) => {
     try {
         const { channelId, userId, isNotifSetting } = req.body;
 
-        const result = await pool.query(
-            `UPDATE subscriptions
-             SET notification_settings = $1
-             WHERE follower_channel_id = $2 AND channel_id = $3
-             RETURNING notification_settings`,
-            [isNotifSetting, userId, channelId]
-        );
-
-        if (result.rowCount === 0) {
-            return res.status(404).json({ message: 'Subscription not found' });
-        }
+        await updateSubscriptionNotifSettings(channelId, userId, isNotifSetting)
 
         return res.status(200).json({ 
             message: `Notification settings ${isNotifSetting ? 'enabled' : 'disabled'} successfully`,

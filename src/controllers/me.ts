@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { pool } from "../utils/pg";
 import { mapVideosToIVideo } from "../utils/maps/mapVideo";
 import { mapPlaylistsToIPlaylists } from "../utils/maps/mapPlaylist";
+import { getChannelById, getChannelHistory, getLikedVideos } from "../repositories/channel";
+import { getLikedplaylists } from "../repositories/playlist";
 
 
 export const getMeInfo = async (req: Request, res: Response) => {
@@ -9,11 +11,7 @@ export const getMeInfo = async (req: Request, res: Response) => {
     try {
         const { meId } = req.params;
 
-        const response = await pool.query(`
-            SELECT * 
-            FROM channels
-            WHERE id = $1
-        `, [meId])
+        const response = await getChannelById(meId as string)
 
         const result = {
             meInfo: response.rows[0],
@@ -33,13 +31,7 @@ export const getMyLikedVideoList = async (req: Request, res: Response) => {
         const { meId } = req.params;
         const { offset, limit } = req.query;
 
-        const response = await pool.query(`
-            SELECT v.* 
-            FROM videos v
-            JOIN stat_of_videos sov ON sov.video_id = v.id 
-            WHERE sov.channel_id = $1 AND sov.liked = true
-            OFFSET $2 LIMIT $3
-        `, [meId, offset, limit])
+        const response = await getLikedVideos(meId as string, offset as string, limit as string)
 
         const result = {
             likedVideos: mapVideosToIVideo(response.rows),
@@ -59,13 +51,7 @@ export const getMyLikedPlaylists = async (req: Request, res: Response) => {
         const { meId } = req.params;
         const { offset, limit } = req.query;
 
-        const response = await pool.query(`
-            SELECT pl.* 
-            FROM playlists pl
-            JOIN stat_of_playlists sop ON sop.playlist_id = pl.id
-            WHERE sop.channel_id = $1 AND sop.liked = true
-            OFFSET $2 LIMIT $3
-        `, [meId, offset, limit])
+        const response = await getLikedplaylists(meId as string, offset as string, limit as string)
 
         const result = {
             likedPlaylists: mapPlaylistsToIPlaylists(response.rows),
@@ -85,15 +71,7 @@ export const getMyViewsHistory = async (req: Request, res: Response) => {
         const { meId } = req.params;
         const { offset, limit } = req.query;
 
-        const response = await pool.query(`
-            SELECT v.*, ch.id as channelId, ch.username as channelUsername, ch.avatar_url as channelAvatarUrl
-            FROM videos v
-            JOIN stat_of_videos sov ON sov.video_id = v.id
-            JOIN channels ch ON ch.id = v.channel_id
-            WHERE sov.channel_id = $1
-            ORDER BY sov.updated_date DESC
-            OFFSET $2 LIMIT $3
-        `, [meId, offset, limit])
+        const response = await getChannelHistory(meId as string, offset as string, limit as string)
 
         const result = {
             viewsHistory: mapVideosToIVideo(response.rows),

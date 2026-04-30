@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { pool } from "../utils/pg";
+import { getPlaylistsByUsername } from "../repositories/playlist";
 
 export const getPlaylistsByChannelUsername = async (req: Request, res: Response) => {
     console.log('getPlaylistsByChannelUsername');
@@ -7,17 +8,10 @@ export const getPlaylistsByChannelUsername = async (req: Request, res: Response)
         const { channelUsername } = req.params;
         const { limit, offset } = req.query;
 
-        const response = await pool.query(`
-            SELECT p.* 
-            FROM playlists p
-            JOIN channels ch ON ch.id = p.channel_id
-            WHERE ch.username = $1
-            OFFSET $2 LIMIT $3
-        `, [channelUsername, offset, limit])
+        const response = await getPlaylistsByUsername(channelUsername as string, offset as string, limit as string)
 
         const result = {
-            playlists: response.rows,
-            total: response.rows.length,
+            playlists: response,
         }
 
         res.status(200).json(result);
