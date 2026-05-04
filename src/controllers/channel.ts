@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import {getChannelByUsername, getChannelsByUser, updateSubsCountChannel} from '../repositories/channel'
 import { pool } from '../utils/pg';
-import { createSubscribeChannel, createSubscription, updateSubscriptionNotifSettings } from '../repositories/subscriptions';
+import { createSubscription, createUnsubscribeChannel, updateSubscriptionNotifSettings } from '../repositories/subscriptions';
 
 export const getMyChannels = async (req: Request, res: Response) => {
     try {
@@ -45,8 +45,11 @@ export const subscribeChannel = async (req: Request, res: Response) => {
     try {
         const { channelId, userId, isSubscribed } = req.body;
 
+        console.log('isSubscribed = ', isSubscribed);
+        
+
         if (isSubscribed) {
-            await createSubscribeChannel(channelId, userId)
+            await createUnsubscribeChannel(channelId, userId)
 
             await updateSubsCountChannel(channelId, 'decr')
 

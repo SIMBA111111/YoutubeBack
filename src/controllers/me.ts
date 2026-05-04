@@ -34,7 +34,7 @@ export const getMyLikedVideoList = async (req: Request, res: Response) => {
         const response = await getLikedVideos(meId as string, offset as string, limit as string)
 
         const result = {
-            likedVideos: mapVideosToIVideo(response.rows),
+            likedVideos: mapVideosToIVideo(response),
         }
 
         res.status(200).json(result);
@@ -54,7 +54,7 @@ export const getMyLikedPlaylists = async (req: Request, res: Response) => {
         const response = await getLikedplaylists(meId as string, offset as string, limit as string)
 
         const result = {
-            likedPlaylists: mapPlaylistsToIPlaylists(response.rows),
+            likedPlaylists: mapPlaylistsToIPlaylists(response),
         }
 
         res.status(200).json(result);
@@ -74,7 +74,7 @@ export const getMyViewsHistory = async (req: Request, res: Response) => {
         const response = await getChannelHistory(meId as string, offset as string, limit as string)
 
         const result = {
-            viewsHistory: mapVideosToIVideo(response.rows),
+            viewsHistory: mapVideosToIVideo(response),
         }
 
         res.status(200).json(result);

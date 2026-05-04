@@ -28,7 +28,7 @@ import {
     updateVideoDislikes, 
     updateVideoLikes, 
     updateVideoViews} from "../repositories/video";
-import { mapVideosToIVideo } from "../utils/maps/mapVideo";
+import { mapToIVideo, mapVideosToIVideo } from "../utils/maps/mapVideo";
 import { getChannelByVideoHash } from "../repositories/channel";
 import { getIsSubscribedChannel } from "../repositories/subscriptions";
 import { createStatOfVideoForUser, getStatOfVideoForUser, updateStatOfVideoForUser, updateStatOfVideoViewsCount } from "../repositories/stats";
@@ -52,11 +52,13 @@ export const getTags = async (req: Request, res: Response) => {
 
 // надо будеть еще добавить обработку запросов к бд на случай, если юзер не атворизован (нет channel_id) 
 export const getVideos = async (req: Request, res: Response) => {
-    console.log('getVideos');
     try {
         const tagId = req.query.tagId
         const channelData = JSON.parse(req.cookies?.channelData || '')
         const channelId = channelData.id
+
+        const offset = 0 
+        const limit = 20
 
         // Преобразуем query параметры в числа
         // const page = parseInt(req.query.page as string) || 1;
@@ -76,23 +78,22 @@ export const getVideos = async (req: Request, res: Response) => {
         } else if (tag.name === 'viewed') {
             response = await getViewedVideosByChannelId(channelId)
         } else if(tag.name === 'all') {
-            response = await getVideoList();
+            response = await getVideoList(offset, limit);
         } else {
             response = await getVideoListByTag(tag.id)
         }
 
-        const videos = response;
-        
         // const result = {
         //     videos: videos.slice(startIndex, endIndex),
         //     total: videos.length,  // используем длину из БД, а не из videosData
         //     page: page,
         //     totalPages: Math.ceil(videos.length / limit)
         // };
+        
 
         const result = {
-            videos: videos,
-            total: videos.length,
+            videos: mapVideosToIVideo(response),
+            total: response.length,
         };
         
         res.json(result);
@@ -112,7 +113,7 @@ export const getVideosMySubs = async (req: Request, res: Response) => {
         if (onlyShorts === onlyFull) {
             videos = await getVideoListBySubs(meId as string, offset as string, limit as string)
         } else {
-            videos = await getVideoListBySubsIsShorts(meId as string, onlyShorts, offset as string, limit as string)
+            videos = await getVideoListBySubsIsShorts(meId as string, onlyShorts === 'true' ? true : false, offset as string, limit as string)
         }
 
         const result = {
@@ -227,7 +228,7 @@ export const getVideoByHash = async (req: Request, res: Response) => {
 
         const stat = await getStatOfVideoForUser(video.id, channelId)
         
-        res.status(200).json({video: video, channel: channel, isSubscribed: isSubscribed, stat: stat});
+        res.status(200).json({video: mapToIVideo(video), channel: channel, isSubscribed: isSubscribed, stat: stat});
     } catch (error) {
         console.error('Error getVideoByHash:', error);
         res.status(500).json({ error: 'Internal server error2' });
@@ -290,7 +291,7 @@ export const markVideo = async (req: Request, res: Response) => {
             if (isDisliked) {
                 await updateVideoDislikes(videoId as string, 'inc')
             } else {
-                await updateVideoDislikes(videoId as string, 'inc')
+                await updateVideoDislikes(videoId as string, 'decr')
             }
         }
 
@@ -309,8 +310,8 @@ export const markVideo = async (req: Request, res: Response) => {
 };
 
 
-export const viewVideo = async (req: Request, res: Response) => {
-    console.log('viewVideo');
+export const updateVideoViewCount = async (req: Request, res: Response) => {
+    console.log('updateVideoViewCount updateVideoViewCount updateVideoViewCount updateVideoViewCount updateVideoViewCount updateVideoViewCount');
     try {
         const videoId = req.params.videoId;
         const { userId } = req.query;
@@ -324,19 +325,23 @@ export const viewVideo = async (req: Request, res: Response) => {
         await updateVideoViews(videoId as string);      
 
         if(userId) {
-            const statRes = await getStatOfVideoForUser(userId as string, videoId as string);      
+            const statRes = await getStatOfVideoForUser(videoId as string, userId as string);      
             
-            if(statRes.rows[0]) {
+            if(('id' in statRes)) {
+                console.log('ОБНОВЛЯЕМ');
+                
                 await updateStatOfVideoViewsCount(videoId as string, userId as string)      
             } else {
+                console.log('СОЗДАЕМ');
+
                 // await pool.query('INSERT INTO stat_of_videos (channel_id, video_id, views_count) VALUES ($1, $2, 1)', [userId, videoId]);  
                 await createStatOfVideoForUser(videoId as string, userId as string, false, false, true)    
             }
         }
-        
+
         res.status(203).json('Updated succesfully')
     } catch (error) {
-        console.error('Error viewVideo:', error);
+        console.error('Error updateVideoViewCount:', error);
         res.status(500).json({ error: 'Internal server error2' });
     }
 };

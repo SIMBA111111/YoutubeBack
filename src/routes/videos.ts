@@ -8,10 +8,10 @@ import {
     getRecommendedVideos, 
     getVideoListByName, 
     getTags, 
-    viewVideo, 
     markVideo,
     getVideosByChannelUsername,
-    getShortVideosByChannelUsername
+    getShortVideosByChannelUsername,
+    updateVideoViewCount
 } from '../controllers/video'
 // import { upload } from '../middleware/upload.js';
 
@@ -28,7 +28,7 @@ router.get('/videos/search/:name', getVideoListByName);
 router.get('/videos/:id', getVideoById);
 
 router.post('/mark/video/:videoId', markVideo);
-router.get('/view/video/:videoId', viewVideo);
+router.get('/view/video/:videoId', updateVideoViewCount);
 
 
 // router.post('/videos/create', upload, createVideo);

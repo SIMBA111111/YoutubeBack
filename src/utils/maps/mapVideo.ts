@@ -12,6 +12,7 @@ interface IVideo {
     hashtags: string
     likeCount: number
     dislikeCount: number
+    masterM3u8Url: string
     channel: {
         id: string
         username: string
@@ -22,7 +23,7 @@ interface IVideo {
     isShort: boolean
 }
 
-const mapToIVideo = (video: any): IVideo => {
+export const mapToIVideo = (video: any): IVideo => {
     return {
         id: video.id,
         name: video.name,
@@ -38,6 +39,7 @@ const mapToIVideo = (video: any): IVideo => {
         tags: video.tags,
         videoDescription: video.description,
         hashtags: video.hashtags,
+        masterM3u8Url: video.master_m3u8_url,
         channel: {
             id: video.channelid || '',
             username: video?.channelusername ||  '',

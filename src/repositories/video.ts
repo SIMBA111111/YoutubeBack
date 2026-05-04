@@ -24,9 +24,15 @@ export const getTagById = async (tagId: string) => {
     }
 }
 
-export const getVideoList = async () => {
+export const getVideoList = async (offset: number = 0, limit: number = 20) => {
     try {
-        const res = await pool.query('SELECT * FROM videos')
+        const res = await pool.query(`
+            SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl
+            FROM videos v
+            JOIN channels ch ON ch.id = v.channel_id 
+            OFFSET $1 LIMIT $2   
+        `, [offset, limit])
+
         if (res.rows) 
             return res.rows
 

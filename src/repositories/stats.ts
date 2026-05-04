@@ -3,7 +3,7 @@ import { pool } from "../utils/pg"
 export const getStatOfVideoForUser = async (videoId: string, userId: string) => {
     try {
         const res = await pool.query(`SELECT * FROM stat_of_videos WHERE video_id = $1 AND channel_id = $2`, [videoId, userId])
-        
+
         if (res.rows.length > 0) 
             return res.rows[0]
 
@@ -15,10 +15,10 @@ export const getStatOfVideoForUser = async (videoId: string, userId: string) => 
 
 export const updateStatOfVideoForUser = async (videoId: string, userId: string, isDisliked: boolean, isLiked: boolean) => {
     try {
-        const res = await pool.query(
-            `UPDATE stat_of_videos 
-                SET liked = $1, disliked = $2 
-                WHERE channel_id = $3 AND video_id = $4`,
+        const res = await pool.query(`
+            UPDATE stat_of_videos 
+            SET liked = $1, disliked = $2 
+            WHERE channel_id = $3 AND video_id = $4`,
             [isLiked, isDisliked, userId, videoId]
         );
         
