@@ -8,7 +8,7 @@ import {
     getRecommendedVideos, 
     getVideoListByName, 
     getTags, 
-    markVideo,
+    updateMarkVideo,
     getVideosByChannelUsername,
     getShortVideosByChannelUsername,
     updateVideoViewCount
@@ -27,7 +27,7 @@ router.post('/recommended-videos/:hash', getRecommendedVideos);
 router.get('/videos/search/:name', getVideoListByName);
 router.get('/videos/:id', getVideoById);
 
-router.post('/mark/video/:videoId', markVideo);
+router.post('/mark/video/:videoId', updateMarkVideo);
 router.get('/view/video/:videoId', updateVideoViewCount);
 
 

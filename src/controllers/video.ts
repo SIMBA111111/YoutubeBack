@@ -52,13 +52,22 @@ export const getTags = async (req: Request, res: Response) => {
 
 // надо будеть еще добавить обработку запросов к бд на случай, если юзер не атворизован (нет channel_id) 
 export const getVideos = async (req: Request, res: Response) => {
+    console.log('getVideos');
+    
     try {
         const tagId = req.query.tagId
-        const channelData = JSON.parse(req.cookies?.channelData || '')
-        const channelId = channelData.id
+        let channelData;
+        if (req.cookies?.channelData) {
+            channelData = JSON.parse(req.cookies.channelData);
+        } else {
+            // Обработка ситуации, когда данных нет
+            console.log('cookie error - getVideos');
+        }
+        const channelId = channelData?.id || null;
 
         const offset = 0 
         const limit = 20
+
 
         // Преобразуем query параметры в числа
         // const page = parseInt(req.query.page as string) || 1;
@@ -73,11 +82,11 @@ export const getVideos = async (req: Request, res: Response) => {
 
         if(tag.name === 'fresh') {
             response = await getOrderedVideoList("DESC");
-        } else if ( tag.name === 'newForMe') {
+        } else if ( tag.name === 'newForMe' && channelId) {
             response = await getVideosFollowedChannels(channelId)
-        } else if (tag.name === 'viewed') {
+        } else if (tag.name === 'viewed' && channelId) {
             response = await getViewedVideosByChannelId(channelId)
-        } else if(tag.name === 'all') {
+        } else if(tag.name === 'all' || !tag) {
             response = await getVideoList(offset, limit);
         } else {
             response = await getVideoListByTag(tag.id)
@@ -224,7 +233,7 @@ export const getVideoByHash = async (req: Request, res: Response) => {
 
         const channel = await getChannelByVideoHash(videoHash as string)
 
-        const isSubscribed = await getIsSubscribedChannel(channelId, channel.id)
+        const isSubscribed = await getIsSubscribedChannel(channel.id, channelId)
 
         const stat = await getStatOfVideoForUser(video.id, channelId)
         
@@ -253,8 +262,8 @@ export const getVideoListByName = async (req: Request, res: Response) => {
 };
 
 
-export const markVideo = async (req: Request, res: Response) => {
-    console.log('markVideo');
+export const updateMarkVideo = async (req: Request, res: Response) => {
+    console.log('updateMarkVideo');
     try {
         const { videoId } = req.params;
         const { userId, isLiked, isDisliked } = req.body;
@@ -297,14 +306,16 @@ export const markVideo = async (req: Request, res: Response) => {
 
         // Получаем обновленную статистику для ответа
         const updatedStats = await getStatOfVideoForUser(videoId as string, userId)
+        const videoData = await getVideoByIdRepo(videoId as string)
 
         res.status(200).json({ 
             success: true, 
-            stats: updatedStats 
+            stats: updatedStats,
+            video: mapToIVideo(videoData) 
         });
         
     } catch (error) {
-        console.error('Error markVideo:', error);
+        console.error('Error updateMarkVideo:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 };

@@ -41,15 +41,15 @@ export const getChannelInfo = async (req: Request, res: Response) => {
 }
 
 
-export const subscribeChannel = async (req: Request, res: Response) => {
+export const updateSubscribeChannel = async (req: Request, res: Response) => {
     try {
         const { channelId, userId, isSubscribed } = req.body;
 
         console.log('isSubscribed = ', isSubscribed);
-        
+        let updatedSub
 
         if (isSubscribed) {
-            await createUnsubscribeChannel(channelId, userId)
+            updatedSub = await createUnsubscribeChannel(channelId, userId)
 
             await updateSubsCountChannel(channelId, 'decr')
 
@@ -58,7 +58,7 @@ export const subscribeChannel = async (req: Request, res: Response) => {
                 isSubscribed: false 
             });
         } else {
-            await createSubscription(channelId, userId)
+            updatedSub = await createSubscription(channelId, userId)
 
             await updateSubsCountChannel(channelId, 'inc')
 
