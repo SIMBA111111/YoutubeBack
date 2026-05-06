@@ -17,8 +17,8 @@ const mapToIComment = (dbComment: any): IComment => {
     return {
         id: dbComment.id,
         text: dbComment.text,
-        likes: dbComment.likes_count || 0,
-        dislikes: dbComment.dislikes_count || 0,
+        likes: dbComment.like_count || 0,
+        dislikes: dbComment.dislike_count || 0,
         datePublication: dbComment.created_date,
         parentCommentId: dbComment.parent_comment_id || '',
         channel: {

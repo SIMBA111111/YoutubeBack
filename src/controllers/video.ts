@@ -233,9 +233,13 @@ export const getVideoByHash = async (req: Request, res: Response) => {
 
         const channel = await getChannelByVideoHash(videoHash as string)
 
-        const isSubscribed = await getIsSubscribedChannel(channel.id, channelId)
+        let isSubscribed = {}
+        let stat = {}
 
-        const stat = await getStatOfVideoForUser(video.id, channelId)
+        if(channelId) {
+            isSubscribed = await getIsSubscribedChannel(channel.id, channelId)
+            stat = await getStatOfVideoForUser(video.id, channelId)
+        }
         
         res.status(200).json({video: mapToIVideo(video), channel: channel, isSubscribed: isSubscribed, stat: stat});
     } catch (error) {

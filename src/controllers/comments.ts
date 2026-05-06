@@ -8,7 +8,7 @@ export const getCommentsByVideoHash = async (req: Request, res: Response) => {
     console.log('getCommentsByVideoHash');
     try {
         const { videoHash } = req.params;
-        const { parentCommentId } = req.body;
+        const { parentCommentId, filter, userId } = req.body;
         const offset = parseInt(req.query.offset as string) || 0;
         const limit = parseInt(req.query.limit as string) || 20;
 
@@ -16,7 +16,7 @@ export const getCommentsByVideoHash = async (req: Request, res: Response) => {
 
         if (parentCommentId) {
             // Получаем комментарии с подсчетом дочерних и информацией о канале
-            comments = await getCommentsByParentCommentId(parentCommentId, offset, limit);
+            comments = await getCommentsByParentCommentId(parentCommentId, offset, limit, userId);
 
         } else {
             const video = await getVideoByHashRepo(videoHash as string);
@@ -24,11 +24,14 @@ export const getCommentsByVideoHash = async (req: Request, res: Response) => {
                 return res.status(404).json({ error: 'Video not found' });
             }
 
-            comments = await getCommentsByVideoHashRepo(video.id, offset, limit);
+            comments = await getCommentsByVideoHashRepo(video.id, offset, limit, filter, userId);
         }
+
+        // const stat = await 
 
         const result = {
             comments: mapCommentsToIComment(comments),
+            // stat: 
             total: comments.length,
             offset,
             limit
@@ -46,11 +49,11 @@ export const getCommentsByVideoHash = async (req: Request, res: Response) => {
 export const getRepliesComment = async (req: Request, res: Response) => {
     console.log('getRepliesComment');
     try {
-        const { parentCommentId } = req.body;
+        const { parentCommentId, userId } = req.body;
         const offset = parseInt(req.query.offset as string) || 0;
         const limit = parseInt(req.query.limit as string) || 20;
 
-        const response = await getCommentsByParentCommentId(parentCommentId as string, offset, limit);
+        const response = await getCommentsByParentCommentId(parentCommentId as string, offset, limit, userId);
 
 
         const result = {
@@ -87,6 +90,9 @@ export const markComment = async (req: Request, res: Response) => {
     try {
         const { commentId } = req.params;
         const { userId, isLiked, isDisliked } = req.body;
+
+        console.log('isDisliked = ', isDisliked);
+        
 
         // Проверяем, существует ли запись статистики
         const commentStatRes = await pool.query(
@@ -143,11 +149,19 @@ export const markComment = async (req: Request, res: Response) => {
              WHERE channel_id = $1 AND comment_id = $2`,
             [userId, commentId]
         );
+
+        const updatedCommentRes = await pool.query(
+            `SELECT like_count, dislike_count FROM comments 
+             WHERE channel_id = $1 AND id = $2`,
+            [userId, commentId]
+        );
+
         const updatedStats = updatedStatsRes.rows[0];
 
         res.status(200).json({ 
             success: true, 
-            stats: updatedStats 
+            stats: updatedStats,
+            comment: updatedCommentRes.rows[0]
         });
         
     } catch (error) {
