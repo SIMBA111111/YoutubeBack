@@ -5,8 +5,6 @@ export const getCommentsByVideoHashRepo = async (videoId: string, offset: number
         let query = `
             SELECT 
                 c.*,
-                soc.liked,
-                soc.disliked,
                 (
                     SELECT COUNT(*) 
                     FROM comments 
@@ -16,29 +14,34 @@ export const getCommentsByVideoHashRepo = async (videoId: string, offset: number
                     'id', ch.id,
                     'name', ch.name,
                     'avatar_url', ch.avatar_url
-                ) as channel
+                ) as channel,
+                soc.liked as user_liked,
+                soc.disliked as user_disliked,
+                soc.id as user_stat_id
             FROM comments c
-            LEFT JOIN channels ch ON c.channel_id = ch.id
-            LEFT JOIN stat_of_comments soc ON soc.comment_id = c.id AND soc.channel_id = $4
-            WHERE c.video_id = $1
+            INNER JOIN channels ch ON c.channel_id = ch.id
+            LEFT JOIN stat_of_comments soc ON soc.comment_id = c.id AND soc.channel_id = $4::uuid
+            WHERE c.video_id = $1::uuid
         `;
         
         if(filter === 'famous') {
-            query += ' ORDER BY c.like_count DESC, c.created_date DESC LIMIT $2 OFFSET $3';
+            query += ' ORDER BY c.like_count DESC, c.created_date DESC';
         } else {
-            query += ' ORDER BY c.created_date DESC LIMIT $2 OFFSET $3';
+            query += ' ORDER BY c.created_date DESC';
         }
         
-        const params = [videoId, limit, offset, userId];
+        query += ' LIMIT $2::int OFFSET $3::int';
         
+        const params = [videoId, limit, offset, userId];
         const res = await pool.query(query, params);
         
-        return res.rows || [];
+        return res.rows
+
     } catch (error) {
+        console.error('SQL Error:', error);
         throw new Error(`Error getCommentsByVideoHashRepo repository: ${error}`);
     }
-}
-
+};
 
 export const getCommentsByParentCommentId = async (parentCommentId: string, offset: number, limit: number, userId: string) => {
     try {
@@ -83,6 +86,7 @@ export const crateCommentRepo = async (commentText: string, videoId: string, use
         const res = await pool.query(`
             INSERT INTO comments (text, video_id, channel_id)
             VALUES ($1, $2, $3)
+            RETURNING *
         `, [commentText, videoId, userId])
 
         

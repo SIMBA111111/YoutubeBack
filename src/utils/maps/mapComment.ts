@@ -5,6 +5,8 @@ interface IComment {
     dislikes: number;
     datePublication: string;
     parentCommentId: string;
+    isLiked: string;
+    isDisliked: string;
     channel: {
         id: string;
         username: string;
@@ -21,6 +23,8 @@ const mapToIComment = (dbComment: any): IComment => {
         dislikes: dbComment.dislike_count || 0,
         datePublication: dbComment.created_date,
         parentCommentId: dbComment.parent_comment_id || '',
+        isLiked: dbComment.user_liked || false,
+        isDisliked: dbComment.user_disliked || false,
         channel: {
             id: dbComment.channel?.id || dbComment.channel_id,
             username: dbComment.channel?.name || dbComment.channel?.username || '',

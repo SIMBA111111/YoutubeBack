@@ -15,7 +15,6 @@ export const getCommentsByVideoHash = async (req: Request, res: Response) => {
         let comments = []
 
         if (parentCommentId) {
-            // Получаем комментарии с подсчетом дочерних и информацией о канале
             comments = await getCommentsByParentCommentId(parentCommentId, offset, limit, userId);
 
         } else {
@@ -27,7 +26,6 @@ export const getCommentsByVideoHash = async (req: Request, res: Response) => {
             comments = await getCommentsByVideoHashRepo(video.id, offset, limit, filter, userId);
         }
 
-        // const stat = await 
 
         const result = {
             comments: mapCommentsToIComment(comments),
@@ -78,7 +76,11 @@ export const createComment = async (req: Request, res: Response) => {
 
         const response = await crateCommentRepo(commentText, videoId as string, userId)
 
-        return res.status(201).json('comment added');
+        const result = {
+            newComment: response
+        }
+
+        return res.status(201).json(result);
     } catch (error) {
         console.error('Error createComment:', error);
         res.status(500).json({ error: 'Internal server error2' });
