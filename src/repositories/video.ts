@@ -103,7 +103,7 @@ export const getVideoListByUsername = async (
   try {
     const res = await pool.query(
       `
-            SELECT v.* 
+            SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl
             FROM videos v
             JOIN channels ch ON ch.id = v.channel_id
             WHERE ch.username = $1 

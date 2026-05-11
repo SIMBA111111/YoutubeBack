@@ -164,7 +164,7 @@ export const getVideosByChannelUsername = async (
     );
 
     const result = {
-      videos: response,
+      videos: mapVideosToIVideo(response),
       total: response.length,
     };
 

@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import {
   getChannelByUsername,
   getChannelsByUser,
+  getIsSubOnChannelInfo,
   updateSubsCountChannel,
 } from "../repositories/channel";
 import { pool } from "../utils/pg";
@@ -42,11 +43,22 @@ export const getMyChannels = async (req: Request, res: Response) => {
 export const getChannelInfo = async (req: Request, res: Response) => {
   try {
     const { channelUsername } = req.params;
+    const { userId } = req.body
 
     const channel = await getChannelByUsername(channelUsername as string);
+    const subData = await getIsSubOnChannelInfo(userId as string, channel.id as string);
     if (!channel) return res.status(404).json({ result: `Нет канала` });
 
-    return res.status(200).json(channel);
+    console.log('subData = ', subData);
+    console.log('req.body = ', req.body);
+    
+
+    const result = {
+      channel: channel,
+      subData: subData ?? {}
+    }
+
+    return res.status(200).json(result);
   } catch (error) {
     console.error("Error getChannelInfo: ", error);
     return res

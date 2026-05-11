@@ -167,3 +167,26 @@ export const getChannelHistory = async (
     throw new Error(`Error getChannelHistory repository: ${error}`);
   }
 };
+
+
+export const getIsSubOnChannelInfo = async (
+  userId: string,
+  channelId: string,
+) => {
+  try {
+    const res = await pool.query(
+      `
+            SELECT *
+            FROM subscriptions
+            WHERE follower_channel_id=$1 AND channel_id=$2
+        `,
+      [userId, channelId]
+    );
+
+    if (res.rows.length > 0) return res.rows[0];
+
+    return [];
+  } catch (error) {
+    throw new Error(`Error getIsSubOnChannelInfo repository: ${error}`);
+  }
+};

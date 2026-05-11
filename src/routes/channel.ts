@@ -4,7 +4,8 @@ import { getMyChannels, getChannelInfo, updateSubscribeChannel, updateNotifSetti
 export const router = express.Router();
 
 router.get('/my-channels', getMyChannels);
-router.get('/channel-info/:channelUsername', getChannelInfo);
+router.post('/channel-info/:channelUsername', getChannelInfo);
+// router.get('/check-is-sub/:userId/:channelId', getChannelInfo);
 
 router.put('/subscribe', updateSubscribeChannel);
 router.put('/notif-setting', updateNotifSetting);
