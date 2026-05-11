@@ -1,364 +1,413 @@
 import ffmpeg from "fluent-ffmpeg";
 import path from "path";
-import fs from 'fs'
-import { Request, Response } from 'express';
+import fs from "fs";
+import { Request, Response } from "express";
 
 import { exec } from "child_process";
-import { pool } from '../utils/pg';
-import {getVideoDuration} from '../utils/getVideoDuration'
-import {createSrtSubtitleFile} from '../services/video/createSrtFile'
-import {convertSrtToVTTAndCreateM3U8} from '../services/video/convertSrtToVTT'
-import {createMasterM3U8File} from '../services/video/createMasterM3U8File'
-import { 
-    getOrderedVideoList, 
-    getRecommendedVideosRepo, 
-    getShortVideoListByUsername, 
-    getTagById, 
-    getTagList, 
-    getVideoByHashRepo, 
-    getVideoByIdRepo, 
-    getVideoList, 
-    getVideoListByNameRepo, 
-    getVideoListBySubs, 
-    getVideoListBySubsIsShorts, 
-    getVideoListByTag, 
-    getVideoListByUsername, 
-    getVideosFollowedChannels, 
-    getViewedVideosByChannelId, 
-    updateVideoDislikes, 
-    updateVideoLikes, 
-    updateVideoViews} from "../repositories/video";
+import { pool } from "../utils/pg";
+import { getVideoDuration } from "../utils/getVideoDuration";
+import { createSrtSubtitleFile } from "../services/video/createSrtFile";
+import { convertSrtToVTTAndCreateM3U8 } from "../services/video/convertSrtToVTT";
+import { createMasterM3U8File } from "../services/video/createMasterM3U8File";
+import {
+  getOrderedVideoList,
+  getRecommendedVideosRepo,
+  getShortVideoListByUsername,
+  getTagById,
+  getTagList,
+  getVideoByHashRepo,
+  getVideoByIdRepo,
+  getVideoList,
+  getVideoListByNameRepo,
+  getVideoListBySubs,
+  getVideoListBySubsIsShorts,
+  getVideoListByTag,
+  getVideoListByUsername,
+  getVideosFollowedChannels,
+  getViewedVideosByChannelId,
+  updateVideoDislikes,
+  updateVideoLikes,
+  updateVideoViews,
+} from "../repositories/video";
 import { mapToIVideo, mapVideosToIVideo } from "../utils/maps/mapVideo";
 import { getChannelByVideoHash } from "../repositories/channel";
 import { getIsSubscribedChannel } from "../repositories/subscriptions";
-import { createStatOfVideoForUser, getStatOfVideoForUser, updateStatOfVideoForUser, updateStatOfVideoViewsCount } from "../repositories/stats";
-
+import {
+  createStatOfVideoForUser,
+  getStatOfVideoForUser,
+  updateStatOfVideoForUser,
+  updateStatOfVideoViewsCount,
+} from "../repositories/stats";
 
 export const getTags = async (req: Request, res: Response) => {
-    console.log('getTags');
-    try {
-        const response = await getTagList();
-        const result = {
-            tags: response,
-            total: response.length,
-        };
-        
-        res.json(result);
-    } catch (error) {
-        console.error('Error getTags:', error);
-        res.status(500).json({ error: 'Internal server error1' });
-    }
+  console.log("getTags");
+  try {
+    const response = await getTagList();
+    const result = {
+      tags: response,
+      total: response.length,
+    };
+
+    res.json(result);
+  } catch (error) {
+    console.error("Error getTags:", error);
+    res.status(500).json({ error: "Internal server error1" });
+  }
 };
 
-// надо будеть еще добавить обработку запросов к бд на случай, если юзер не атворизован (нет channel_id) 
+// надо будеть еще добавить обработку запросов к бд на случай, если юзер не атворизован (нет channel_id)
 export const getVideos = async (req: Request, res: Response) => {
-    console.log('getVideos');
-    
-    try {
-        const tagId = req.query.tagId
-        let channelData;
-        if (req.cookies?.channelData) {
-            channelData = JSON.parse(req.cookies.channelData);
-        } else {
-            // Обработка ситуации, когда данных нет
-            console.log('cookie error - getVideos');
-        }
-        const channelId = channelData?.id || null;
+  console.log("getVideos");
 
-        const offset = 0 
-        const limit = 20
-
-
-        // Преобразуем query параметры в числа
-        // const page = parseInt(req.query.page as string) || 1;
-        // const limit = parseInt(req.query.limit as string) || 20;
-        
-        // const startIndex = (page - 1) * limit;
-        // const endIndex = page * limit;
-
-        const tag = await getTagById(tagId as string)
-        
-        let response
-
-        if(tag.name === 'fresh') {
-            response = await getOrderedVideoList("DESC");
-        } else if ( tag.name === 'newForMe' && channelId) {
-            response = await getVideosFollowedChannels(channelId)
-        } else if (tag.name === 'viewed' && channelId) {
-            response = await getViewedVideosByChannelId(channelId)
-        } else if(tag.name === 'all' || !tag) {
-            response = await getVideoList(offset, limit);
-        } else {
-            response = await getVideoListByTag(tag.id)
-        }
-
-        // const result = {
-        //     videos: videos.slice(startIndex, endIndex),
-        //     total: videos.length,  // используем длину из БД, а не из videosData
-        //     page: page,
-        //     totalPages: Math.ceil(videos.length / limit)
-        // };
-        
-
-        const result = {
-            videos: mapVideosToIVideo(response),
-            total: response.length,
-        };
-        
-        res.json(result);
-    } catch (error) {
-        console.error('Error getVideos:', error);
-        res.status(500).json({ error: 'Internal server error1' });
+  try {
+    const tagId = req.query.tagId;
+    let channelData;
+    if (req.cookies?.channelData) {
+      channelData = JSON.parse(req.cookies.channelData);
+    } else {
+      // Обработка ситуации, когда данных нет
+      console.log("cookie error - getVideos");
     }
+    const channelId = channelData?.id || null;
+
+    const offset = 0;
+    const limit = 20;
+
+    // Преобразуем query параметры в числа
+    // const page = parseInt(req.query.page as string) || 1;
+    // const limit = parseInt(req.query.limit as string) || 20;
+
+    // const startIndex = (page - 1) * limit;
+    // const endIndex = page * limit;
+
+    const tag = await getTagById(tagId as string);
+
+    let response;
+
+    if (tag.name === "fresh") {
+      response = await getOrderedVideoList("DESC");
+    } else if (tag.name === "newForMe" && channelId) {
+      response = await getVideosFollowedChannels(channelId);
+    } else if (tag.name === "viewed" && channelId) {
+      response = await getViewedVideosByChannelId(channelId);
+    } else if (tag.name === "all" || !tag) {
+      response = await getVideoList(offset, limit);
+    } else {
+      response = await getVideoListByTag(tag.id);
+    }
+
+    // const result = {
+    //     videos: videos.slice(startIndex, endIndex),
+    //     total: videos.length,  // используем длину из БД, а не из videosData
+    //     page: page,
+    //     totalPages: Math.ceil(videos.length / limit)
+    // };
+
+    const result = {
+      videos: mapVideosToIVideo(response),
+      total: response.length,
+    };
+
+    res.json(result);
+  } catch (error) {
+    console.error("Error getVideos:", error);
+    res.status(500).json({ error: "Internal server error1" });
+  }
 };
 
 export const getVideosMySubs = async (req: Request, res: Response) => {
-    try {
-        const { meId } = req.params
-        const { offset, limit, onlyShorts, onlyFull } = req.query
+  try {
+    const { meId } = req.params;
+    const { offset, limit, onlyShorts, onlyFull } = req.query;
 
-        let videos
+    let videos;
 
-        if (onlyShorts === onlyFull) {
-            videos = await getVideoListBySubs(meId as string, offset as string, limit as string)
-        } else {
-            videos = await getVideoListBySubsIsShorts(meId as string, onlyShorts === 'true' ? true : false, offset as string, limit as string)
-        }
-
-        const result = {
-            videos: mapVideosToIVideo(videos)
-        }
-
-        return res.status(200).json(result)
-    } catch (error) {
-        console.error('Error getVideosMySubs: ', error)
-        return res.status(500)
-    }    
-}
-
-
-export const getVideosByChannelUsername = async (req: Request, res: Response) => {
-    console.log('getVideosByChannelUsername');
-    try {
-        const { channelUsername } = req.params
-        const { limit, offset } = req.query
-
-        const response = await getVideoListByUsername(channelUsername as string, offset as string, limit as string)       
-            
-        const result = {
-            videos: response,
-            total: response.length
-        }
-
-        return res.status(200).json(result)
-    } catch (error) {
-        console.error('Error getVideosByChannelUsername:', error);
-        res.status(500).json({ error: 'Internal server error1' });
+    if (onlyShorts === onlyFull) {
+      videos = await getVideoListBySubs(
+        meId as string,
+        offset as string,
+        limit as string
+      );
+    } else {
+      videos = await getVideoListBySubsIsShorts(
+        meId as string,
+        onlyShorts === "true" ? true : false,
+        offset as string,
+        limit as string
+      );
     }
-}
 
+    const result = {
+      videos: mapVideosToIVideo(videos),
+    };
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Error getVideosMySubs: ", error);
+    return res.status(500);
+  }
+};
+
+export const getVideosByChannelUsername = async (
+  req: Request,
+  res: Response
+) => {
+  console.log("getVideosByChannelUsername");
+  try {
+    const { channelUsername } = req.params;
+    const { limit, offset } = req.query;
+
+    const response = await getVideoListByUsername(
+      channelUsername as string,
+      offset as string,
+      limit as string
+    );
+
+    const result = {
+      videos: response,
+      total: response.length,
+    };
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Error getVideosByChannelUsername:", error);
+    res.status(500).json({ error: "Internal server error1" });
+  }
+};
 
 // TO DO точно ли нужен этот эндпоинт ???? Выше по сути аналогичные есть
-export const getShortVideosByChannelUsername = async (req: Request, res: Response) => {
-    console.log('getShortVideosByChannelUsername');
-    try {
-        const { channelUsername } = req.params
-        const { limit, offset } = req.query
+export const getShortVideosByChannelUsername = async (
+  req: Request,
+  res: Response
+) => {
+  console.log("getShortVideosByChannelUsername");
+  try {
+    const { channelUsername } = req.params;
+    const { limit, offset } = req.query;
 
-        const response = await getShortVideoListByUsername(channelUsername as string, offset as string, limit as string)       
-            
-        const result = {
-            videos: response,
-            total: response.length
-        }
+    const response = await getShortVideoListByUsername(
+      channelUsername as string,
+      offset as string,
+      limit as string
+    );
 
-        return res.status(200).json(result)
-    } catch (error) {
-        console.error('Error getShortVideosByChannelUsername:', error);
-        res.status(500).json({ error: 'Internal server error1' });
-    }
-}
+    const result = {
+      videos: response,
+      total: response.length,
+    };
 
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Error getShortVideosByChannelUsername:", error);
+    res.status(500).json({ error: "Internal server error1" });
+  }
+};
 
 // TO DO рекомендации привязать в channelId и videoId
 export const getRecommendedVideos = async (req: Request, res: Response) => {
-    console.log('getRecommendedVideos');
-    try {
-        const videoHash = req.params.videoHash
-        const { offset, limit } = req.query
-        const { myChannelId } = req.body
+  console.log("getRecommendedVideos");
+  try {
+    const videoHash = req.params.videoHash;
+    const { offset, limit } = req.query;
+    const { myChannelId } = req.body;
 
-        const response = await getRecommendedVideosRepo(offset as string, limit as string)        
+    const response = await getRecommendedVideosRepo(
+      offset as string,
+      limit as string
+    );
 
-        const result = {
-            videos: response|| [],
-            total: response.length || 0,
-        };
+    const result = {
+      videos: mapVideosToIVideo(response) || [],
+      total: response.length || 0,
+    };
 
-        res.status(200).json(result);
-    } catch (error) {
-        console.error('Error getRecommendedVideos:', error);
-        res.status(500).json({ error: 'Internal server error1' });
-    }
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error getRecommendedVideos:", error);
+    res.status(500).json({ error: "Internal server error1" });
+  }
 };
 
 export const getVideoById = async (req: Request, res: Response) => {
-    console.log('getVideoById');
-    try {
-        const videoId = req.params.id;
-        const video = await getVideoByIdRepo(videoId as string)        
+  console.log("getVideoById");
+  try {
+    const videoId = req.params.id;
+    const video = await getVideoByIdRepo(videoId as string);
 
-        if (!video) {
-            return res.status(404).json({ error: 'Video not found' });
-        }
-        
-        res.json(video);
-    } catch (error) {
-        console.error('Error getVideoById:', error);
-        res.status(500).json({ error: 'Internal server error2' });
+    if (!video) {
+      return res.status(404).json({ error: "Video not found" });
     }
+
+    res.json(video);
+  } catch (error) {
+    console.error("Error getVideoById:", error);
+    res.status(500).json({ error: "Internal server error2" });
+  }
 };
 
 export const getVideoByHash = async (req: Request, res: Response) => {
-    console.log('getVideoByHash');
-    try {
-        const { channelId } = req.body;
-        const { hash: videoHash } = req.params;
+  console.log("getVideoByHash");
+  try {
+    const { channelId } = req.body;
+    const { hash: videoHash } = req.params;
 
-        const video = await getVideoByHashRepo(videoHash as string)
+    const video = await getVideoByHashRepo(videoHash as string);
 
-        if (!video) {
-            return res.status(404).json({ error: 'Video not found' });
-        }
-
-        const channel = await getChannelByVideoHash(videoHash as string)
-
-        let isSubscribed = {}
-        let stat = {}
-
-        if(channelId) {
-            isSubscribed = await getIsSubscribedChannel(channel.id, channelId)
-            stat = await getStatOfVideoForUser(video.id, channelId)
-        }
-        
-        res.status(200).json({video: mapToIVideo(video), channel: channel, isSubscribed: isSubscribed, stat: stat});
-    } catch (error) {
-        console.error('Error getVideoByHash:', error);
-        res.status(500).json({ error: 'Internal server error2' });
+    if (!video) {
+      return res.status(404).json({ error: "Video not found" });
     }
+
+    const channel = await getChannelByVideoHash(videoHash as string);
+
+    let isSubscribed = {};
+    let stat = {};
+
+    if (channelId) {
+      isSubscribed = await getIsSubscribedChannel(channel.id, channelId);
+      stat = await getStatOfVideoForUser(video.id, channelId);
+    }
+
+    res.status(200).json({
+      video: mapToIVideo(video),
+      channel: channel,
+      isSubscribed: isSubscribed,
+      stat: stat,
+    });
+  } catch (error) {
+    console.error("Error getVideoByHash:", error);
+    res.status(500).json({ error: "Internal server error2" });
+  }
 };
 
 export const getVideoListByName = async (req: Request, res: Response) => {
-    console.log('getVideoListByName');
-    try {
-        const videoName = req.params.name;
-        const video = await getVideoListByNameRepo(videoName as string)
+  console.log("getVideoListByName");
+  try {
+    const videoName = req.params.name;
+    const video = await getVideoListByNameRepo(videoName as string);
 
-        if (!video) {
-            return res.status(404).json({ error: 'Video not found' });
-        }
-        
-        res.json(video);
-    } catch (error) {
-        console.error('Error getVideoListByName:', error);
-        res.status(500).json({ error: 'Internal server error3' });
+    if (!video) {
+      return res.status(404).json({ error: "Video not found" });
     }
-};
 
+    res.json(video);
+  } catch (error) {
+    console.error("Error getVideoListByName:", error);
+    res.status(500).json({ error: "Internal server error3" });
+  }
+};
 
 export const updateMarkVideo = async (req: Request, res: Response) => {
-    console.log('updateMarkVideo');
-    try {
-        const { videoId } = req.params;
-        const { userId, isLiked, isDisliked } = req.body;
+  console.log("updateMarkVideo");
+  try {
+    const { videoId } = req.params;
+    const { userId, isLiked, isDisliked } = req.body;
 
-        // Проверяем, существует ли запись статистики
-        const oldStat = await getStatOfVideoForUser(videoId as string, userId)
+    // Проверяем, существует ли запись статистики
+    const oldStat = await getStatOfVideoForUser(videoId as string, userId);
 
-        let oldLiked = false;
-        let oldDisliked = false;
+    let oldLiked = false;
+    let oldDisliked = false;
 
-        if (oldStat) {
-            oldLiked = oldStat.liked;
-            oldDisliked = oldStat.disliked;
-            
-            // Обновляем существующую запись
-            await updateStatOfVideoForUser(videoId as string, userId, isDisliked, isLiked)
-        } else {
-            // Создаем новую запись
-            await createStatOfVideoForUser(videoId as string, userId, isDisliked, isLiked)
-        }
+    if (oldStat) {
+      oldLiked = oldStat.liked;
+      oldDisliked = oldStat.disliked;
 
-        // Обновляем счетчики видео
-        // Сначала обрабатываем лайки
-        if (oldLiked !== isLiked) {
-            if (isLiked) {
-                await updateVideoLikes(videoId as string, 'inc')
-            } else {
-                await updateVideoLikes(videoId as string, 'decr')
-            }
-        }
-
-        // Обрабатываем дизлайки
-        if (oldDisliked !== isDisliked) {
-            if (isDisliked) {
-                await updateVideoDislikes(videoId as string, 'inc')
-            } else {
-                await updateVideoDislikes(videoId as string, 'decr')
-            }
-        }
-
-        // Получаем обновленную статистику для ответа
-        const updatedStats = await getStatOfVideoForUser(videoId as string, userId)
-        const videoData = await getVideoByIdRepo(videoId as string)
-
-        res.status(200).json({ 
-            success: true, 
-            stats: updatedStats,
-            video: mapToIVideo(videoData) 
-        });
-        
-    } catch (error) {
-        console.error('Error updateMarkVideo:', error);
-        res.status(500).json({ error: 'Internal server error' });
+      // Обновляем существующую запись
+      await updateStatOfVideoForUser(
+        videoId as string,
+        userId,
+        isDisliked,
+        isLiked
+      );
+    } else {
+      // Создаем новую запись
+      await createStatOfVideoForUser(
+        videoId as string,
+        userId,
+        isDisliked,
+        isLiked
+      );
     }
+
+    // Обновляем счетчики видео
+    // Сначала обрабатываем лайки
+    if (oldLiked !== isLiked) {
+      if (isLiked) {
+        await updateVideoLikes(videoId as string, "inc");
+      } else {
+        await updateVideoLikes(videoId as string, "decr");
+      }
+    }
+
+    // Обрабатываем дизлайки
+    if (oldDisliked !== isDisliked) {
+      if (isDisliked) {
+        await updateVideoDislikes(videoId as string, "inc");
+      } else {
+        await updateVideoDislikes(videoId as string, "decr");
+      }
+    }
+
+    // Получаем обновленную статистику для ответа
+    const updatedStats = await getStatOfVideoForUser(videoId as string, userId);
+    const videoData = await getVideoByIdRepo(videoId as string);
+
+    res.status(200).json({
+      success: true,
+      stats: updatedStats,
+      video: mapToIVideo(videoData),
+    });
+  } catch (error) {
+    console.error("Error updateMarkVideo:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 };
 
-
 export const updateVideoViewCount = async (req: Request, res: Response) => {
-    console.log('updateVideoViewCount updateVideoViewCount updateVideoViewCount updateVideoViewCount updateVideoViewCount updateVideoViewCount');
-    try {
-        const videoId = req.params.videoId;
-        const { userId } = req.query;
-        
-        const video = await getVideoByIdRepo(videoId as string)
+  console.log(
+    "updateVideoViewCount updateVideoViewCount updateVideoViewCount updateVideoViewCount updateVideoViewCount updateVideoViewCount"
+  );
+  try {
+    const videoId = req.params.videoId;
+    const { userId } = req.query;
 
-        if (!video) {
-            return res.status(404).json({ error: 'Video not found' });
-        }
-    
-        await updateVideoViews(videoId as string);      
+    const video = await getVideoByIdRepo(videoId as string);
 
-        if(userId) {
-            const statRes = await getStatOfVideoForUser(videoId as string, userId as string);      
-            
-            if(('id' in statRes)) {
-                console.log('ОБНОВЛЯЕМ');
-                
-                await updateStatOfVideoViewsCount(videoId as string, userId as string)      
-            } else {
-                console.log('СОЗДАЕМ');
-
-                // await pool.query('INSERT INTO stat_of_videos (channel_id, video_id, views_count) VALUES ($1, $2, 1)', [userId, videoId]);  
-                await createStatOfVideoForUser(videoId as string, userId as string, false, false, true)    
-            }
-        }
-
-        res.status(203).json('Updated succesfully')
-    } catch (error) {
-        console.error('Error updateVideoViewCount:', error);
-        res.status(500).json({ error: 'Internal server error2' });
+    if (!video) {
+      return res.status(404).json({ error: "Video not found" });
     }
+
+    await updateVideoViews(videoId as string);
+
+    if (userId) {
+      const statRes = await getStatOfVideoForUser(
+        videoId as string,
+        userId as string
+      );
+
+      if ("id" in statRes) {
+        console.log("ОБНОВЛЯЕМ");
+
+        await updateStatOfVideoViewsCount(videoId as string, userId as string);
+      } else {
+        console.log("СОЗДАЕМ");
+
+        // await pool.query('INSERT INTO stat_of_videos (channel_id, video_id, views_count) VALUES ($1, $2, 1)', [userId, videoId]);
+        await createStatOfVideoForUser(
+          videoId as string,
+          userId as string,
+          false,
+          false,
+          true
+        );
+      }
+    }
+
+    res.status(203).json("Updated succesfully");
+  } catch (error) {
+    console.error("Error updateVideoViewCount:", error);
+    res.status(500).json({ error: "Internal server error2" });
+  }
 };
 
 // controllers/video-controller.js
@@ -372,10 +421,8 @@ export const updateVideoViewCount = async (req: Request, res: Response) => {
 //   // const channel_avatarUrl = req.body.channel_avatarUrl;
 //   const fragments = JSON.parse(req.body.fragments || "[]");
 
-
 //   const videoUrl = `/videos/${videoId}/video/${req.files.video[0].filename}`;
 //   const thumbnailUrl = `/videos/${videoId}/thumbnail/${req.files.thumbnail[0].filename}`;
-
 
 //   const publicDir = path.join(process.cwd(), "public");
 //   const videoIdDir = path.join(publicDir, "videos", videoId); // /public/videos/:videoId
@@ -393,7 +440,6 @@ export const updateVideoViewCount = async (req: Request, res: Response) => {
 
 //   const srtFilePath = await createSrtSubtitleFile(videoIdDir, absoluteVideoPath, req.files.video[0].filename) // создаем srt файл
 //   console.log('srtFilePath ============ ', srtFilePath);
-
 
 //   const playlistDir = path.join(videoIdDir, "playlist");
 //   if (!fs.existsSync(playlistDir)) {
@@ -413,7 +459,6 @@ export const updateVideoViewCount = async (req: Request, res: Response) => {
 //   const previewPath = path.join(previewDir, "preview.mp4");
 //   const previewUrl = `/videos/${videoId}/preview/preview.mp4`;
 
-
 //     const hls480Dir = path.join(playlistDir, "480");
 //   const hls720Dir = path.join(playlistDir, "720");
 //   const hls1080Dir = path.join(playlistDir, "1080");
@@ -421,10 +466,6 @@ export const updateVideoViewCount = async (req: Request, res: Response) => {
 //   if (!fs.existsSync(hls480Dir)) fs.mkdirSync(hls480Dir, { recursive: true });
 //   if (!fs.existsSync(hls720Dir)) fs.mkdirSync(hls720Dir, { recursive: true });
 //   if (!fs.existsSync(hls1080Dir)) fs.mkdirSync(hls1080Dir, { recursive: true });
-
-
-
-
 
 // const cmd = `D:\\ffmpeg\\ffmpeg-2026-01-29-git-c898ddb8fe-full_build\\bin\\ffmpeg.exe -i "${absoluteVideoPath}" \
 //   -map 0:v -map 0:a -c:a aac -b:a 128k -c:v libx264 -crf 23 -preset medium -vf "scale=-2:480" -hls_time 4 -hls_playlist_type vod -hls_segment_filename "${playlistDir}/480/output_480_%04d.ts" -f hls "${playlistDir}/480/output_480.m3u8" \
@@ -442,15 +483,11 @@ export const updateVideoViewCount = async (req: Request, res: Response) => {
 //   console.log("HLS 480/720/1080 и master.m3u8 успешно созданы в:", playlistDir);
 // });
 
-
-
 //     const subtitles = await convertSrtToVTTAndCreateM3U8(srtFilePath, playlistDir) // создаем vtt файл и m3u8 файл субтитров
 //     console.log('subtitles +++++++ ', subtitles);
-    
 
 //   // 2. Создаём короткий 10‑секундный mp4‑превью из 5 рандомных кусков по 2 секунды
 //    console.log(previewUrl);
-   
 
 //   // Получаем длительность исходного видео (в секундах)
 //   ffmpeg.ffprobe(absoluteVideoPath, (err, metadata) => {
@@ -508,10 +545,9 @@ export const updateVideoViewCount = async (req: Request, res: Response) => {
 //       .run();
 //   });
 
-
 //   await createMasterM3U8File(playlistDir)
 //   console.log('duration =- ', duration);
-  
+
 //   try {
 //     // 1. Добавляем видео и получаем его id
 //     const videoRes = await pool.query(
@@ -543,7 +579,6 @@ export const updateVideoViewCount = async (req: Request, res: Response) => {
 
 //     const insertedVideoId = videoRes.rows[0].id;
 //     console.log('insertedVideoId = ', insertedVideoId);
-    
 
 //   if (fragments.length > 0) {
 //     const fragmentValues = fragments
@@ -562,9 +597,7 @@ export const updateVideoViewCount = async (req: Request, res: Response) => {
 //       f.title,
 //     ]);
 
-
 //     console.log('fragmentParams ==============', fragmentParams);
-    
 
 //     try {
 // await pool.query(
@@ -603,11 +636,11 @@ export const updateVideoViewCount = async (req: Request, res: Response) => {
 // export const searchVideos = (req, res) => {
 //     try {
 //         const query = req.params.query.toLowerCase();
-//         const results = videosData.filter(video => 
+//         const results = videosData.filter(video =>
 //             video.title.toLowerCase().includes(query) ||
 //             video.channel.name.toLowerCase().includes(query)
 //         );
-        
+
 //         res.json({
 //             query,
 //             results,
@@ -624,7 +657,7 @@ export const updateVideoViewCount = async (req: Request, res: Response) => {
 //         const popularVideos = [...videosData]
 //             .sort((a, b) => b.views - a.views)
 //             .slice(0, 20);
-        
+
 //         res.json({
 //             title: 'Popular Videos',
 //             videos: popularVideos
