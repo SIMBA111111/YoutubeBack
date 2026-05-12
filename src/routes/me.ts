@@ -12,4 +12,4 @@ export const router = express.Router();
 router.get('/me/:meId', getMeInfo);
 router.get('/me/my-liked-videos/:meId', getMyLikedVideoList);
 router.get('/me/my-liked-playlists/:meId', getMyLikedPlaylists);
-router.get('/me/my-view-history/:meId', getMyViewsHistory);
+router.post('/me/my-view-history', getMyViewsHistory);

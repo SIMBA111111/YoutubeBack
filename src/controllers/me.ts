@@ -8,6 +8,7 @@ import {
   getLikedVideos,
 } from "../repositories/channel";
 import { getLikedplaylists } from "../repositories/playlist";
+import { getViewedVideosByChannelId } from "../repositories/video";
 
 export const getMeInfo = async (req: Request, res: Response) => {
   console.log("getMeInfo");
@@ -78,13 +79,13 @@ export const getMyLikedPlaylists = async (req: Request, res: Response) => {
 export const getMyViewsHistory = async (req: Request, res: Response) => {
   console.log("getMyViewsHistory");
   try {
-    const { meId } = req.params;
     const { offset, limit } = req.query;
+    const { userId, filter } = req.body;
 
-    const response = await getChannelHistory(
-      meId as string,
-      offset as string,
-      limit as string
+    const response = await getViewedVideosByChannelId(
+      userId as string,
+      parseInt(offset as string),
+      parseInt(limit as string)
     );
 
     const result = {

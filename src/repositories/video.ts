@@ -241,17 +241,27 @@ export const getVideosFollowedChannels = async (channelId: string) => {
   }
 };
 
-export const getViewedVideosByChannelId = async (channelId: string) => {
+export const getViewedVideosByChannelId = async (channelId: string, offset: number, limit: number) => {
+  console.log('getViewedVideosByChannelId');
+  console.log('offset = ', offset);
+  console.log('limit = ', limit);
+  
+  
   try {
     const res = await pool.query(
       `
-            SELECT v.* 
+            SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl, sov.updated_date as dateViewed
             FROM videos v
             JOIN stat_of_videos sov ON v.id = sov.video_id
+            JOIN channels ch ON ch.id = v.channel_id
             WHERE sov.views_count > 0 AND sov.channel_id = $1
+            OFFSET $2 LIMIT $3
         `,
-      [channelId]
+      [channelId, offset, limit]
     );
+
+    console.log('res.rows = ', res.rows);
+    
 
     if (res.rows) return res.rows;
 

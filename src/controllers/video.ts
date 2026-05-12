@@ -89,7 +89,7 @@ export const getVideos = async (req: Request, res: Response) => {
     } else if (tag.name === "newForMe" && channelId) {
       response = await getVideosFollowedChannels(channelId);
     } else if (tag.name === "viewed" && channelId) {
-      response = await getViewedVideosByChannelId(channelId);
+      response = await getViewedVideosByChannelId(channelId, offset, limit);
     } else if (tag.name === "all" || !tag) {
       response = await getVideoList(offset, limit);
     } else {
