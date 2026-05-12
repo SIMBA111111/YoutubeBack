@@ -144,12 +144,40 @@ export const getShortVideoListByUsername = async (
     throw new Error(`Error getShortVideoListByUsername repository: ${error}`);
   }
 };
-
-export const getVideoListByTag = async (tagId: string) => {
+export const getVideoListByTag = async (tagId: string, offset: number = 0, limit: number = 20, channelId: string | null = null) => {
+  console.log('getVideoListByTag');
+  
+  
   try {
-    const res = await pool.query("SELECT * FROM videos WHERE $1 = ANY (tags)", [
-      tagId,
-    ]);
+
+    const tag = await getTagById(tagId)
+
+    console.log('tag', tag );
+    
+
+    let query = `
+      SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl
+      FROM videos v
+      JOIN channels ch ON ch.id = v.channel_id
+      WHERE $1 = ANY (v.tags)
+    `;
+
+    const params: any[] = [tag.name, offset, limit];
+    let paramIndex = 4; // Следующий индекс параметра
+
+    if (channelId) {
+      query += ` AND v.channel_id = $${paramIndex}`;
+      params.push(channelId);
+      paramIndex++;
+    }
+
+    query += ` OFFSET $${paramIndex - 2} LIMIT $${paramIndex - 1}`;
+
+    console.log('Generated query:', query);
+    console.log('Parameters:', params);
+
+    const res = await pool.query(query, params);
+    
     if (res.rows) return res.rows;
 
     return [];
@@ -187,6 +215,8 @@ export const getVideoByHashRepo = async (videoHash: string) => {
 };
 
 export const getVideoByIdRepo = async (videoId: string) => {
+  console.log('getVideoByIdRepo ', videoId);
+  
   try {
     const res = await pool.query("select * from videos where id=$1", [videoId]);
 
@@ -198,18 +228,26 @@ export const getVideoByIdRepo = async (videoId: string) => {
   }
 };
 
-export const getOrderedVideoList = async (order: "DESC" | "ASC") => {
+export const getOrderedVideoList = async (order: "DESC" | "ASC", offset: number, limit: number) => {
   try {
     let res;
 
     if (order === "DESC") {
-      res = await pool.query(
-        "SELECT * FROM videos ORDER BY date_publication DESC"
-      );
+      res = await pool.query(`
+        SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl
+        FROM videos v
+        LEFT JOIN channels ch ON ch.id = v.channel_id
+        ORDER BY date_publication DESC
+        OFFSET $1 LIMIT $2
+      `, [offset, limit]);
     } else {
-      res = await pool.query(
-        "SELECT * FROM videos ORDER BY date_publication ASC"
-      );
+      res = await pool.query(`
+        SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl
+        FROM videos v
+        LEFT JOIN channels ch ON ch.id = v.channel_id
+        ORDER BY date_publication ASC
+        OFFSET $1 LIMIT $2
+      `, [offset, limit]);
     }
 
     if (res.rows) return res.rows;
@@ -220,17 +258,19 @@ export const getOrderedVideoList = async (order: "DESC" | "ASC") => {
   }
 };
 
-export const getVideosFollowedChannels = async (channelId: string) => {
+export const getVideosFollowedChannels = async (channelId: string, offset: number, limit: number) => {
   try {
     const res = await pool.query(
       `
-            SELECT v.* 
+            SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl
             FROM videos v
             JOIN subscriptions s ON v.channel_id = s.channel_id
+            JOIN channels ch ON ch.id = v.channel_id
             WHERE s.follower_channel_id = $1
-            ORDER BY v.date_publication DESC 
+            ORDER BY v.date_publication DESC
+            OFFSET $2 LIMIT $3
         `,
-      [channelId]
+      [channelId, offset, limit]
     );
 
     if (res.rows) return res.rows;
@@ -243,9 +283,9 @@ export const getVideosFollowedChannels = async (channelId: string) => {
 
 export const getViewedVideosByChannelId = async (channelId: string, offset: number, limit: number) => {
   console.log('getViewedVideosByChannelId');
-  console.log('offset = ', offset);
-  console.log('limit = ', limit);
-  
+  console.log('channelId = ', channelId);
+  console.log('getViewedVideosByChannelId', offset);
+  console.log('getViewedVideosByChannelId', limit);
   
   try {
     const res = await pool.query(
@@ -255,13 +295,11 @@ export const getViewedVideosByChannelId = async (channelId: string, offset: numb
             JOIN stat_of_videos sov ON v.id = sov.video_id
             JOIN channels ch ON ch.id = v.channel_id
             WHERE sov.views_count > 0 AND sov.channel_id = $1
+            ORDER BY sov.updated_date DESC
             OFFSET $2 LIMIT $3
         `,
       [channelId, offset, limit]
     );
-
-    console.log('res.rows = ', res.rows);
-    
 
     if (res.rows) return res.rows;
 
@@ -270,6 +308,36 @@ export const getViewedVideosByChannelId = async (channelId: string, offset: numb
     throw new Error(`Error getViewedVideosByChannelId repository: ${error}`);
   }
 };
+
+export const getViewedShortVideosByChannelId = async (channelId: string, isShort: boolean, offset: number, limit: number) => {
+  console.log('getViewedVideosByChannelId');
+  console.log('channelId = ', channelId);
+  console.log('offset', offset);
+  console.log('limit', limit);
+  console.log('isShort', isShort);
+  
+  try {
+    const res = await pool.query(
+      `
+            SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl, sov.updated_date as dateViewed
+            FROM videos v
+            JOIN stat_of_videos sov ON v.id = sov.video_id
+            JOIN channels ch ON ch.id = v.channel_id
+            WHERE sov.views_count > 0 AND sov.channel_id = $1 AND v.is_short=$2
+            ORDER BY sov.updated_date DESC
+            OFFSET $3 LIMIT $4
+        `,
+      [channelId, isShort, offset, limit]
+    );
+
+    if (res.rows) return res.rows;
+
+    return [];
+  } catch (error) {
+    throw new Error(`Error getViewedVideosByChannelId repository: ${error}`);
+  }
+};
+
 
 export const getRecommendedVideosRepo = async (
   offset: string,

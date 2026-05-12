@@ -8,7 +8,7 @@ import {
   getLikedVideos,
 } from "../repositories/channel";
 import { getLikedplaylists } from "../repositories/playlist";
-import { getViewedVideosByChannelId } from "../repositories/video";
+import { getVideoListByTag, getViewedShortVideosByChannelId, getViewedVideosByChannelId } from "../repositories/video";
 
 export const getMeInfo = async (req: Request, res: Response) => {
   console.log("getMeInfo");
@@ -79,14 +79,49 @@ export const getMyLikedPlaylists = async (req: Request, res: Response) => {
 export const getMyViewsHistory = async (req: Request, res: Response) => {
   console.log("getMyViewsHistory");
   try {
+    const { meId } = req.params;
     const { offset, limit } = req.query;
-    const { userId, filter } = req.body;
+    const filter = req.body?.filter || null;
 
-    const response = await getViewedVideosByChannelId(
-      userId as string,
-      parseInt(offset as string),
-      parseInt(limit as string)
-    );
+
+    console.log('meId = ', meId);
+    console.log('offset = ', offset);
+    console.log('limit = ', limit);
+    console.log('filter = ', filter);
+    
+    let response
+
+    if (filter?.isShort) {
+      response = await getViewedShortVideosByChannelId(
+        meId as string,
+        true,
+        parseInt(offset as string),
+        parseInt(limit as string)
+      );
+    } else if(filter?.isShort === false) {
+      response = await getViewedShortVideosByChannelId(
+        meId as string,
+        false,
+        parseInt(offset as string),
+        parseInt(limit as string)
+      );
+    } else if (filter?.tags) {
+      response = await getVideoListByTag(
+        filter.tags,
+        parseInt(offset as string),
+        parseInt(limit as string),
+        meId as string,
+      );
+    } else {
+      response = await getViewedVideosByChannelId(
+        meId as string,
+        parseInt(offset as string),
+        parseInt(limit as string)
+      );
+    }
+
+    console.log('response = ', response);
+    
 
     const result = {
       viewsHistory: mapVideosToIVideo(response),

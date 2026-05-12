@@ -85,9 +85,9 @@ export const getVideos = async (req: Request, res: Response) => {
     let response;
 
     if (tag.name === "fresh") {
-      response = await getOrderedVideoList("DESC");
+      response = await getOrderedVideoList("DESC", offset, limit);
     } else if (tag.name === "newForMe" && channelId) {
-      response = await getVideosFollowedChannels(channelId);
+      response = await getVideosFollowedChannels(channelId, offset, limit);
     } else if (tag.name === "viewed" && channelId) {
       response = await getViewedVideosByChannelId(channelId, offset, limit);
     } else if (tag.name === "all" || !tag) {
