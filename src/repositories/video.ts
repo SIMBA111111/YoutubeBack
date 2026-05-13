@@ -22,6 +22,17 @@ export const getTagById = async (tagId: string) => {
   }
 };
 
+export const getTagByName = async (tagName: string) => {
+  try {
+    const res = await pool.query("SELECT * FROM tags WHERE name=$1", [tagName]);
+    if (res.rows[0]) return res.rows[0];
+
+    return {};
+  } catch (error) {
+    throw new Error(`Error getTagByName repository: ${error}`);
+  }
+};
+
 export const getVideoList = async (offset: number = 0, limit: number = 20) => {
   try {
     const res = await pool.query(
@@ -144,13 +155,36 @@ export const getShortVideoListByUsername = async (
     throw new Error(`Error getShortVideoListByUsername repository: ${error}`);
   }
 };
-export const getVideoListByTag = async (tagId: string, offset: number = 0, limit: number = 20, channelId: string | null = null) => {
-  console.log('getVideoListByTag');
-  
+
+
+
+
+
+
+export const getVideoListByTag = async (tagId: string) => {
+  try {
+    const res = await pool.query("SELECT * FROM videos WHERE $1 = ANY (tags)", [
+      tagId,
+    ]);
+    if (res.rows) return res.rows;
+
+    return [];
+  } catch (error) {
+    throw new Error(`Error getVideoListByTag repository: ${error}`);
+  }
+};
+
+
+
+
+
+
+export const getViewedVideoListByTag = async (tagId: string, offset: number = 0, limit: number = 20, channelId: string | null = null) => {
+  console.log('getViewedVideoListByTag');
   
   try {
 
-    const tag = await getTagById(tagId)
+    const tag = await getTagByName(tagId)
 
     console.log('tag', tag );
     
@@ -159,19 +193,15 @@ export const getVideoListByTag = async (tagId: string, offset: number = 0, limit
       SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl
       FROM videos v
       JOIN channels ch ON ch.id = v.channel_id
-      WHERE $1 = ANY (v.tags)
+      JOIN stat_of_videos sov ON sov.video_id = v.id
+      WHERE $1 = ANY (v.tags) AND sov.channel_id = $2
     `;
 
-    const params: any[] = [tag.name, offset, limit];
-    let paramIndex = 4; // Следующий индекс параметра
+    const params: any[] = [tag.id, channelId, offset, limit];
 
-    if (channelId) {
-      query += ` AND v.channel_id = $${paramIndex}`;
-      params.push(channelId);
-      paramIndex++;
-    }
 
-    query += ` OFFSET $${paramIndex - 2} LIMIT $${paramIndex - 1}`;
+    query += `ORDER BY sov.updated_date DESC`;
+    query += `OFFSET $3 LIMIT $4`;
 
     console.log('Generated query:', query);
     console.log('Parameters:', params);
@@ -185,6 +215,9 @@ export const getVideoListByTag = async (tagId: string, offset: number = 0, limit
     throw new Error(`Error getVideoListByTag repository: ${error}`);
   }
 };
+
+
+
 
 export const getVideoListByNameRepo = async (videoName: string) => {
   try {
@@ -283,9 +316,6 @@ export const getVideosFollowedChannels = async (channelId: string, offset: numbe
 
 export const getViewedVideosByChannelId = async (channelId: string, offset: number, limit: number) => {
   console.log('getViewedVideosByChannelId');
-  console.log('channelId = ', channelId);
-  console.log('getViewedVideosByChannelId', offset);
-  console.log('getViewedVideosByChannelId', limit);
   
   try {
     const res = await pool.query(
@@ -300,6 +330,8 @@ export const getViewedVideosByChannelId = async (channelId: string, offset: numb
         `,
       [channelId, offset, limit]
     );
+
+
 
     if (res.rows) return res.rows;
 

@@ -8,14 +8,12 @@ import {
   getLikedVideos,
 } from "../repositories/channel";
 import { getLikedplaylists } from "../repositories/playlist";
-import { getVideoListByTag, getViewedShortVideosByChannelId, getViewedVideosByChannelId } from "../repositories/video";
+import { getVideoList, getVideoListByTag, getViewedShortVideosByChannelId, getViewedVideoListByTag, getViewedVideosByChannelId } from "../repositories/video";
 
 export const getMeInfo = async (req: Request, res: Response) => {
   console.log("getMeInfo");
   try {
     const { meId } = req.params;
-
-    console.log("meId === ", meId);
 
     const response = await getChannelById(meId as string);
 
@@ -35,12 +33,24 @@ export const getMyLikedVideoList = async (req: Request, res: Response) => {
   try {
     const { meId } = req.params;
     const { offset, limit } = req.query;
+    const filter = req.body?.filter || null;
+
+    console.log('req.body? = ', req.body);
+    
+
+    const isShort = filter?.isShort === true ? true : filter?.isShort === false ? false : null
 
     const response = await getLikedVideos(
       meId as string,
-      offset as string,
-      limit as string
+      isShort,
+      // offset ? Number(offset) : 0,
+      0,
+      // limit ? Number(limit) : 20
+      20
     );
+
+    // console.log('getMyLikedVideoList response = ', response);
+    
 
     const result = {
       likedVideos: mapVideosToIVideo(response),
@@ -82,12 +92,6 @@ export const getMyViewsHistory = async (req: Request, res: Response) => {
     const { meId } = req.params;
     const { offset, limit } = req.query;
     const filter = req.body?.filter || null;
-
-
-    console.log('meId = ', meId);
-    console.log('offset = ', offset);
-    console.log('limit = ', limit);
-    console.log('filter = ', filter);
     
     let response
 
@@ -105,8 +109,16 @@ export const getMyViewsHistory = async (req: Request, res: Response) => {
         parseInt(offset as string),
         parseInt(limit as string)
       );
-    } else if (filter?.tags) {
-      response = await getVideoListByTag(
+    } else if (filter?.tags === 'all') {
+      console.log('all');
+       
+      response = await getViewedVideosByChannelId(
+        meId as string,
+        parseInt(offset as string),
+        parseInt(limit as string)
+      );
+    } else if (filter?.tags) {      
+      response = await getViewedVideoListByTag(
         filter.tags,
         parseInt(offset as string),
         parseInt(limit as string),
@@ -119,9 +131,6 @@ export const getMyViewsHistory = async (req: Request, res: Response) => {
         parseInt(limit as string)
       );
     }
-
-    console.log('response = ', response);
-    
 
     const result = {
       viewsHistory: mapVideosToIVideo(response),

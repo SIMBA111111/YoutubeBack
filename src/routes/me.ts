@@ -10,6 +10,6 @@ import {
 export const router = express.Router();
 
 router.get('/me/:meId', getMeInfo);
-router.get('/me/my-liked-videos/:meId', getMyLikedVideoList);
+router.post('/me/my-liked-videos/:meId', getMyLikedVideoList);
 router.get('/me/my-liked-playlists/:meId', getMyLikedPlaylists);
 router.post('/me/my-view-history/:meId', getMyViewsHistory);

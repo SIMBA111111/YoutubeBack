@@ -117,21 +117,34 @@ export const updateSubsCountChannel = async (
 
 export const getLikedVideos = async (
   meId: string,
-  offset: string,
-  limit: string
+  isShort: boolean | null,
+  offset: number = 0,
+  limit: number = 20
 ) => {
   try {
-    const res = await pool.query(
-      `
-            SELECT v.*, ch.id as channelId, ch.username as channelUsername, ch.avatar_url as channelAvatarUrl
-            FROM videos v
-            JOIN stat_of_videos sov ON sov.video_id = v.id 
-            JOIN channels ch ON ch.id = v.channel_id
-            WHERE sov.channel_id = $1 AND sov.liked = true
-            OFFSET $2 LIMIT $3
-        `,
-      [meId, offset, limit]
-    );
+    let query = `
+      SELECT v.*, ch.id as channelId, ch.username as channelUsername, ch.avatar_url as channelAvatarUrl
+      FROM videos v
+      JOIN stat_of_videos sov ON sov.video_id = v.id 
+      JOIN channels ch ON ch.id = v.channel_id
+      WHERE sov.channel_id = $1 AND sov.liked = true
+    `
+
+    if (isShort === true) {
+      query += `AND v.is_short = true`
+    } else if (isShort === false) {
+      query += `AND v.is_short = false`
+    }
+
+    query += ` OFFSET $2 LIMIT $3`
+
+    console.log('isShort = ', isShort);
+    console.log('offset = ', offset);
+    console.log('limit = ', limit);
+    console.log('query = ', query);
+    
+
+    const res = await pool.query(query, [meId, offset, limit])
 
     if (res.rows.length > 0) return res.rows;
 

@@ -14,6 +14,7 @@ import {
   getRecommendedVideosRepo,
   getShortVideoListByUsername,
   getTagById,
+  getTagByName,
   getTagList,
   getVideoByHashRepo,
   getVideoByIdRepo,
@@ -80,7 +81,7 @@ export const getVideos = async (req: Request, res: Response) => {
     // const startIndex = (page - 1) * limit;
     // const endIndex = page * limit;
 
-    const tag = await getTagById(tagId as string);
+    const tag = await getTagByName(tagId as string);
 
     let response;
 
