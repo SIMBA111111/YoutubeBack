@@ -37,7 +37,7 @@ export const getVideoList = async (offset: number = 0, limit: number = 20) => {
   try {
     const res = await pool.query(
       `
-            SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl
+            SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl, ch.name as channelname
             FROM videos v
             JOIN channels ch ON ch.id = v.channel_id 
             OFFSET $1 LIMIT $2   
@@ -190,7 +190,7 @@ export const getViewedVideoListByTag = async (tagId: string, offset: number = 0,
     
 
     let query = `
-      SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl
+      SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl, ch.name as channelname
       FROM videos v
       JOIN channels ch ON ch.id = v.channel_id
       JOIN stat_of_videos sov ON sov.video_id = v.id
@@ -267,7 +267,7 @@ export const getOrderedVideoList = async (order: "DESC" | "ASC", offset: number,
 
     if (order === "DESC") {
       res = await pool.query(`
-        SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl
+        SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl, ch.name as channelname
         FROM videos v
         LEFT JOIN channels ch ON ch.id = v.channel_id
         ORDER BY date_publication DESC
@@ -295,7 +295,7 @@ export const getVideosFollowedChannels = async (channelId: string, offset: numbe
   try {
     const res = await pool.query(
       `
-            SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl
+            SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl, ch.name as channelname
             FROM videos v
             JOIN subscriptions s ON v.channel_id = s.channel_id
             JOIN channels ch ON ch.id = v.channel_id
@@ -320,7 +320,7 @@ export const getViewedVideosByChannelId = async (channelId: string, offset: numb
   try {
     const res = await pool.query(
       `
-            SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl, sov.updated_date as dateViewed
+            SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl, ch.name as channelname, sov.updated_date as dateViewed
             FROM videos v
             JOIN stat_of_videos sov ON v.id = sov.video_id
             JOIN channels ch ON ch.id = v.channel_id
@@ -351,7 +351,7 @@ export const getViewedShortVideosByChannelId = async (channelId: string, isShort
   try {
     const res = await pool.query(
       `
-            SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl, sov.updated_date as dateViewed
+            SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl, ch.name as channelname, sov.updated_date as dateViewed
             FROM videos v
             JOIN stat_of_videos sov ON v.id = sov.video_id
             JOIN channels ch ON ch.id = v.channel_id

@@ -132,6 +132,9 @@ export const getMyViewsHistory = async (req: Request, res: Response) => {
       );
     }
 
+    console.log(response);
+    
+
     const result = {
       viewsHistory: mapVideosToIVideo(response),
     };

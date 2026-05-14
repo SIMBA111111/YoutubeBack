@@ -14,7 +14,7 @@ import {
 
 export const getMyChannels = async (req: Request, res: Response) => {
   try {
-    const { meId } = req.params;
+    const { userId: meId } = req.params;
     const { offset, limit } = req.query;
 
     let userId = meId || JSON.parse(req.cookies.channelData).id;

@@ -3,7 +3,7 @@ import { getMyChannels, getChannelInfo, updateSubscribeChannel, updateNotifSetti
 
 export const router = express.Router();
 
-router.get('/my-channels', getMyChannels);
+router.get('/my-channels/:userId', getMyChannels);
 router.post('/channel-info/:channelUsername', getChannelInfo);
 // router.get('/check-is-sub/:userId/:channelId', getChannelInfo);
 

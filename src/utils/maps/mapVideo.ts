@@ -17,6 +17,7 @@ interface IVideo {
     channel: {
         id: string
         username: string
+        name?: string
         avatarUrl: string
     }
     datePublication?: string
@@ -44,6 +45,7 @@ export const mapToIVideo = (video: any): IVideo => {
         dateviewed: video.dateviewed || '',
         channel: {
             id: video.channelid || '',
+            name: video?.channelname || '',
             username: video?.channelusername ||  '',
             avatarUrl: video?.channelavatarurl || ''
         },

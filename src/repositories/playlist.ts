@@ -3,9 +3,10 @@ import { pool } from "../utils/pg"
 export const getLikedplaylists = async (meId: string, offset: string, limit: string) => {
     try {
         const res = await pool.query(`
-            SELECT pl.* 
+            SELECT pl.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl
             FROM playlists pl
             JOIN stat_of_playlists sop ON sop.playlist_id = pl.id
+            JOIN channels ch ON ch.id = pl.channel_id
             WHERE sop.channel_id = $1 AND sop.liked = true
             OFFSET $2 LIMIT $3
         `, [meId, offset, limit])
