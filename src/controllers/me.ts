@@ -6,9 +6,11 @@ import {
   getChannelById,
   getChannelHistory,
   getLikedVideos,
+  updateSaveHistoryByChannel,
 } from "../repositories/channel";
 import { getLikedplaylists } from "../repositories/playlist";
 import { getVideoList, getVideoListByTag, getViewedShortVideosByChannelId, getViewedVideoListByTag, getViewedVideosByChannelId } from "../repositories/video";
+import { deletHistoryByChannel } from "../repositories/stats";
 
 export const getMeInfo = async (req: Request, res: Response) => {
   console.log("getMeInfo");
@@ -63,6 +65,7 @@ export const getMyLikedVideoList = async (req: Request, res: Response) => {
   }
 };
 
+
 export const getMyLikedPlaylists = async (req: Request, res: Response) => {
   console.log("getMyLikedPlaylists");
   try {
@@ -85,6 +88,7 @@ export const getMyLikedPlaylists = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
 
 export const getMyViewsHistory = async (req: Request, res: Response) => {
   console.log("getMyViewsHistory");
@@ -142,6 +146,50 @@ export const getMyViewsHistory = async (req: Request, res: Response) => {
     res.status(200).json(result);
   } catch (error) {
     console.error("Error getMyViewsHistory:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+export const deleteMyViewsHistory = async (req: Request, res: Response) => {
+  console.log("deleteMyViewsHistory");
+  try {
+    const { meId } = req.params;
+
+    const response = await deletHistoryByChannel(
+      meId as string,
+    );
+
+    const result = {
+      success: response
+    }
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error deleteMyViewsHistory:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+export const updateSaveHistory = async (req: Request, res: Response) => {
+  console.log("updateSaveHistory");
+  try {
+    const { meId } = req.params;
+    const { isSaveHistory } = req.body;
+
+    const response = await updateSaveHistoryByChannel(
+      meId as string,
+      isSaveHistory
+    );
+
+    const result = {
+      updatedChannel: response,
+    };
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error updateSaveHistory:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };

@@ -69,3 +69,14 @@ export const updateStatOfVideoViewsCount = async (videoId: string, userId: strin
         throw new Error(`Error updateStatOfVideoViewsCount repository: ${error}`)
     }
 }
+
+
+export const deletHistoryByChannel = async (userId: string) => {
+    try {
+        const res = await pool.query('UPDATE stat_of_videos SET views_count=0 WHERE channel_id = $1', [userId]);      
+        
+        return true
+    } catch (error) {
+        throw new Error(`Error deletHistoryByChannel repository: ${error}`)
+    }
+}

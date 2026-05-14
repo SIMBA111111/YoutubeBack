@@ -203,3 +203,17 @@ export const getIsSubOnChannelInfo = async (
     throw new Error(`Error getIsSubOnChannelInfo repository: ${error}`);
   }
 };
+
+
+export const updateSaveHistoryByChannel = async (userId: string, isSaveHistory: boolean) => {
+    try {
+        const res = await pool.query('UPDATE channels SET is_save_history = $1 WHERE id=$2 RETURNING id, username, is_save_history', [isSaveHistory, userId]);      
+        
+        if (res.rows.length > 0) 
+            return res.rows[0]
+
+        return {}
+    } catch (error) {
+        throw new Error(`Error updateSaveHistoryByChannel repository: ${error}`)
+    }
+}
