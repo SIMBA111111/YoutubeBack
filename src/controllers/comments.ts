@@ -193,8 +193,6 @@ export const markComment = async (req: Request, res: Response) => {
       [commentId]
     );
 
-    console.log("updatedCommentRes === ", updatedCommentRes.rows);
-
     res.status(200).json({
       success: true,
       stats: updatedStatsRes.rows[0] || {},

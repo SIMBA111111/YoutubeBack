@@ -198,7 +198,7 @@ export const getIsSubOnChannelInfo = async (
 
     if (res.rows.length > 0) return res.rows[0];
 
-    return [];
+    return null;
   } catch (error) {
     throw new Error(`Error getIsSubOnChannelInfo repository: ${error}`);
   }

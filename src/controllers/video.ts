@@ -157,9 +157,12 @@ export const getVideosByChannelUsername = async (
   try {
     const { channelUsername } = req.params;
     const { limit, offset } = req.query;
+    const { filter, isShort } = req.body;
 
     const response = await getVideoListByUsername(
       channelUsername as string,
+      filter,
+      isShort,
       offset as string,
       limit as string
     );

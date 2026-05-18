@@ -1,3 +1,4 @@
+import { log } from "console";
 import { pool } from "../utils/pg";
 
 export const getTagList = async () => {
@@ -106,22 +107,42 @@ export const getVideoListBySubsIsShorts = async (
   }
 };
 
+export enum FiltersEnum {
+    NEWS='NEWS',
+    FAME='FAME',
+    OLD='OLD'
+}
+
 export const getVideoListByUsername = async (
   channelUsername: string,
+  filter: keyof typeof FiltersEnum,
+  isShort: boolean,
   offset: string,
   limit: string
 ) => {
   try {
-    const res = await pool.query(
-      `
-            SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl
-            FROM videos v
-            JOIN channels ch ON ch.id = v.channel_id
-            WHERE ch.username = $1 
-            OFFSET $2 LIMIT $3
-        `,
-      [channelUsername, offset, limit]
-    );
+    let query = `
+      SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl
+      FROM videos v
+      JOIN channels ch ON ch.id = v.channel_id
+      WHERE ch.username = $1 AND v.is_short = $2
+    `
+    
+    if(filter === FiltersEnum.NEWS) {
+      query += 'ORDER BY date_publication DESC'
+    }
+
+    if(filter === FiltersEnum.OLD) {
+      query += 'ORDER BY date_publication ASC'
+    }
+    
+    if(filter === FiltersEnum.FAME) {
+      query += 'ORDER BY viewers_count DESC'
+    }
+
+    query += ` OFFSET $3 LIMIT $4`
+
+    const res = await pool.query(query, [channelUsername, isShort, offset, limit])
 
     if (res.rows) return res.rows;
 
@@ -448,10 +469,21 @@ export const updateVideoDislikes = async (
   }
 };
 
+
 export const updateVideoViews = async (videoId: string) => {
   try {
     const res = await pool.query(
-      `UPDATE videos SET viewers_count = viewers_count + 1 WHERE id = $1`,
+      `WITH updated_video AS (
+        UPDATE videos 
+        SET viewers_count = viewers_count + 1 
+        WHERE id = $1
+        RETURNING channel_id
+      )
+      UPDATE channels 
+      SET viewers_count = viewers_count + 1
+      FROM updated_video
+      WHERE channels.id = updated_video.channel_id
+      RETURNING updated_video.channel_id;`,
       [videoId]
     );
 
