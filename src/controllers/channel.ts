@@ -5,7 +5,6 @@ import {
   getIsSubOnChannelInfo,
   updateSubsCountChannel,
 } from "../repositories/channel";
-import { pool } from "../utils/pg";
 import {
   createSubscription,
   createUnsubscribeChannel,

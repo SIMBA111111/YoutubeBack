@@ -8,7 +8,7 @@ export const getChannelsByUser = async (
   try {
     const res = await pool.query(
       `
-            SELECT c.id, c.name, c.username, c.avatar_url 
+            SELECT c.id, c.name, c.username, c.avatar_url, c.subscribers_count, c.description, subs.notification_settings
             FROM channels c
             JOIN subscriptions subs ON subs.channel_id = c.id
             WHERE subs.follower_channel_id = $1
