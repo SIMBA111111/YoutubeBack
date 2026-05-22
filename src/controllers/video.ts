@@ -31,7 +31,7 @@ import {
   updateVideoViews,
 } from "../repositories/video";
 import { mapToIVideo, mapVideosToIVideo } from "../utils/maps/mapVideo";
-import { getChannelByVideoHash } from "../repositories/channel";
+import { getAllSubscriptionsByChannel, getChannelById, getChannelByVideoHash, getChannelsByUser } from "../repositories/channel";
 import { getIsSubscribedChannel } from "../repositories/subscriptions";
 import {
   createStatOfVideoForUser,
@@ -413,6 +413,128 @@ export const updateVideoViewCount = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Internal server error2" });
   }
 };
+
+
+const activeConnections = new Map();
+
+export const event = async (req: Request, res: Response) => {
+  console.log('event');
+  
+  try {
+    const channelId = req.query.channelId as string;
+    const userId = req.query.userId as string;
+    
+    if (!channelId || !userId) {
+      return res.status(400).json({ error: "channelId and userId required" });
+    }
+    
+    const headers = {
+      'Content-Type': 'text/event-stream',
+      'Connection': 'keep-alive',
+      'Cache-Control': 'no-cache',
+      'Access-Control-Allow-Origin': '*'
+    };
+    
+    res.writeHead(200, headers);
+    
+    // Создаем объект соединения
+    const connection = { res, userId, channelId };
+    
+    // Добавляем в Map
+    if (!activeConnections.has(channelId)) {
+      activeConnections.set(channelId, new Set());
+    }
+    activeConnections.get(channelId).add(connection);
+    
+    console.log(`SSE connected: channel ${channelId}, total connections: ${activeConnections.get(channelId).size}`);
+    
+    // Отправляем приветствие
+    res.write(`: connected\n\n`);
+    
+    // Keep-alive
+    const interval = setInterval(() => {
+      res.write(`: heartbeat\n\n`);
+    }, 30000);
+    
+    // Обработка закрытия
+    req.on('close', () => {
+      clearInterval(interval);
+      
+      // Удаляем соединение
+      const channelConnections = activeConnections.get(channelId);
+      if (channelConnections) {
+        channelConnections.delete(connection);
+        if (channelConnections.size === 0) {
+          activeConnections.delete(channelId);
+        }
+      }
+      
+      console.log(`SSE disconnected: channel ${channelId}`);
+      res.end();
+    });
+    
+  } catch (error) {
+    console.error('Error event: ', error);
+    return res.status(500).end();
+  }
+};
+
+
+export const createVideo = async (req: Request, res: Response) => {
+  console.log("createVideo")
+
+  try {
+    // const videoId = req.params.videoId;
+    const { userId } = req.body;
+
+    
+    const subscribers = await getAllSubscriptionsByChannel(
+      userId as string,
+    );
+    console.log('subscribers = ', subscribers);
+
+
+    const channel = await getChannelById(userId)
+    const newNotif = {
+      createdAt: "2026-03-16T11:54:00Z",
+      id: "new video",
+      isViewed: false,
+      channel: {
+        id: channel.id,
+        avatarUrl: channel.avatar_url,
+        name: channel.name
+      },
+      video: {
+
+      }
+    }
+
+    // subscribers.forEach((subscriber: any) => {
+    //   // subscription содержит информацию о подписчике
+    //   const subscriberChannelId = subscribers.subscriber_channel_id; // или как у вас называется поле
+      
+    //   if (activeConnections.has(subscriber.id)) {
+    //     const connection = activeConnections.get(subscriberChannelId);
+    //     const message = JSON.stringify({ newNotif });
+        
+    //     try {
+    //       connection.res.write(`data: ${message}\n\n`);
+    //       console.log(`Notification sent to subscriber: ${subscriberChannelId}`);
+    //     } catch (error) {
+    //       console.error(`Error sending to subscriber ${subscriberChannelId}:`, error);
+    //       activeConnections.delete(subscriberChannelId);
+    //     }
+    //   }
+    // });
+
+
+    return res.status(201).json("Video created succesfully");
+  } catch (error) {
+    console.error("Error createVideo:", error);
+    res.status(500).json({ error: "Internal server error2" });
+  }
+};
+
 
 // controllers/video-controller.js
 // export const createVideo = async (req: Request, res: Response) => {

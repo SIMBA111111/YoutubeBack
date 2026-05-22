@@ -11,13 +11,17 @@ import {
     updateMarkVideo,
     getVideosByChannelUsername,
     getShortVideosByChannelUsername,
-    updateVideoViewCount
+    updateVideoViewCount,
+    event,
+    createVideo
 } from '../controllers/video'
 // import { upload } from '../middleware/upload.js';
 
 const router = express.Router();
 
+router.get('/event', event);
 router.get('/tags', getTags);
+
 router.get('/videos', getVideos);
 router.get('/videos/my-subs/:meId', getVideosMySubs);
 router.post('/channel-videos/:channelUsername', getVideosByChannelUsername);
@@ -32,5 +36,6 @@ router.get('/view/video/:videoId', updateVideoViewCount);
 
 
 // router.post('/videos/create', upload, createVideo);
+router.post('/create-video', createVideo);
 
 export default router;

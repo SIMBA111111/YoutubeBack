@@ -217,3 +217,22 @@ export const updateSaveHistoryByChannel = async (userId: string, isSaveHistory: 
         throw new Error(`Error updateSaveHistoryByChannel repository: ${error}`)
     }
 }
+
+
+export const getAllSubscriptionsByChannel = async (userId: string) => {
+    try {
+        const res = await pool.query(`
+          SELECT ch.id, ch.username
+          FROM channels ch
+          JOIN subscriptions subs ON subs.follower_channel_id = ch.id
+          WHERE subs.channel_id = $1
+          `, [userId]);      
+        
+        if (res.rows.length > 0) 
+            return res.rows
+
+        return {}
+    } catch (error) {
+        throw new Error(`Error getAllSubscriptionsByChannel repository: ${error}`)
+    }
+}
