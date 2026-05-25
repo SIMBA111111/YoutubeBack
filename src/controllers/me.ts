@@ -11,6 +11,8 @@ import {
 import { getLikedplaylists } from "../repositories/playlist";
 import { getVideoList, getVideoListByTag, getViewedShortVideosByChannelId, getViewedVideoListByTag, getViewedVideosByChannelId } from "../repositories/video";
 import { deletHistoryByChannel } from "../repositories/stats";
+import { getNotifsByUserId } from "../repositories/notifs";
+import { mapNotifToINotif } from "../utils/maps/mapNotifs";
 
 export const getMeInfo = async (req: Request, res: Response) => {
   console.log("getMeInfo");
@@ -190,6 +192,30 @@ export const updateSaveHistory = async (req: Request, res: Response) => {
     res.status(200).json(result);
   } catch (error) {
     console.error("Error updateSaveHistory:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+export const getMyNotifs = async (req: Request, res: Response) => {
+  console.log("getMyNotifs");
+  try {
+    const { meId } = req.params;
+
+    const response = await getNotifsByUserId(
+      meId as string,
+    );
+
+    console.log('response = ', response);
+    
+
+    const result = {
+      notifs: mapNotifToINotif(response),
+    };
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error getMyNotifs:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };

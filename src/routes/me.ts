@@ -6,12 +6,14 @@ import {
     getMyLikedVideoList,
     getMyViewsHistory, 
     deleteMyViewsHistory,
-    updateSaveHistory
+    updateSaveHistory,
+    getMyNotifs
 } from '../controllers/me'
 
 export const router = express.Router();
 
 router.get('/me/:meId', getMeInfo);
+router.get('/me/my-notifs/:meId', getMyNotifs);
 router.post('/me/my-liked-videos/:meId', getMyLikedVideoList);
 router.get('/me/my-liked-playlists/:meId', getMyLikedPlaylists);
 router.post('/me/my-view-history/:meId', getMyViewsHistory);
