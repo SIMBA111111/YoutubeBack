@@ -36,7 +36,7 @@ export const mapToIVideo = (video: any): IVideo => {
         viewersCount: video.viewers_count,
         likeCount: video.likes_count || 0,
         dislikeCount: video.dislikes_count || 0,
-        datePublication: video.created_date,
+        datePublication: video.date_publication,
         isShort: video.is_short,
         tags: video.tags,
         videoDescription: video.description,
