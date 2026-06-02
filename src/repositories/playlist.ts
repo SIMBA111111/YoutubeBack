@@ -21,6 +21,13 @@ export const getLikedplaylists = async (meId: string, offset: string, limit: str
 }
 
 export const getPlaylistsByUsername = async (channelUsername: string, offset: string, limit: string) => {
+    console.log('getPlaylistsByUsername');
+    
+    console.log('channelUsername = ', channelUsername);
+    console.log('offset = ', offset);
+    console.log('limit = ', limit);
+    
+
     try {
         const res = await pool.query(`
             SELECT p.* 
@@ -29,12 +36,31 @@ export const getPlaylistsByUsername = async (channelUsername: string, offset: st
             WHERE ch.username = $1
             OFFSET $2 LIMIT $3
         `, [channelUsername, offset, limit])
+
+        console.log('res.rows = ', res.rows);
         
+
         if (res.rows.length > 0) 
+            
             return res.rows
 
         return []
     } catch (error) {
         throw new Error(`Error getPlaylistsByUsername repository: ${error}`)
+    }
+}
+
+export const createPlaylistRepo = async (name: string, userId: string, thumbnailUrl: string) => {
+    try {
+        const res = await pool.query(`
+            INSERT INTO playlists (name, channel_id, thumbnail_url) VALUES ($1, $2, $3) RETURNING *
+        `, [name, userId, thumbnailUrl])
+        
+        if (res.rows.length > 0) 
+            return res.rows[0]
+
+        return []
+    } catch (error) {
+        throw new Error(`Error createPlaylistRepo repository: ${error}`)
     }
 }
