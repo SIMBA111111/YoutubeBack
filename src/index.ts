@@ -13,7 +13,7 @@ import {router as RouterComments} from './routes/comments'
 import {router as RouterPosts} from './routes/posts'
 import {router as RouterPlaylists} from './routes/playlists'
 import {router as RouterMe} from './routes/me'
-import { authCheck } from './middleware';
+import { authCheck } from './middlewares/middleware';
 
 
 const port = 8080;

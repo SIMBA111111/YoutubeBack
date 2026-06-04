@@ -494,3 +494,50 @@ export const updateVideoViews = async (videoId: string) => {
     throw new Error(`Error updateVideoViews repository: ${error}`);
   }
 };
+
+
+export const createVideoRepo = async (
+  videoId: string,
+  videoName: string, 
+  videoDescription: string, 
+  masterM3U8Path: string, 
+  thumbnailUrl: string, 
+  previewUrl: string, 
+  fragments: any[], 
+  channelId: string,
+  duration: number,
+  isShort: boolean = false
+) => {
+  try {
+
+    console.log('videoName = ', videoName);
+    console.log('videoDescription = ', videoDescription);
+    console.log('masterM3U8Path = ', masterM3U8Path);
+    console.log('thumbnailUrl = ', thumbnailUrl);
+    console.log('fragments = ', fragments);
+    console.log('channelId = ', channelId);
+
+    const createdVideo = await pool.query(`
+      INSERT INTO videos    
+      (id, name, duration, thumbnail_url, video_preview_url, master_m3u8_url, description, channel_id, is_short, video_hash)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      RETURNING *
+    `, [videoId, videoName, duration, thumbnailUrl, previewUrl, masterM3U8Path, videoDescription, channelId, false, 'asdkoaksdopkoapskdopkaopskd'])
+    
+    const createdVideoId = createdVideo.rows[0].id;
+
+    await Promise.all(fragments.map(frag => 
+      pool.query(`
+        INSERT INTO video_fragments    
+        (name, start_time, end_time, video_id)
+        VALUES ($1, $2, $3, $4)
+      `, [frag.title, frag.start, frag.end, createdVideoId])
+    ));
+    
+    if (createdVideo.rows[0]) return createdVideo.rows[0]
+
+    return {};
+  } catch (error) {
+    throw new Error(`Error createVideoRepo repository: ${error}`);
+  }
+};

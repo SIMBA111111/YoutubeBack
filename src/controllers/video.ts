@@ -10,6 +10,7 @@ import { createSrtSubtitleFile } from "../services/video/createSrtFile";
 import { convertSrtToVTTAndCreateM3U8 } from "../services/video/convertSrtToVTT";
 import { createMasterM3U8File } from "../services/video/createMasterM3U8File";
 import {
+  createVideoRepo,
   getOrderedVideoList,
   getRecommendedVideosRepo,
   getShortVideoListByUsername,
@@ -485,49 +486,202 @@ export const createVideo = async (req: Request, res: Response) => {
 
   try {
     // const videoId = req.params.videoId;
-    const { userId } = req.body;
-
     
-    const subscribers = await getAllSubscriptionsByChannel(
-      userId as string,
-    );
-    console.log('subscribers = ', subscribers);
+    console.log('req.body = ', req.body);
+    console.log('req.files = ', req.files);
+    console.log('req.videoId = ', req.videoId);
 
+    const videoId = req.videoId;
+    const {videoName, videoDescription, videoPreview, playlistIds, fragments} = JSON.parse(req.body.videoData)
+    const channelId = req.body.userId
 
-    const channel = await getChannelById(userId)
-    const newNotif = {
-      createdAt: "2026-03-16T11:54:00Z",
-      id: "new video",
-      isViewed: false,
-      channel: {
-        id: channel.id,
-        avatarUrl: channel.avatar_url,
-        name: channel.name
-      },
-      video: {
+    console.log(videoName);
+    console.log(videoDescription);
+    console.log(videoPreview);
+    console.log(playlistIds);
+    console.log(fragments);
+    
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
-      }
+    if (!videoId || !files?.videoFile?.[0] || !files?.videoPreview?.[0]) {
+        console.log('Missing required data');
+        return res.status(400).json({ error: 'Missing required files' });
     }
 
-    // subscribers.forEach((subscriber: any) => {
-    //   // subscription содержит информацию о подписчике
-    //   const subscriberChannelId = subscribers.subscriber_channel_id; // или как у вас называется поле
-      
-    //   if (activeConnections.has(subscriber.id)) {
-    //     const connection = activeConnections.get(subscriberChannelId);
-    //     const message = JSON.stringify({ newNotif });
+    // const title = req.body.title;
+    // const views = Number(req.body.views);
+    // const channel_id = req.body.channel_id;
+    // // const channel_name = req.body.channel_name;
+    // // const channel_avatarUrl = req.body.channel_avatarUrl;
+    // const fragments = JSON.parse(req.body.fragments || "[]");
+
+    const videoUrl = `/videos/${videoId}/video/${files.videoFile[0].filename}`;
+    const thumbnailUrl = `/videos/${videoId}/thumbnail/${files.videoPreview[0].filename}`;
+
+    const publicDir = path.join(process.cwd(), "public");
+    const videoIdDir = path.join(publicDir, "videos", videoId); // /public/videos/:videoId
+
+    const absoluteVideoPath = path.join(publicDir, videoUrl.replace(/^\//, ""));
+    const videoDir = path.dirname(absoluteVideoPath); // /public/videos/:videoId/video
+
+
+    let duration;
+    try {
+      duration = await getVideoDuration(absoluteVideoPath);
+    } catch (err) {
+      console.error("Failed to get video duration:", err);
+      return res.status(500).json({ error: "Cannot read video duration" });
+    }
+
+    console.log('videoUrl = ', videoUrl);
+    console.log('publicDir = ', publicDir);
+    console.log('absoluteVideoPath = ', absoluteVideoPath);
+    console.log('duration = ', duration);
+    
+
+    const srtFilePath = await createSrtSubtitleFile(videoIdDir, absoluteVideoPath, files.videoFile[0].filename)
+    console.log('srtFilePath ============ ', srtFilePath);
+
+    // ✅ ПРОВЕРКА: существует ли файл и не пустой ли он
+    if (srtFilePath && fs.existsSync(srtFilePath)) {
+        const stats = fs.statSync(srtFilePath);
+        console.log(`SRT файл существует, размер: ${stats.size} байт`);
         
-    //     try {
-    //       connection.res.write(`data: ${message}\n\n`);
-    //       console.log(`Notification sent to subscriber: ${subscriberChannelId}`);
-    //     } catch (error) {
-    //       console.error(`Error sending to subscriber ${subscriberChannelId}:`, error);
-    //       activeConnections.delete(subscriberChannelId);
-    //     }
-    //   }
-    // });
+        if (stats.size === 0) {
+            console.error('❌ SRT файл пустой!');
+            // Не пытаемся конвертировать пустой файл
+        } else {
+            // Показываем первые 100 символов для проверки
+            const content = fs.readFileSync(srtFilePath, 'utf-8');
+            console.log('SRT content preview:', content.substring(0, 200));
+        }
+    } else {
+        console.error('❌ SRT файл НЕ СУЩЕСТВУЕТ!');
+    }
+
+    const playlistDir = path.join(videoIdDir, "playlist");
+    if (!fs.existsSync(playlistDir)) {
+      fs.mkdirSync(playlistDir, { recursive: true });
+    }
+
+    const hlsPlaylistPath = path.join(playlistDir, "video.m3u8");
+    const playlistMasterPath = path.join(playlistDir, "master.m3u8");
+    const hlsSegmentPath = path.join(playlistDir, "video_fragment_%03d.ts");
+
+    // preview на уровне video, thumbnail, playlist
+    const previewDir = path.join(videoIdDir, "preview");
+    if (!fs.existsSync(previewDir)) {
+      fs.mkdirSync(previewDir, { recursive: true });
+    }
+
+    const previewPath = path.join(previewDir, "preview.mp4");
+    const previewUrl = `/videos/${videoId}/preview/preview.mp4`;
+
+    const hls480Dir = path.join(playlistDir, "480");
+    const hls720Dir = path.join(playlistDir, "720");
+    const hls1080Dir = path.join(playlistDir, "1080");
+
+    if (!fs.existsSync(hls480Dir)) fs.mkdirSync(hls480Dir, { recursive: true });
+    if (!fs.existsSync(hls720Dir)) fs.mkdirSync(hls720Dir, { recursive: true });
+    if (!fs.existsSync(hls1080Dir)) fs.mkdirSync(hls1080Dir, { recursive: true });
+
+    const cmd = `D:\\ffmpeg\\ffmpeg-2026-01-29-git-c898ddb8fe-full_build\\bin\\ffmpeg.exe -i "${absoluteVideoPath}" \
+    -map 0:v -map 0:a -c:a aac -b:a 128k -c:v libx264 -crf 23 -preset medium -vf "scale=-2:480" -hls_time 4 -hls_playlist_type vod -hls_segment_filename "${playlistDir}/480/output_480_%04d.ts" -f hls "${playlistDir}/480/output_480.m3u8" \
+    -map 0:v -map 0:a -c:a aac -b:a 128k -c:v libx264 -crf 22 -preset medium -vf "scale=-2:720" -hls_time 4 -hls_playlist_type vod -hls_segment_filename "${playlistDir}/720/output_720_%04d.ts" -f hls "${playlistDir}/720/output_720.m3u8" \
+    -map 0:v -map 0:a -c:a aac -b:a 192k -c:v libx264 -crf 20 -preset medium -vf "scale=-2:1080" -hls_time 4 -hls_playlist_type vod -hls_segment_filename "${playlistDir}/1080/output_1080_%04d.ts" -f hls "${playlistDir}/1080/output_1080.m3u8" \
+    -master_pl_name "${playlistDir}/master.m3u8"`;
+
+    await new Promise((resolve, reject) => {
+      exec(cmd, (error, stdout, stderr) => {
+        if (error) {
+          console.error("Ошибка ffmpeg:", error);
+          console.error("stderr:", stderr);
+          reject(error);
+          return;
+        }
+        console.log("stdout:", stdout);
+        console.log("HLS плейлисты успешно созданы");
+        resolve(true);
+      });
+    });
 
 
+    const subtitles = await convertSrtToVTTAndCreateM3U8(srtFilePath, playlistDir) // создаем vtt файл и m3u8 файл субтитров
+    console.log('subtitles +++++++ ', subtitles);
+
+      // 2. Создаём короткий 10‑секундный mp4‑превью из 5 рандомных кусков по 2 секунды
+      console.log(previewUrl);
+
+      // Получаем длительность исходного видео (в секундах)
+      ffmpeg.ffprobe(absoluteVideoPath, (err, metadata) => {
+        if (err) {
+            console.error("Ошибка ffprobe:", err);
+            return;
+        }
+
+        const totalDuration = metadata.format.duration; // в секундах
+        if (!totalDuration || totalDuration < 2) {
+            console.warn("Видео слишком короткое для превью");
+            return;
+        }
+
+        const cuts = [];
+        const clipDuration = 2; // по 2 секунды
+
+        // 5 рандомных кусков по 2 секунды
+        for (let i = 0; i < 5; i++) {
+            const maxStart = totalDuration - clipDuration;
+            const start = Math.random() * maxStart;
+            cuts.push(`[${start},${start + clipDuration}]`);
+        }
+
+        // Собираем команду с trim + concat
+        const complexFilter = cuts
+            .map((cut, i) => {
+                const match = cut.match(/\[(\d+\.?\d*),(\d+\.?\d*)\]/);
+                if (!match) {
+                    console.error('Ошибка парсинга cut:', cut);
+                    return '';
+                }
+                const [_, start, end] = match;
+                return `[0:v]trim=start=${start}:end=${end},setpts=PTS-STARTPTS[v${i}];[0:a]atrim=start=${start}:end=${end},asetpts=PTS-STARTPTS[a${i}];`;
+            })
+            .join("");
+
+        const concatVideo = cuts.map((_, i) => `[v${i}]`).join("");
+        const concatAudio = cuts.map((_, i) => `[a${i}]`).join("");
+
+        ffmpeg(absoluteVideoPath)
+            .complexFilter(
+                `${complexFilter}${concatVideo}concat=n=5:v=1:a=0[v];${concatAudio}concat=n=5:v=0:a=1[a]`,
+                ["v", "a"]
+            )
+            .videoCodec("libx264")
+            .audioCodec("aac")
+            .outputOptions([
+                "-preset fast",
+                "-crf 23",
+                "-t 10",
+            ])
+            .output(previewPath)
+            .on("end", () => {
+                console.log("Preview mp4 создан:", previewPath);
+            })
+            .on("error", (err) => {
+                console.error("Ошибка при создании preview:", err);
+            })
+            .run();
+    });
+
+    const masterM3U8Path = await createMasterM3U8File(playlistDir);
+    console.log('duration = ', duration);
+
+    const thumbnail = 'http://localhost:8080/' + thumbnailUrl 
+    const m3u8 = 'http://localhost:8080/videos/' + videoId + '/playlist/master.m3u8'  
+    const preview = 'http://localhost:8080/videos/' + videoId + '/preview/' + files.videoFile[0].filename
+
+    const response = await createVideoRepo(videoId, videoName, videoDescription, m3u8, thumbnail, preview, fragments, channelId, duration, false)    
+    
     return res.status(201).json("Video created succesfully");
   } catch (error) {
     console.error("Error createVideo:", error);
@@ -537,6 +691,8 @@ export const createVideo = async (req: Request, res: Response) => {
 
 
 // controllers/video-controller.js
+
+
 // export const createVideo = async (req: Request, res: Response) => {
 //   const videoId = req.videoId;
 

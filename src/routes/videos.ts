@@ -15,7 +15,7 @@ import {
     event,
     createVideo
 } from '../controllers/video'
-// import { upload } from '../middleware/upload.js';
+import { upload } from '../middlewares/upload';
 
 const router = express.Router();
 
@@ -36,6 +36,6 @@ router.get('/view/video/:videoId', updateVideoViewCount);
 
 
 // router.post('/videos/create', upload, createVideo);
-router.post('/create-video', createVideo);
+router.post('/create-video', upload, createVideo);
 
 export default router;
