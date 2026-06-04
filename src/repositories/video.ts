@@ -510,13 +510,6 @@ export const createVideoRepo = async (
 ) => {
   try {
 
-    console.log('videoName = ', videoName);
-    console.log('videoDescription = ', videoDescription);
-    console.log('masterM3U8Path = ', masterM3U8Path);
-    console.log('thumbnailUrl = ', thumbnailUrl);
-    console.log('fragments = ', fragments);
-    console.log('channelId = ', channelId);
-
     const createdVideo = await pool.query(`
       INSERT INTO videos    
       (id, name, duration, thumbnail_url, video_preview_url, master_m3u8_url, description, channel_id, is_short, video_hash)
