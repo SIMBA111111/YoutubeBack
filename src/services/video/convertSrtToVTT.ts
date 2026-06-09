@@ -5,27 +5,48 @@ import fs from "fs/promises";
 export const convertSrtToVTTAndCreateM3U8 = async (
   srtFilePath: string,
   playlistDir: string
-): Promise<{}> => {
-  const srtBasename = path.basename(srtFilePath, ".srt"); // например, "sound1440p1"
+): Promise<{ m3u8Path: string; vttPath: string }> => {
+  const srtBasename = path.basename(srtFilePath, ".srt");
   const vttFilename = `${srtBasename}.vtt`;
   const vttPath = path.join(playlistDir, vttFilename);
 
-  // 1. Конвертим SRT → VTT через ffmpeg
-  const cmd = `D:\\ffmpeg\\ffmpeg-2026-01-29-git-c898ddb8fe-full_build\\bin\\ffmpeg.exe -i "${srtFilePath}" "${vttPath}"`;
+  // Проверяем, существует ли файл и не пустой ли он
+  let isSrtEmpty = false;
+  try {
+    const stats = await fs.stat(srtFilePath);
+    if (stats.size === 0) {
+      isSrtEmpty = true;
+      console.warn(`SRT файл пуст: ${srtFilePath}, будет создан пустой VTT файл`);
+    }
+  } catch (error) {
+    console.error(`Ошибка при проверке SRT файла: ${srtFilePath}`, error);
+    throw new Error(`Не удалось прочитать SRT файл: ${srtFilePath}`);
+  }
 
-  await new Promise<void>((resolve, reject) => {
-    exec(cmd, (error, stdout, stderr) => {
-      if (error) {
-        console.error("ffmpeg error (SRT → VTT):", error);
-        console.error("stderr:", stderr);
-        return reject(error);
-      }
-      console.log("ffmpeg stdout:", stdout);
-      resolve();
+  // Если SRT пустой - создаем пустой VTT файл напрямую
+  if (isSrtEmpty) {
+    // Создаем пустой VTT файл с минимальным содержимым (для валидности)
+    const emptyVttContent = "WEBVTT\n\n";
+    await fs.writeFile(vttPath, emptyVttContent, "utf8");
+    console.log("Создан пустой VTT файл:", vttPath);
+  } else {
+    // Конвертируем SRT → VTT через ffmpeg
+    const cmd = `D:\\ffmpeg\\ffmpeg-2026-01-29-git-c898ddb8fe-full_build\\bin\\ffmpeg.exe -i "${srtFilePath}" "${vttPath}"`;
+
+    await new Promise<void>((resolve, reject) => {
+      exec(cmd, (error, stdout, stderr) => {
+        if (error) {
+          console.error("ffmpeg error (SRT → VTT):", error);
+          console.error("stderr:", stderr);
+          return reject(error);
+        }
+        console.log("ffmpeg stdout:", stdout);
+        resolve();
+      });
     });
-  });
+  }
 
-  // 2. Генерим subs.m3u8
+  // Генерируем subs.m3u8 (даже для пустых субтитров)
   const m3u8Content = `#EXTM3U
 #EXT-X-VERSION:3
 #EXT-X-TARGETDURATION:4
@@ -42,5 +63,5 @@ ${vttFilename}
   console.log("Субтитры сохранены в:", vttPath);
   console.log("M3U8 плейлист создан:", m3u8Path);
 
-  return {'m3u8Path': m3u8Path, 'vttPath': vttPath};
+  return { m3u8Path, vttPath };
 };

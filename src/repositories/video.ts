@@ -257,9 +257,33 @@ export const getVideoListByNameRepo = async (videoName: string) => {
 
 export const getVideoByHashRepo = async (videoHash: string) => {
   try {
-    const res = await pool.query("SELECT * FROM videos WHERE video_hash = $1", [
-      videoHash,
-    ]);
+
+      //   const res = await pool.query(`
+      // SELECT * FROM videos, vf.start_time, vf.end_time, vf.name, 
+      // JOIN video_fragments vf ON vf.video_id = videos.id
+      // WHERE id=$1`,
+      // [videoId]);
+
+
+    const res = await pool.query(`
+        SELECT 
+            *,
+            (
+                SELECT json_agg(json_build_object(
+                    'start_time', start_time,
+                    'end_time', end_time,
+                    'name', name
+                ))
+                FROM video_fragments
+                WHERE video_id = videos.id
+            ) as fragments
+        FROM videos 
+        WHERE video_hash = $1
+    `, [videoHash]);
+
+    console.log('res.rows[0] -= ', res.rows[0]);
+    
+
     if (res.rows[0]) return res.rows[0];
 
     return {};
@@ -272,7 +296,9 @@ export const getVideoByIdRepo = async (videoId: string) => {
   console.log('getVideoByIdRepo ', videoId);
   
   try {
-    const res = await pool.query("select * from videos where id=$1", [videoId]);
+    const res = await pool.query(`
+      SELECT * FROM videos WHERE id=$1`,
+      [videoId]);
 
     if (res.rows[0]) return res.rows[0];
 
@@ -510,12 +536,14 @@ export const createVideoRepo = async (
 ) => {
   try {
 
+    const videoHash = Math.random().toString(36).substring(2, 18);
+
     const createdVideo = await pool.query(`
       INSERT INTO videos    
       (id, name, duration, thumbnail_url, video_preview_url, master_m3u8_url, description, channel_id, is_short, video_hash)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING *
-    `, [videoId, videoName, duration, thumbnailUrl, previewUrl, masterM3U8Path, videoDescription, channelId, false, 'asdkoaksdopkoapskdopkaopskd'])
+    `, [videoId, videoName, duration, thumbnailUrl, previewUrl, masterM3U8Path, videoDescription, channelId, false, videoHash])
     
     const createdVideoId = createdVideo.rows[0].id;
 

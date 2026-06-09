@@ -37,9 +37,6 @@ export const getPlaylistsByUsername = async (channelUsername: string, offset: st
             OFFSET $2 LIMIT $3
         `, [channelUsername, offset, limit])
 
-        console.log('res.rows = ', res.rows);
-        
-
         if (res.rows.length > 0) 
             
             return res.rows

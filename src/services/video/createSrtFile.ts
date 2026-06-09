@@ -46,9 +46,9 @@ export const createSrtSubtitleFile = async (videoIdDir: string, absoluteVideoPat
     const stats = fs.statSync(srtFilePath);
     console.log(`SRT файл создан: ${srtFileName}, размер: ${stats.size} байт`);
     
-    if (stats.size === 0) {
-        throw new Error('SRT файл пустой');
-    }
+    // if (stats.size === 0) {
+    //     throw new Error('SRT файл пустой');
+    // }
     
     return srtFilePath;
 }

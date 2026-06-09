@@ -13,6 +13,7 @@ import {router as RouterComments} from './routes/comments'
 import {router as RouterPosts} from './routes/posts'
 import {router as RouterPlaylists} from './routes/playlists'
 import {router as RouterMe} from './routes/me'
+import {router as RouterEvent} from './routes/events'
 import { authCheck } from './middlewares/middleware';
 
 
@@ -49,6 +50,7 @@ app.use('/api', RouterPosts);
 app.use('/api', RouterPlaylists);
 app.use('/api', RouterMe);
 app.use('/api/auth', RouterAuth);
+app.use('/api/event', RouterEvent);
 
 // Запуск сервера
 app.listen(port, () => {
