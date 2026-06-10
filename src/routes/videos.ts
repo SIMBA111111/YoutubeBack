@@ -34,7 +34,7 @@ router.get('/videos/:id', getVideoById);
 
 router.post('/mark/video/:videoId', updateMarkVideo);
 router.get('/view/video/:videoId', updateVideoViewCount);
-router.get('/delete-video/:videoId', deleteVideo);
+router.delete('/delete-video/:videoId', deleteVideo);
 
 
 // router.post('/videos/create', upload, createVideo);

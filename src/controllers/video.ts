@@ -42,6 +42,7 @@ import {
   updateStatOfVideoViewsCount,
 } from "../repositories/stats";
 import { sendProgress } from "./event";
+import { deleteVideoService } from "../services/video/deleteVideo";
 
 export const getTags = async (req: Request, res: Response) => {
   console.log("getTags");
@@ -427,7 +428,9 @@ export const deleteVideo = async (req: Request, res: Response) => {
   );
   try {
     const videoId = req.params.videoId;
-    const { userId } = req.query;
+    const { userId } = req.body;
+
+    await deleteVideoService(videoId as string)
 
     const video = await deleteVideoByIdRepo(videoId as string);
 
