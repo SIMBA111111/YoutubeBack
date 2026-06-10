@@ -14,12 +14,14 @@ interface IVideo {
     duration: number
     previewUrl: string
     videoPreviewUrl: string
+    videoMp4Url: string
     viewersCount: number
     videoDescription: string
     hashtags: string
     likeCount: number
     dislikeCount: number
     commentsCount: number
+    videoAccess: string
     masterM3u8Url: string
     dateviewed: string
     channel: {
@@ -42,10 +44,12 @@ export const mapToIVideo = (video: any): IVideo => {
         duration: video.duration,
         previewUrl: video.thumbnail_url,
         videoPreviewUrl: video.video_preview_url,
+        videoMp4Url: video.video_mp4_url,
         viewersCount: video.viewers_count,
         likeCount: video.likes_count || 0,
         dislikeCount: video.dislikes_count || 0,
         commentsCount: video.comments_count || 0,
+        videoAccess: video.video_access || '',
         datePublication: video.date_publication,
         isShort: video.is_short,
         tags: video.tags,

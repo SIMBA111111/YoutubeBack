@@ -258,31 +258,19 @@ export const getVideoListByNameRepo = async (videoName: string) => {
 export const getVideoByHashRepo = async (videoHash: string) => {
   try {
 
-      //   const res = await pool.query(`
-      // SELECT * FROM videos, vf.start_time, vf.end_time, vf.name, 
-      // JOIN video_fragments vf ON vf.video_id = videos.id
-      // WHERE id=$1`,
-      // [videoId]);
-
-
     const res = await pool.query(`
-        SELECT 
-            *,
-            (
-                SELECT json_agg(json_build_object(
-                    'start_time', start_time,
-                    'end_time', end_time,
-                    'name', name
-                ))
-                FROM video_fragments
-                WHERE video_id = videos.id
-            ) as fragments
-        FROM videos 
-        WHERE video_hash = $1
+      SELECT 
+          v.*,
+          json_agg(json_build_object(
+              'start_time', vf.start_time,
+              'end_time', vf.end_time,
+              'name', vf.name
+          ) ORDER BY vf.index ASC) as fragments
+      FROM videos v
+      LEFT JOIN video_fragments vf ON vf.video_id = v.id
+      WHERE v.video_hash = $1
+      GROUP BY v.id
     `, [videoHash]);
-
-    console.log('res.rows[0] -= ', res.rows[0]);
-    
 
     if (res.rows[0]) return res.rows[0];
 
@@ -398,13 +386,13 @@ export const getViewedShortVideosByChannelId = async (channelId: string, isShort
   try {
     const res = await pool.query(
       `
-            SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl, ch.name as channelname, sov.updated_date as dateViewed
-            FROM videos v
-            JOIN stat_of_videos sov ON v.id = sov.video_id
-            JOIN channels ch ON ch.id = v.channel_id
-            WHERE sov.views_count > 0 AND sov.channel_id = $1 AND v.is_short=$2
-            ORDER BY sov.updated_date DESC
-            OFFSET $3 LIMIT $4
+        SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl, ch.name as channelname, sov.updated_date as dateViewed
+        FROM videos v
+        JOIN stat_of_videos sov ON v.id = sov.video_id
+        JOIN channels ch ON ch.id = v.channel_id
+        WHERE sov.views_count > 0 AND sov.channel_id = $1 AND v.is_short=$2
+        ORDER BY sov.updated_date DESC
+        OFFSET $3 LIMIT $4
         `,
       [channelId, isShort, offset, limit]
     );
@@ -522,8 +510,26 @@ export const updateVideoViews = async (videoId: string) => {
 };
 
 
+export const deleteVideoByIdRepo = async (videoId: string) => {
+  try {
+    const res = await pool.query(
+      `DELETE FROM videos 
+       WHERE id = $1 
+       RETURNING id, channel_id, video_hash;`,
+      [videoId]
+    );
+
+    if (res.rows[0]) return res.rows[0];
+
+    return null;
+  } catch (error) {
+    throw new Error(`Error deleteVideoById repository: ${error}`);
+  }
+};
+
 export const createVideoRepo = async (
   videoId: string,
+  videoMp4: string,
   videoName: string, 
   videoDescription: string, 
   masterM3U8Path: string, 
@@ -532,7 +538,8 @@ export const createVideoRepo = async (
   fragments: any[], 
   channelId: string,
   duration: number,
-  isShort: boolean = false
+  videoAccess: string,
+  isShort: boolean = false,
 ) => {
   try {
 
@@ -540,19 +547,19 @@ export const createVideoRepo = async (
 
     const createdVideo = await pool.query(`
       INSERT INTO videos    
-      (id, name, duration, thumbnail_url, video_preview_url, master_m3u8_url, description, channel_id, is_short, video_hash)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      (id, name, duration, thumbnail_url, video_preview_url, master_m3u8_url, description, channel_id, is_short, video_hash, video_access, video_mp4_url)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING *
-    `, [videoId, videoName, duration, thumbnailUrl, previewUrl, masterM3U8Path, videoDescription, channelId, false, videoHash])
+    `, [videoId, videoName, duration, thumbnailUrl, previewUrl, masterM3U8Path, videoDescription, channelId, false, videoHash, videoAccess, videoMp4])
     
     const createdVideoId = createdVideo.rows[0].id;
 
     await Promise.all(fragments.map(frag => 
       pool.query(`
         INSERT INTO video_fragments    
-        (name, start_time, end_time, video_id)
-        VALUES ($1, $2, $3, $4)
-      `, [frag.title, frag.start, frag.end, createdVideoId])
+        (name, index, start_time, end_time, video_id)
+        VALUES ($1, $2, $3, $4, $5)
+      `, [frag.title, frag.index, frag.start, frag.end, createdVideoId])
     ));
     
     if (createdVideo.rows[0]) return createdVideo.rows[0]

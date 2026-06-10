@@ -13,7 +13,8 @@ import {
     getShortVideosByChannelUsername,
     updateVideoViewCount,
     event,
-    createVideo
+    createVideo,
+    deleteVideo
 } from '../controllers/video'
 import { upload } from '../middlewares/upload';
 
@@ -33,6 +34,7 @@ router.get('/videos/:id', getVideoById);
 
 router.post('/mark/video/:videoId', updateMarkVideo);
 router.get('/view/video/:videoId', updateVideoViewCount);
+router.get('/delete-video/:videoId', deleteVideo);
 
 
 // router.post('/videos/create', upload, createVideo);
