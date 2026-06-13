@@ -515,17 +515,19 @@ export const createVideo = async (req: Request, res: Response) => {
     console.log("req.videoId = ", req.videoId);
 
     const videoId = req.videoId;
-    const { videoName, videoDescription, videoPreview, playlistIds, fragments, videoAccess } = JSON.parse(req.body.videoData);
+    const { videoName, videoDescription, videoPreview, playlistIds, fragments, videoAccess, hashTags, tags } = JSON.parse(req.body.videoData);
     const channelId = req.body.userId;
 
 
     sendProgress(channelId, { progress: 8, stage: 'saving', message: '' });
     
-    console.log(videoName);
-    console.log(videoDescription);
+    console.log('videoName ==== ', videoName);
+    console.log('videoDescription =-==-=- ', videoDescription);
     console.log(videoPreview);
     console.log(playlistIds);
     console.log(fragments);
+    console.log('hashTags =-=--=- ', hashTags);
+    console.log('tags =-=--=- ', tags);
 
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
@@ -701,6 +703,9 @@ export const createVideo = async (req: Request, res: Response) => {
       channelId,
       duration,
       videoAccess,
+      hashTags,
+      tags,
+      playlistIds,
       false
     );
 

@@ -113,6 +113,60 @@ export const crateCommentRepo = async (
   }
 };
 
+
+export const deleteCommentRepo = async (
+  commentId: string,
+  userId?: string // опционально для проверки прав
+) => {
+  try {
+    // Вариант 1: Использование CTE (Common Table Expression) для рекурсивного удаления
+    const res = await pool.query(
+      `
+      WITH RECURSIVE comment_tree AS (
+        -- Базовый запрос: ищем удаляемый комментарий
+        SELECT id, parent_comment_id
+        FROM comments
+        WHERE id = $1
+        
+        UNION ALL
+        
+        -- Рекурсивный запрос: находим все дочерние комментарии
+        SELECT c.id, c.parent_comment_id
+        FROM comments c
+        INNER JOIN comment_tree ct ON c.parent_comment_id = ct.id
+      ),
+      comments_to_delete AS (
+        SELECT id FROM comment_tree
+      )
+      -- Удаляем все найденные комментарии
+      DELETE FROM comments
+      WHERE id IN (SELECT id FROM comments_to_delete)
+      RETURNING id, parent_comment_id
+      `,
+      [commentId]
+    );
+
+    if (res.rows.length > 0) {
+      return {
+        success: true,
+        deletedCount: res.rows.length,
+        deletedIds: res.rows.map(row => row.id)
+      };
+    }
+
+    return {
+      success: false,
+      deletedCount: 0,
+      deletedIds: []
+    };
+  } catch (error) {
+    throw new Error(`Error deleteCommentRepo repository: ${error}`);
+  }
+};
+
+
+
+
 // export const getCommentStatByUserIdRepo = async (userId: string, videoId: string) => {
 //     try {
 //         const res = await pool.query(`

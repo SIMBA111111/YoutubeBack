@@ -23,6 +23,7 @@ interface IVideo {
     commentsCount: number
     videoAccess: string
     masterM3u8Url: string
+    playlistIds: string[]
     dateviewed: string
     channel: {
         id: string
@@ -55,6 +56,8 @@ export const mapToIVideo = (video: any): IVideo => {
         tags: video.tags,
         videoDescription: video.description,
         hashtags: video.hashtags,
+        playlistIds: video.playlistids,
+        subscribersCount: video.subscribers_count,
         masterM3u8Url: video.master_m3u8_url,
         dateviewed: video.dateviewed || '',
         channel: {

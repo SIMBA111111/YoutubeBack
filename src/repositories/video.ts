@@ -539,18 +539,30 @@ export const createVideoRepo = async (
   channelId: string,
   duration: number,
   videoAccess: string,
+  hashTags: any[],
+  tags: any[],
+  playlistIds: any[],
   isShort: boolean = false,
 ) => {
   try {
 
     const videoHash = Math.random().toString(36).substring(2, 18);
+    const preparedHashtags = hashTags.reduce((arr, el) => {
+      arr.push(el.name)
+      return arr
+    }, [])
+    const preparedTags = tags.map(t => t.value)
+    const preparedPlaylistIds = playlistIds.map(p => p.id)
+
+    console.log('preparedPlaylistIds preparedPlaylistIds: ', preparedPlaylistIds);
+    
 
     const createdVideo = await pool.query(`
       INSERT INTO videos    
-      (id, name, duration, thumbnail_url, video_preview_url, master_m3u8_url, description, channel_id, is_short, video_hash, video_access, video_mp4_url)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      (id, name, duration, thumbnail_url, video_preview_url, master_m3u8_url, description, channel_id, is_short, video_hash, video_access, video_mp4_url, tags, hashtags, playlistIds)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
       RETURNING *
-    `, [videoId, videoName, duration, thumbnailUrl, previewUrl, masterM3U8Path, videoDescription, channelId, false, videoHash, videoAccess, videoMp4])
+    `, [videoId, videoName, duration, thumbnailUrl, previewUrl, masterM3U8Path, videoDescription, channelId, false, videoHash, videoAccess, videoMp4, preparedTags, preparedHashtags, preparedPlaylistIds])
     
     const createdVideoId = createdVideo.rows[0].id;
 
@@ -561,7 +573,7 @@ export const createVideoRepo = async (
         VALUES ($1, $2, $3, $4, $5)
       `, [frag.title, frag.index, frag.start, frag.end, createdVideoId])
     ));
-    
+
     if (createdVideo.rows[0]) return createdVideo.rows[0]
 
     return {};

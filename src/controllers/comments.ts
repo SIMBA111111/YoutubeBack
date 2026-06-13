@@ -4,6 +4,7 @@ import { getVideoByHashRepo } from "../repositories/video";
 import { mapCommentsToIComment } from "../utils/maps/mapComment";
 import {
   crateCommentRepo,
+  deleteCommentRepo,
   getCommentsByParentCommentId,
   getCommentsByVideoHashRepo,
 } from "../repositories/comment";
@@ -107,6 +108,28 @@ export const createComment = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Internal server error2" });
   }
 };
+
+
+export const deleteComment = async (req: Request, res: Response) => {
+  console.log("deleteComment");
+  try {
+    const { commentId } = req.params;
+
+    const response = await deleteCommentRepo(
+      commentId as string,
+    );
+
+    const result = {
+      deletedComment: true,
+    };
+
+    return res.status(201).json(result);
+  } catch (error) {
+    console.error("Error deleteComment:", error);
+    res.status(500).json({ error: "Internal server error2" });
+  }
+};
+
 
 export const markComment = async (req: Request, res: Response) => {
   console.log("markComment");
