@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { pool } from "../utils/pg";
-import { getPlaylistsByUsername, createPlaylistRepo } from "../repositories/playlist";
+import { getPlaylistsByUsername, createPlaylistRepo, getPlaylistByIdRepo } from "../repositories/playlist";
 import path from "path";
 import fs from 'fs';
 
@@ -62,3 +62,19 @@ export const createPlaylist = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 };
+
+export const getPlaylistById = async (req: Request, res: Response) => {
+    try {
+        const { playlistIds } = req.body
+
+        console.log('req.body = ', req.body);
+        console.log('playlistIds = ', playlistIds);
+        
+
+        // getPlaylistByIdRepo()
+        
+        return 200 
+    } catch (error) {
+        throw new Error(`Error getPlaylistById repository: ${error}`)
+    }
+}

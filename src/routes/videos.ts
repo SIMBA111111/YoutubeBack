@@ -14,7 +14,8 @@ import {
     updateVideoViewCount,
     event,
     createVideo,
-    deleteVideo
+    deleteVideo,
+    updateVideo
 } from '../controllers/video'
 import { upload } from '../middlewares/upload';
 
@@ -35,6 +36,7 @@ router.get('/videos/:id', getVideoById);
 router.post('/mark/video/:videoId', updateMarkVideo);
 router.get('/view/video/:videoId', updateVideoViewCount);
 router.delete('/delete-video/:videoId', deleteVideo);
+router.patch('/update-video/:videoId', updateVideo);
 
 
 // router.post('/videos/create', upload, createVideo);

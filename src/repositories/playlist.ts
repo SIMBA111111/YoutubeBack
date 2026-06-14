@@ -61,3 +61,16 @@ export const createPlaylistRepo = async (name: string, userId: string, thumbnail
         throw new Error(`Error createPlaylistRepo repository: ${error}`)
     }
 }
+
+export const getPlaylistByIdRepo = async (playlistIds: string[]) => {
+    try {
+        const res = await pool.query(`
+            SELECT id, name FROM playlists
+            WHERE id = ANY($1)
+        `, [playlistIds])
+        
+        return res.rows // возвращаем все найденные плейлисты
+    } catch (error) {
+        throw new Error(`Error getPlaylistById repository: ${error}`)
+    }
+}

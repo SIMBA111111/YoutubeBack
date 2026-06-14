@@ -24,6 +24,7 @@ interface IVideo {
     videoAccess: string
     masterM3u8Url: string
     playlistIds: string[]
+    subscribersCount: number,
     dateviewed: string
     channel: {
         id: string

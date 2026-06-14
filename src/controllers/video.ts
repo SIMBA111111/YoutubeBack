@@ -28,6 +28,7 @@ import {
   getVideoListByUsername,
   getVideosFollowedChannels,
   getViewedVideosByChannelId,
+  updateVideoByIdRepo,
   updateVideoDislikes,
   updateVideoLikes,
   updateVideoViews,
@@ -170,9 +171,6 @@ export const getVideosByChannelUsername = async (
       offset as string,
       limit as string
     );
-
-    console.log('response = ', response);
-    
 
     const result = {
       videos: mapVideosToIVideo(response),
@@ -718,6 +716,46 @@ export const createVideo = async (req: Request, res: Response) => {
   }
 };
 
+export const updateVideo = async (req: Request, res: Response) => {
+  console.log("updateVideo");
+  try {
+    const videoId = req.params.videoId;
+    const { formData } = req.body;
+
+    if (!formData) {
+      return res.status(400).json({ error: "formData is required" });
+    }
+
+    const preparedHashtags = formData.hashTags?.map((h: any) => h.name) || [];
+    const preparedTags = formData.tags?.map((t: any) => t.value) || [];
+    const preparedPlaylistIds = formData.playlistIds?.map((t: any) => t.id) || [];
+
+    const video = await updateVideoByIdRepo(
+      videoId as string,
+      preparedHashtags,
+      preparedTags,
+      preparedPlaylistIds,
+      formData.videoName,
+      formData.videoDescription,
+    );
+
+    console.log('video ======= ', video);
+    
+    // ✅ Добавьте return перед каждым res.status()
+    if (!video) {
+      return res.status(404).json({ error: "Video not found" });
+    }
+
+    return res.status(200).json({ 
+      message: "Video updated successfully",
+      video 
+    });
+
+  } catch (error) {
+    console.error("Error updateVideo:", error);
+    return res.status(500).json({ error: "Internal server error2" });
+  }
+};
 
 // controllers/video-controller.js
 

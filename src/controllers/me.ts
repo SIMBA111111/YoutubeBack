@@ -206,9 +206,6 @@ export const getMyNotifs = async (req: Request, res: Response) => {
       meId as string,
     );
 
-    console.log('response = ', response);
-    
-
     const result = {
       notifs: mapNotifToINotif(response),
     };

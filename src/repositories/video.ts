@@ -581,3 +581,36 @@ export const createVideoRepo = async (
     throw new Error(`Error createVideoRepo repository: ${error}`);
   }
 };
+
+export const updateVideoByIdRepo = async (
+  videoId: string,
+  hashTags: string[],
+  tags: string[],
+  playlistIds: string[],
+  videoName: string,
+  videoDescription: string,
+  // thumbnailUrl: string,
+) => {
+  try {
+    const res = await pool.query(
+      `UPDATE videos 
+       SET 
+         name = $1,
+         description = $2,
+         hashtags = $3,
+         tags = $4,
+         playlistIds = $5,
+         updated_date = NOW()
+       WHERE id = $6
+       RETURNING id, channel_id, video_hash, name, description, thumbnail_url, hashtags, tags, playlistIds;`,
+      [videoName, videoDescription, hashTags, tags, playlistIds, videoId]
+    );
+
+    if (res.rows[0]) return res.rows[0];
+
+    return null;
+  } catch (error) {
+    console.error('updateVideoByIdRepo error details:', error);
+    throw new Error(`Error updateVideoById repository: ${error}`);
+  }
+};
