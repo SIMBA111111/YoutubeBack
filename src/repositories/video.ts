@@ -589,7 +589,7 @@ export const updateVideoByIdRepo = async (
   playlistIds: string[],
   videoName: string,
   videoDescription: string,
-  // thumbnailUrl: string,
+  thumbnailUrl: string,
 ) => {
   try {
     const res = await pool.query(
@@ -600,10 +600,11 @@ export const updateVideoByIdRepo = async (
          hashtags = $3,
          tags = $4,
          playlistIds = $5,
+         thumbnail_url = $6,
          updated_date = NOW()
-       WHERE id = $6
+       WHERE id = $7
        RETURNING id, channel_id, video_hash, name, description, thumbnail_url, hashtags, tags, playlistIds;`,
-      [videoName, videoDescription, hashTags, tags, playlistIds, videoId]
+      [videoName, videoDescription, hashTags, tags, playlistIds, thumbnailUrl, videoId]
     );
 
     if (res.rows[0]) return res.rows[0];

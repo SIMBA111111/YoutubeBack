@@ -719,12 +719,32 @@ export const createVideo = async (req: Request, res: Response) => {
 export const updateVideo = async (req: Request, res: Response) => {
   console.log("updateVideo");
   try {
+    console.log('req.body = ', req.body);
+
     const videoId = req.params.videoId;
     const { formData } = req.body;
+
 
     if (!formData) {
       return res.status(400).json({ error: "formData is required" });
     }
+
+    console.log('formData = ', formData);
+    
+    const base64Data = formData.iconPreview.replace(/^data:image\/\w+;base64,/, '');
+    
+    const filename = `thumb_${Date.now()}.jpg`;
+    const currentDir = process.cwd()
+    console.log('currentDir = ', currentDir);
+    const thumbnailPath = currentDir + '/public' + '/videos/' + videoId + '/thumbnail'
+    const thumbnailUrl = 'http://localhost:8080' + '/videos/' + videoId + '/thumbnail/' + filename
+
+    const filepath = path.join(thumbnailPath, filename);
+    
+    fs.writeFile(filepath, base64Data, 'base64', (err) => {
+      if (err) throw err;
+      console.log('Файл сохранен:', filename)
+    })
 
     const preparedHashtags = formData.hashTags?.map((h: any) => h.name) || [];
     const preparedTags = formData.tags?.map((t: any) => t.value) || [];
@@ -737,10 +757,9 @@ export const updateVideo = async (req: Request, res: Response) => {
       preparedPlaylistIds,
       formData.videoName,
       formData.videoDescription,
+      thumbnailUrl
     );
 
-    console.log('video ======= ', video);
-    
     // ✅ Добавьте return перед каждым res.status()
     if (!video) {
       return res.status(404).json({ error: "Video not found" });
@@ -755,7 +774,7 @@ export const updateVideo = async (req: Request, res: Response) => {
     console.error("Error updateVideo:", error);
     return res.status(500).json({ error: "Internal server error2" });
   }
-};
+}
 
 // controllers/video-controller.js
 
