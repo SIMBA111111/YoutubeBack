@@ -28,14 +28,18 @@ export const getTagByName = async (tagName: string) => {
     const res = await pool.query("SELECT * FROM tags WHERE name=$1", [tagName]);
     if (res.rows[0]) return res.rows[0];
 
-    return {};
+    return null;
   } catch (error) {
     throw new Error(`Error getTagByName repository: ${error}`);
   }
 };
 
-export const getVideoList = async (offset: number = 0, limit: number = 20) => {
+export const getVideoList = async (offset: number = 0, limit: number = 20, isShort: boolean | null = null) => {
+  console.log('getVideoList REPO REPO REPO REPO');
   try {
+
+    const params = isShort ? [offset, limit, isShort] : [offset, limit]
+
     const res = await pool.query(
       `
             SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl, ch.name as channelname
@@ -43,7 +47,7 @@ export const getVideoList = async (offset: number = 0, limit: number = 20) => {
             JOIN channels ch ON ch.id = v.channel_id 
             OFFSET $1 LIMIT $2   
         `,
-      [offset, limit]
+      params
     );
 
     if (res.rows) return res.rows;
@@ -179,10 +183,10 @@ export const getShortVideoListByUsername = async (
 
 
 
-
-
-
 export const getVideoListByTag = async (tagId: string) => {
+  console.log('getVideoListByTag = ', getVideoListByTag);
+  
+  
   try {
     const res = await pool.query("SELECT * FROM videos WHERE $1 = ANY (tags)", [
       tagId,
@@ -194,9 +198,6 @@ export const getVideoListByTag = async (tagId: string) => {
     throw new Error(`Error getVideoListByTag repository: ${error}`);
   }
 };
-
-
-
 
 
 
@@ -297,6 +298,9 @@ export const getVideoByIdRepo = async (videoId: string) => {
 };
 
 export const getOrderedVideoList = async (order: "DESC" | "ASC", offset: number, limit: number) => {
+  console.log('getOrderedVideoList');
+  
+  
   try {
     let res;
 
@@ -327,6 +331,8 @@ export const getOrderedVideoList = async (order: "DESC" | "ASC", offset: number,
 };
 
 export const getVideosFollowedChannels = async (channelId: string, offset: number, limit: number) => {
+  console.log('getVideosFollowedChannels');
+  
   try {
     const res = await pool.query(
       `

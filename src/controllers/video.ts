@@ -67,6 +67,8 @@ export const getVideos = async (req: Request, res: Response) => {
 
   try {
     const tagId = req.query.tagId;
+    const isShorts = req.query.isShorts;
+    
     let channelData;
     if (req.cookies?.channelData) {
       channelData = JSON.parse(req.cookies.channelData);
@@ -90,17 +92,23 @@ export const getVideos = async (req: Request, res: Response) => {
 
     let response;
 
-    if (tag.name === "fresh") {
+    console.log('tag = ', tag);
+    
+
+    if (tag?.name === "fresh") {
       response = await getOrderedVideoList("DESC", offset, limit);
-    } else if (tag.name === "newForMe" && channelId) {
+    } else if (tag?.name === "newForMe" && channelId) {
       response = await getVideosFollowedChannels(channelId, offset, limit);
-    } else if (tag.name === "viewed" && channelId) {
+    } else if (tag?.name === "viewed" && channelId) {
       response = await getViewedVideosByChannelId(channelId, offset, limit);
-    } else if (tag.name === "all" || !tag) {
+    } else if (tag?.name === "all" || !tag) {
       response = await getVideoList(offset, limit);
     } else {
-      response = await getVideoListByTag(tag.id);
+      response = await getVideoListByTag(tag?.id);
     }
+
+    console.log('response = ', response);
+    
 
     // const result = {
     //     videos: videos.slice(startIndex, endIndex),
