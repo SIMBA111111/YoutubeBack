@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import {
+  getChannelById,
   getChannelByUsername,
   getChannelsByUser,
   getIsSubOnChannelInfo,
@@ -10,6 +11,7 @@ import {
   createUnsubscribeChannel,
   updateSubscriptionNotifSettings,
 } from "../repositories/subscriptions";
+import { pool } from "../utils/pg";
 
 export const getMyChannels = async (req: Request, res: Response) => {
   try {
@@ -62,6 +64,31 @@ export const getChannelInfo = async (req: Request, res: Response) => {
   }
 };
 
+
+
+export const getChannelInfoById = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+
+    const channel = await getChannelById(userId as string);
+    const subData = await getIsSubOnChannelInfo(userId as string, channel.id as string);
+    if (!channel) return res.status(404).json({ result: `Нет канала` });
+
+    const result = {
+      channel: channel,
+      subData: subData
+    }
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Error getChannelInfo: ", error);
+    return res
+      .status(500)
+      .json({ message: "Internal server error getChannelInfo" });
+  }
+};
+
+
 export const updateSubscribeChannel = async (req: Request, res: Response) => {
   try {
     const { channelId, userId, isSubscribed } = req.body;
@@ -113,5 +140,86 @@ export const updateNotifSetting = async (req: Request, res: Response) => {
     return res
       .status(500)
       .json({ message: "Internal server error notifSetting" });
+  }
+};
+
+
+export const updateChannelInfo = async (req: Request, res: Response) => {
+  try {
+    const channelId = req.params.channelId;
+    if (!channelId) return res.status(400).json({ message: 'channelId required' });
+
+    const body = req.body;
+    if (!body || Object.keys(body).length === 0) {
+      return res.status(400).json({ message: 'No fields to update' });
+    }
+
+    // Маппинг полей
+    const fieldMapping: Record<string, string> = {
+      channelDescription: 'description',
+      avatarUrl: 'avatar_url',
+      bannerUrl: 'banner_url',
+      channelName: 'name',
+    };
+
+    const updatableFields = [
+      'name', 'username', 'email', 'avatar_url', 'banner_url',
+      'description', 'country', 'links', 'notification_setting', 'is_save_history'
+    ];
+
+    const updates: string[] = [];
+    const values: any[] = [];
+    let paramIndex = 1;
+
+    for (const [key, value] of Object.entries(body)) {
+      if (key === 'oldBannerUrl' || key === 'oldAvatarUrl') continue;
+
+      let dbField = fieldMapping[key] || key;
+      if (!updatableFields.includes(dbField)) continue;
+
+      let processedValue = value;
+      if (dbField === 'links' && typeof value === 'string') {
+        processedValue = value
+          .split(',')
+          .map((s: string) => s.trim())
+          .filter((s: string) => s.length > 0);
+        // для PostgreSQL массив передаётся как ARRAY[...]
+        updates.push(`${dbField} = $${paramIndex}::text[]`);
+        values.push(processedValue);
+      } else {
+        updates.push(`${dbField} = $${paramIndex}`);
+        values.push(processedValue);
+      }
+      paramIndex++;
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ message: 'No valid fields to update' });
+    }
+
+    values.push(channelId);
+    const sql = `
+      UPDATE channels
+      SET ${updates.join(', ')}
+      WHERE id = $${paramIndex}
+      RETURNING *
+    `;
+
+    console.log('values = ', values);
+    console.log('sql = ', sql);
+    
+
+    const result = await pool.query(sql, values);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Channel not found' });
+    }
+
+    return res.status(200).json({
+      message: 'Channel updated',
+      channel: result.rows[0],
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Internal error' });
   }
 };
