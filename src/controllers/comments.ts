@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { pool } from "../utils/pg";
-import { getVideoByHashRepo } from "../repositories/video";
+import { getVideoByHashRepo, getVideoByIdRepo } from "../repositories/video";
 import { mapCommentsToIComment } from "../utils/maps/mapComment";
 import {
   crateCommentRepo,
@@ -8,11 +8,12 @@ import {
   getCommentsByParentCommentId,
   getCommentsByVideoHashRepo,
 } from "../repositories/comment";
+import { getVideoById } from "./video";
 
-export const getCommentsByVideoHash = async (req: Request, res: Response) => {
+export const getCommentsByVideoId = async (req: Request, res: Response) => {
   console.log("getCommentsByVideoHash");
   try {
-    const { videoHash } = req.params;
+    const { videoId } = req.params;
     const { parentCommentId, filter, userId } = req.body;
     const offset = parseInt(req.query.offset as string) || 0;
     const limit = parseInt(req.query.limit as string) || 20;
@@ -27,19 +28,30 @@ export const getCommentsByVideoHash = async (req: Request, res: Response) => {
         userId
       );
     } else {
-      const video = await getVideoByHashRepo(videoHash as string);
+      const videoData = await getVideoByIdRepo(videoId as string)
+
+      console.log('videoData = ', videoData);
+      
+
+      const video = await getVideoByHashRepo(videoData.video_hash as string);
+
+      console.log('video = ', video);
+
       if (!video) {
         return res.status(404).json({ error: "Video not found" });
       }
 
       comments = await getCommentsByVideoHashRepo(
-        video.id,
+        videoId as string,
         offset,
         limit,
         filter,
         userId
       );
     }
+
+    console.log('comments = ', comments);
+    
 
     const result = {
       comments: mapCommentsToIComment(comments),

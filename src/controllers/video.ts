@@ -255,7 +255,32 @@ export const getVideoById = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Video not found" });
     }
 
-    res.json(video);
+
+    console.log('=======================================');
+    console.log('video = ', video);
+    
+    
+
+    const channel = await getChannelByVideoHash(video.video_hash as string);
+
+    console.log('channel = ', channel);
+
+    let isSubscribed = {};
+    let stat = {};
+
+    if (channel) {
+      isSubscribed = await getIsSubscribedChannel(channel.id, channel.id);
+      stat = await getStatOfVideoForUser(video.id, channel.id);
+    }
+
+    res.status(200).json({
+      video: mapToIVideo(video),
+      channel: channel,
+      isSubscribed: isSubscribed,
+      stat: stat,
+    });
+
+    // res.json(video);
   } catch (error) {
     console.error("Error getVideoById:", error);
     res.status(500).json({ error: "Internal server error2" });
@@ -593,7 +618,10 @@ export const createVideo = async (req: Request, res: Response) => {
     if (!fs.existsSync(hls1080Dir)) fs.mkdirSync(hls1080Dir, { recursive: true });
 
     // 1. СОЗДАЕМ HLS ПОТОКИ
-    const cmd = `D:\\ffmpeg\\ffmpeg-2026-01-29-git-c898ddb8fe-full_build\\bin\\ffmpeg.exe -i "${absoluteVideoPath}" \
+    // путь к экзешнику дома - D:\\ffmpeg\\ffmpeg-2026-01-29-git-c898ddb8fe-full_build\\bin\\ffmpeg.exe 
+    // путь к экзешнику на работе - C:\\ffmpeg-2026-01-12-git-21a3e44fbe-full_build\\bin\\ffmpeg.exe
+
+    const cmd = `C:\\ffmpeg-2026-01-12-git-21a3e44fbe-full_build\\bin\\ffmpeg.exe -i "${absoluteVideoPath}" \
       -map 0:v -map 0:a -c:a aac -b:a 128k -c:v libx264 -crf 23 -preset medium -vf "scale=-2:480" -hls_time 4 -hls_playlist_type vod -hls_segment_filename "${playlistDir}/480/output_480_%04d.ts" -f hls "${playlistDir}/480/output_480.m3u8" \
       -map 0:v -map 0:a -c:a aac -b:a 128k -c:v libx264 -crf 22 -preset medium -vf "scale=-2:720" -hls_time 4 -hls_playlist_type vod -hls_segment_filename "${playlistDir}/720/output_720_%04d.ts" -f hls "${playlistDir}/720/output_720.m3u8" \
       -map 0:v -map 0:a -c:a aac -b:a 192k -c:v libx264 -crf 20 -preset medium -vf "scale=-2:1080" -hls_time 4 -hls_playlist_type vod -hls_segment_filename "${playlistDir}/1080/output_1080_%04d.ts" -f hls "${playlistDir}/1080/output_1080.m3u8"`;

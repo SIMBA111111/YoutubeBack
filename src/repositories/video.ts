@@ -551,26 +551,56 @@ export const createVideoRepo = async (
   isShort: boolean = false,
 ) => {
   try {
+    // Проверка длительности
+    if (!duration || duration <= 0 || isNaN(duration)) {
+      console.warn(`Длительность видео ${videoMp4} равна ${duration}, устанавливаем значение по умолчанию`);
+      duration = 1; // минимальная длительность
+    }
 
     const videoHash = Math.random().toString(36).substring(2, 18);
     const preparedHashtags = hashTags.reduce((arr, el) => {
-      arr.push(el.name)
-      return arr
-    }, [])
-    const preparedTags = tags.map(t => t.value)
-    const preparedPlaylistIds = playlistIds.map(p => p.id)
+      arr.push(el.name);
+      return arr;
+    }, []);
+    const preparedTags = tags ? tags.map(t => t.value) : [];
+    const preparedPlaylistIds = playlistIds ? playlistIds.map(p => p.id) : [];
 
-    console.log('preparedPlaylistIds preparedPlaylistIds: ', preparedPlaylistIds);
-    
+    console.log('preparedPlaylistIds:', preparedPlaylistIds);
+    console.log('duration:', duration, typeof duration);
+
+    // Убедитесь, что duration - число
+    const durationNumber = Number(duration);
+    if (isNaN(durationNumber) || durationNumber <= 0) {
+      throw new Error(`Невалидная длительность: ${duration}`);
+    }
 
     const createdVideo = await pool.query(`
       INSERT INTO videos    
-      (id, name, duration, thumbnail_url, video_preview_url, master_m3u8_url, description, channel_id, is_short, video_hash, video_access, video_mp4_url, tags, hashtags, playlistIds)
+      (id, name, duration, thumbnail_url, video_preview_url, master_m3u8_url, description, channel_id, is_short, video_hash, video_access, video_mp4_url, tags, hashtags, playlistids)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
       RETURNING *
-    `, [videoId, videoName, duration, thumbnailUrl, previewUrl, masterM3U8Path, videoDescription, channelId, false, videoHash, videoAccess, videoMp4, preparedTags, preparedHashtags, preparedPlaylistIds])
+    `, [
+      videoId,              // $1 - id (uuid)
+      videoName,            // $2 - name (text)
+      durationNumber,       // $3 - duration (double precision) - число!
+      thumbnailUrl,         // $4 - thumbnail_url (text)
+      previewUrl,           // $5 - video_preview_url (text)
+      masterM3U8Path,       // $6 - master_m3u8_url (text)
+      videoDescription,     // $7 - description (text)
+      channelId,            // $8 - channel_id (uuid)
+      false,                // $9 - is_short (boolean)
+      videoHash,            // $10 - video_hash (text)
+      videoAccess,          // $11 - video_access (text) - может быть null
+      videoMp4,             // $12 - video_mp4_url (text)
+      preparedTags,         // $13 - tags (uuid[]) - массив UUID
+      preparedHashtags,     // $14 - hashtags (text[])
+      preparedPlaylistIds   // $15 - playlistids (text[])
+    ]);
     
     const createdVideoId = createdVideo.rows[0].id;
+
+    console.log('fragments = ', fragments);
+    
 
     await Promise.all(fragments.map(frag => 
       pool.query(`
@@ -580,10 +610,11 @@ export const createVideoRepo = async (
       `, [frag.title, frag.index, frag.start, frag.end, createdVideoId])
     ));
 
-    if (createdVideo.rows[0]) return createdVideo.rows[0]
+    if (createdVideo.rows[0]) return createdVideo.rows[0];
 
     return {};
   } catch (error) {
+    console.error('Ошибка в createVideoRepo:', error);
     throw new Error(`Error createVideoRepo repository: ${error}`);
   }
 };

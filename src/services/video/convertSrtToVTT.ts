@@ -31,7 +31,9 @@ export const convertSrtToVTTAndCreateM3U8 = async (
     console.log("Создан пустой VTT файл:", vttPath);
   } else {
     // Конвертируем SRT → VTT через ffmpeg
-    const cmd = `D:\\ffmpeg\\ffmpeg-2026-01-29-git-c898ddb8fe-full_build\\bin\\ffmpeg.exe -i "${srtFilePath}" "${vttPath}"`;
+    // путь к экзешнику дома - D:\\ffmpeg\\ffmpeg-2026-01-29-git-c898ddb8fe-full_build\\bin\\ffmpeg.exe 
+    // путь к экзешнику на работе - C:\\ffmpeg-2026-01-12-git-21a3e44fbe-full_build\\bin\\ffprobe.exe
+    const cmd = `C:\\ffmpeg-2026-01-12-git-21a3e44fbe-full_build\\bin\\ffprobe.exe -i "${srtFilePath}" "${vttPath}"`;
 
     await new Promise<void>((resolve, reject) => {
       exec(cmd, (error, stdout, stderr) => {
