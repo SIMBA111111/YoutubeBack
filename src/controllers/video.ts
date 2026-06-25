@@ -92,9 +92,6 @@ export const getVideos = async (req: Request, res: Response) => {
 
     let response;
 
-    console.log('tag = ', tag);
-    
-
     if (tag?.name === "fresh") {
       response = await getOrderedVideoList("DESC", offset, limit);
     } else if (tag?.name === "newForMe" && channelId) {
@@ -107,20 +104,13 @@ export const getVideos = async (req: Request, res: Response) => {
       response = await getVideoListByTag(tag?.id);
     }
 
-    console.log('response = ', response);
-    
-
-    // const result = {
-    //     videos: videos.slice(startIndex, endIndex),
-    //     total: videos.length,  // используем длину из БД, а не из videosData
-    //     page: page,
-    //     totalPages: Math.ceil(videos.length / limit)
-    // };
 
     const result = {
       videos: mapVideosToIVideo(response),
       total: response.length,
     };
+
+    console.log('result = ', result);
 
     res.json(result);
   } catch (error) {
@@ -344,8 +334,16 @@ export const updateMarkVideo = async (req: Request, res: Response) => {
     const { videoId } = req.params;
     const { userId, isLiked, isDisliked } = req.body;
 
+    console.log('videoId = ', videoId);
+    console.log('userId = ', userId);
+    console.log('isLiked = ', isLiked);
+    console.log('isDisliked = ', isDisliked);
+
     // Проверяем, существует ли запись статистики
     const oldStat = await getStatOfVideoForUser(videoId as string, userId);
+
+    console.log('oldStat = ', oldStat);
+    
 
     let oldLiked = false;
     let oldDisliked = false;

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { pool } from "../utils/pg";
-import { getVideoByHashRepo, getVideoByIdRepo } from "../repositories/video";
+import { getVideoByHashRepo, getVideoByIdRepo, updateVideoCommentCount } from "../repositories/video";
 import { mapCommentsToIComment } from "../utils/maps/mapComment";
 import {
   crateCommentRepo,
@@ -109,6 +109,10 @@ export const createComment = async (req: Request, res: Response) => {
       videoId as string,
       userId
     );
+
+    if(response) {
+      await updateVideoCommentCount(videoId as string)
+    }
 
     const result = {
       newComment: response,

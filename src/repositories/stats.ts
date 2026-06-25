@@ -7,7 +7,7 @@ export const getStatOfVideoForUser = async (videoId: string, userId: string) => 
         if (res.rows.length > 0) 
             return res.rows[0]
 
-        return {}
+        return null
     } catch (error) {
         throw new Error(`Error getStatOfVideoForUser repository: ${error}`)
     }

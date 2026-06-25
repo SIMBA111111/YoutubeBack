@@ -462,6 +462,25 @@ export const updateVideoLikes = async (
   }
 };
 
+
+export const updateVideoCommentCount = async (
+  videoId: string,
+) => {
+  try {
+    const res = await pool.query(
+      `UPDATE videos SET comments_count = comments_count + 1 WHERE id = $1`,
+      [videoId]
+    );
+
+    if (res.rows[0]) return res.rows[0];
+
+    return {};
+  } catch (error) {
+    throw new Error(`Error updateVideoCommentCount repository: ${error}`);
+  }
+};
+
+
 export const updateVideoDislikes = async (
   videoId: string,
   operation: "inc" | "decr"
