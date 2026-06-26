@@ -15,9 +15,7 @@ export const getIsSubscribedChannel = async (channelId: string, meId: string) =>
 
 export const createUnsubscribeChannel = async (channelId: string, userId: string) => {
     console.log('createUnsubscribeChannel');
-    console.log('channelId = ', channelId);
-    console.log('userId === ', userId);
-    
+
     try {
         const res = await pool.query(`
             DELETE FROM subscriptions 

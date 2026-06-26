@@ -44,10 +44,8 @@ export const getMyLikedVideoList = async (req: Request, res: Response) => {
     const response = await getLikedVideos(
       meId as string,
       isShort,
-      // offset ? Number(offset) : 0,
-      0,
-      // limit ? Number(limit) : 20
-      20
+      offset ? Number(offset) : 0,
+      limit ? Number(limit) : 20
     );
 
     const result = {
