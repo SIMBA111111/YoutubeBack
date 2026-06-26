@@ -30,12 +30,7 @@ export const getCommentsByVideoId = async (req: Request, res: Response) => {
     } else {
       const videoData = await getVideoByIdRepo(videoId as string)
 
-      console.log('videoData = ', videoData);
-      
-
       const video = await getVideoByHashRepo(videoData.video_hash as string);
-
-      console.log('video = ', video);
 
       if (!video) {
         return res.status(404).json({ error: "Video not found" });
@@ -49,9 +44,6 @@ export const getCommentsByVideoId = async (req: Request, res: Response) => {
         userId
       );
     }
-
-    console.log('comments = ', comments);
-    
 
     const result = {
       comments: mapCommentsToIComment(comments),
@@ -71,9 +63,6 @@ export const getRepliesComment = async (req: Request, res: Response) => {
   console.log("getRepliesComment");
   try {
     const { parentCommentId } = req.params;
-    console.log("parentCommentId ============ ", parentCommentId);
-    console.log("req.body ============ ", req.body);
-
     const { userId } = req.body;
     const offset = parseInt(req.query.offset as string) || 0;
     const limit = parseInt(req.query.limit as string) || 20;
@@ -215,9 +204,6 @@ export const markComment = async (req: Request, res: Response) => {
         );
       }
     }
-
-    console.log("userId = ", userId);
-    console.log("commentId = ", commentId);
 
     // Получаем обновленную статистику для ответа
     const updatedStatsRes = await pool.query(

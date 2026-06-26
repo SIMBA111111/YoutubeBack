@@ -39,9 +39,6 @@ export const getMyLikedVideoList = async (req: Request, res: Response) => {
     const { offset, limit } = req.query;
     const filter = req.body?.filter || null;
 
-    console.log('req.body? = ', req.body);
-    
-
     const isShort = filter?.isShort === true ? true : filter?.isShort === false ? false : null
 
     const response = await getLikedVideos(
@@ -52,9 +49,6 @@ export const getMyLikedVideoList = async (req: Request, res: Response) => {
       // limit ? Number(limit) : 20
       20
     );
-
-    // console.log('getMyLikedVideoList response = ', response);
-    
 
     const result = {
       likedVideos: mapVideosToIVideo(response),
@@ -116,8 +110,6 @@ export const getMyViewsHistory = async (req: Request, res: Response) => {
         parseInt(limit as string)
       );
     } else if (filter?.tags === 'all') {
-      console.log('all');
-       
       response = await getViewedVideosByChannelId(
         meId as string,
         parseInt(offset as string),
@@ -137,9 +129,6 @@ export const getMyViewsHistory = async (req: Request, res: Response) => {
         parseInt(limit as string)
       );
     }
-
-    console.log(response);
-    
 
     const result = {
       viewsHistory: mapVideosToIVideo(response),

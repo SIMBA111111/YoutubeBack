@@ -208,9 +208,6 @@ export const getViewedVideoListByTag = async (tagId: string, offset: number = 0,
 
     const tag = await getTagByName(tagId)
 
-    console.log('tag', tag );
-    
-
     let query = `
       SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl, ch.name as channelname
       FROM videos v
@@ -224,9 +221,6 @@ export const getViewedVideoListByTag = async (tagId: string, offset: number = 0,
 
     query += `ORDER BY sov.updated_date DESC`;
     query += `OFFSET $3 LIMIT $4`;
-
-    console.log('Generated query:', query);
-    console.log('Parameters:', params);
 
     const res = await pool.query(query, params);
     
@@ -282,8 +276,6 @@ export const getVideoByHashRepo = async (videoHash: string) => {
 };
 
 export const getVideoByIdRepo = async (videoId: string) => {
-  console.log('getVideoByIdRepo ', videoId);
-  
   try {
     const res = await pool.query(`
       SELECT * FROM videos WHERE id=$1`,
@@ -372,8 +364,6 @@ export const getViewedVideosByChannelId = async (channelId: string, offset: numb
       [channelId, offset, limit]
     );
 
-
-
     if (res.rows) return res.rows;
 
     return [];
@@ -384,11 +374,6 @@ export const getViewedVideosByChannelId = async (channelId: string, offset: numb
 
 export const getViewedShortVideosByChannelId = async (channelId: string, isShort: boolean, offset: number, limit: number) => {
   console.log('getViewedVideosByChannelId');
-  console.log('channelId = ', channelId);
-  console.log('offset', offset);
-  console.log('limit', limit);
-  console.log('isShort', isShort);
-  
   try {
     const res = await pool.query(
       `
@@ -584,9 +569,6 @@ export const createVideoRepo = async (
     const preparedTags = tags ? tags.map(t => t.value) : [];
     const preparedPlaylistIds = playlistIds ? playlistIds.map(p => p.id) : [];
 
-    console.log('preparedPlaylistIds:', preparedPlaylistIds);
-    console.log('duration:', duration, typeof duration);
-
     // Убедитесь, что duration - число
     const durationNumber = Number(duration);
     if (isNaN(durationNumber) || durationNumber <= 0) {
@@ -617,9 +599,6 @@ export const createVideoRepo = async (
     ]);
     
     const createdVideoId = createdVideo.rows[0].id;
-
-    console.log('fragments = ', fragments);
-    
 
     await Promise.all(fragments.map(frag => 
       pool.query(`

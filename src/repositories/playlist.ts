@@ -23,11 +23,6 @@ export const getLikedplaylists = async (meId: string, offset: string, limit: str
 export const getPlaylistsByUsername = async (channelUsername: string, offset: string, limit: string) => {
     console.log('getPlaylistsByUsername');
     
-    console.log('channelUsername = ', channelUsername);
-    console.log('offset = ', offset);
-    console.log('limit = ', limit);
-    
-
     try {
         const res = await pool.query(`
             SELECT p.* 

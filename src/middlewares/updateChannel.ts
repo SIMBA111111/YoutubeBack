@@ -27,11 +27,6 @@ const storage = multer.diskStorage({
         const avatarsDir = path.join(baseDir, 'avatars');
         const bannersDir = path.join(baseDir, 'banners');
 
-        console.log(avatarsDir);
-        console.log(bannersDir);
-        console.log('req.params = ', req.params);
-        
-
         // Создаем директории если их нет
         if (!fs.existsSync(bannersDir)) {
             fs.mkdirSync(bannersDir, { recursive: true });

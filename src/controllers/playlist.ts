@@ -30,9 +30,6 @@ export const createPlaylist = async (req: Request, res: Response) => {
     try {
         const { name, userId, thumbnail } = req.body; // thumbnail приходит как base64
         
-        console.log('name:', name);
-        console.log('userId:', userId);
-        
         if (!name || !userId || !thumbnail) {
             return res.status(400).json({ error: 'Missing required fields' });
         }
@@ -66,10 +63,6 @@ export const createPlaylist = async (req: Request, res: Response) => {
 export const getPlaylistById = async (req: Request, res: Response) => {
     try {
         const { playlistIds } = req.body
-
-        console.log('req.body = ', req.body);
-        console.log('playlistIds = ', playlistIds);
-        
 
         // getPlaylistByIdRepo()
         

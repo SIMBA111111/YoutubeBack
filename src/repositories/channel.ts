@@ -138,12 +138,6 @@ export const getLikedVideos = async (
 
     query += ` OFFSET $2 LIMIT $3`
 
-    console.log('isShort = ', isShort);
-    console.log('offset = ', offset);
-    console.log('limit = ', limit);
-    console.log('query = ', query);
-    
-
     const res = await pool.query(query, [meId, offset, limit])
 
     if (res.rows.length > 0) return res.rows;

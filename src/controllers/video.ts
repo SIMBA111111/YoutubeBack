@@ -74,7 +74,6 @@ export const getVideos = async (req: Request, res: Response) => {
       channelData = JSON.parse(req.cookies.channelData);
     } else {
       // Обработка ситуации, когда данных нет
-      console.log("cookie error - getVideos");
     }
     const channelId = channelData?.id || null;
 
@@ -109,8 +108,6 @@ export const getVideos = async (req: Request, res: Response) => {
       videos: mapVideosToIVideo(response),
       total: response.length,
     };
-
-    console.log('result = ', result);
 
     res.json(result);
   } catch (error) {
@@ -245,15 +242,7 @@ export const getVideoById = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Video not found" });
     }
 
-
-    console.log('=======================================');
-    console.log('video = ', video);
-    
-    
-
     const channel = await getChannelByVideoHash(video.video_hash as string);
-
-    console.log('channel = ', channel);
 
     let isSubscribed = {};
     let stat = {};
@@ -425,7 +414,7 @@ export const updateVideoViewCount = async (req: Request, res: Response) => {
         userId as string
       );
 
-      if ("id" in statRes) {
+      if (statRes) {
         console.log("ОБНОВЛЯЕМ");
 
         await updateStatOfVideoViewsCount(videoId as string, userId as string);
@@ -539,10 +528,6 @@ export const createVideo = async (req: Request, res: Response) => {
   console.log("createVideo");
 
   try {
-    console.log("req.body = ", req.body);
-    console.log("req.files = ", req.files);
-    console.log("req.videoId = ", req.videoId);
-
     const videoId = req.videoId;
     const { videoName, videoDescription, videoPreview, playlistIds, fragments, videoAccess, hashTags, tags } = JSON.parse(req.body.videoData);
     const channelId = req.body.userId;
@@ -550,14 +535,6 @@ export const createVideo = async (req: Request, res: Response) => {
 
     sendProgress(channelId, { progress: 8, stage: 'saving', message: '' });
     
-    console.log('videoName ==== ', videoName);
-    console.log('videoDescription =-==-=- ', videoDescription);
-    console.log(videoPreview);
-    console.log(playlistIds);
-    console.log(fragments);
-    console.log('hashTags =-=--=- ', hashTags);
-    console.log('tags =-=--=- ', tags);
-
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
     if (!videoId || !files?.videoFile?.[0] || !files?.videoPreview?.[0]) {
@@ -713,8 +690,6 @@ export const createVideo = async (req: Request, res: Response) => {
           .run();
       });
     });
-
-    console.log("duration = ", duration);
 
     sendProgress(channelId, { progress: 89, stage: 'saving', message: '' });
 
