@@ -32,6 +32,7 @@ import {
   updateVideoDislikes,
   updateVideoLikes,
   updateVideoViews,
+  updateVideoViewsForAnal,
 } from "../repositories/video";
 import { mapToIVideo, mapVideosToIVideo } from "../utils/maps/mapVideo";
 import { getAllSubscriptionsByChannel, getChannelById, getChannelByVideoHash, getChannelsByUser } from "../repositories/channel";
@@ -407,6 +408,17 @@ export const updateVideoViewCount = async (req: Request, res: Response) => {
     }
 
     await updateVideoViews(videoId as string);
+
+    console.log('+++++++++++++++++++++++++++');
+
+    // новая таблица для отслеживания просмотров для статистики 
+    await updateVideoViewsForAnal( 
+      videoId as string,
+      userId !== 'undefined' ? userId as string : '00000000-0000-0000-0000-000000000000',
+    )
+
+    console.log('=============================');
+    
 
     if (userId) {
       const statRes = await getStatOfVideoForUser(

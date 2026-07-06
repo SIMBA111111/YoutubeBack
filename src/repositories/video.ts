@@ -520,6 +520,23 @@ export const updateVideoViews = async (videoId: string) => {
 };
 
 
+export const updateVideoViewsForAnal = async (videoId: string, channelId: string) => {
+  console.log('channelId  ::: ', channelId);
+  
+  try {
+    const res = await pool.query(
+      `INSERT INTO video_views (video_id, channel_id) 
+        VALUES ($1, $2) 
+        RETURNING *`,
+      [videoId, channelId]
+    );
+
+    return res.rows[0] || {};
+  } catch (error) {
+      throw new Error(`Error updateVideoViewsForAnal repository: ${error}`);
+  }
+};
+
 export const deleteVideoByIdRepo = async (videoId: string) => {
   try {
     const res = await pool.query(

@@ -12,6 +12,7 @@ import {
   updateSubscriptionNotifSettings,
 } from "../repositories/subscriptions";
 import { pool } from "../utils/pg";
+import { getChannelAnalyticService } from "../services/channels/getChannelAnalyticService";
 
 export const getMyChannels = async (req: Request, res: Response) => {
   try {
@@ -93,7 +94,6 @@ export const updateSubscribeChannel = async (req: Request, res: Response) => {
   try {
     const { channelId, userId, isSubscribed } = req.body;
 
-    console.log("isSubscribed = ", isSubscribed);
     let updatedSub;
 
     if (isSubscribed) {
@@ -205,10 +205,6 @@ export const updateChannelInfo = async (req: Request, res: Response) => {
       RETURNING *
     `;
 
-    console.log('values = ', values);
-    console.log('sql = ', sql);
-    
-
     const result = await pool.query(sql, values);
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Channel not found' });
@@ -221,5 +217,29 @@ export const updateChannelInfo = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: 'Internal error' });
+  }
+};
+
+
+export const getChannelAnalytic = async (req: Request, res: Response) => {
+  try {
+    const { channelId } = req.params;
+    const { dateRange, tab } = req.body
+
+    console.log('tab = ', tab);
+    console.log('dateRange = ', dateRange);
+
+
+    const resAnalytic = await getChannelAnalyticService(channelId as string, dateRange, tab)
+
+    console.log('resAnalytic = ', resAnalytic);
+
+    return res.status(200).json({result: resAnalytic})
+
+  } catch (error) {
+    console.error("Error notifSetting: ", error);
+    return res
+      .status(500)
+      .json({ message: "Internal server error notifSetting" });
   }
 };
