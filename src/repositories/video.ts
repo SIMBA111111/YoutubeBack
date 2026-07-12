@@ -734,7 +734,7 @@ export const createVideoRepo = async (
 
     if (createdVideo.rows[0]) return createdVideo.rows[0];
 
-    return {};
+    return null;
   } catch (error) {
     console.error('Ошибка в createVideoRepo:', error);
     throw new Error(`Error createVideoRepo repository: ${error}`);

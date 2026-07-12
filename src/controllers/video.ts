@@ -46,9 +46,11 @@ import {
   updateStatOfVideoForUser,
   updateStatOfVideoViewsCount,
 } from "../repositories/stats";
-import { sendProgress } from "./event";
+import { activeNotifConnections, sendProgress } from "./event";
 import { deleteVideoService } from "../services/video/deleteVideo";
 import { getDateRangeInfo } from "../utils/getDateRangeCondition";
+import { broadcastNewVideo } from "../services/channels/broadcastNewVideo";
+import { createNewVideoNotifs } from "../repositories/notifs";
 
 export const getTags = async (req: Request, res: Response) => {
   console.log("getTags");
@@ -507,71 +509,6 @@ export const getVideoAnalytics = async (req: Request, res: Response) => {
 };
 
 
-const activeConnections = new Map();
-
-export const event = async (req: Request, res: Response) => {
-  console.log('event');
-  
-  try {
-    const channelId = req.query.channelId as string;
-    const userId = req.query.userId as string;
-    
-    if (!channelId || !userId) {
-      return res.status(400).json({ error: "channelId and userId required" });
-    }
-    
-    const headers = {
-      'Content-Type': 'text/event-stream',
-      'Connection': 'keep-alive',
-      'Cache-Control': 'no-cache',
-      'Access-Control-Allow-Origin': '*'
-    };
-    
-    res.writeHead(200, headers);
-    
-    // Создаем объект соединения
-    const connection = { res, userId, channelId };
-    
-    // Добавляем в Map
-    if (!activeConnections.has(channelId)) {
-      activeConnections.set(channelId, new Set());
-    }
-    activeConnections.get(channelId).add(connection);
-    
-    console.log(`SSE connected: channel ${channelId}, total connections: ${activeConnections.get(channelId).size}`);
-    
-    // Отправляем приветствие
-    res.write(`: connected\n\n`);
-    
-    // Keep-alive
-    const interval = setInterval(() => {
-      res.write(`: heartbeat\n\n`);
-    }, 30000);
-    
-    // Обработка закрытия
-    req.on('close', () => {
-      clearInterval(interval);
-      
-      // Удаляем соединение
-      const channelConnections = activeConnections.get(channelId);
-      if (channelConnections) {
-        channelConnections.delete(connection);
-        if (channelConnections.size === 0) {
-          activeConnections.delete(channelId);
-        }
-      }
-      
-      console.log(`SSE disconnected: channel ${channelId}`);
-      res.end();
-    });
-    
-  } catch (error) {
-    console.error('Error event: ', error);
-    return res.status(500).end();
-  }
-};
-
-
 export const createVideo = async (req: Request, res: Response) => {
   console.log("createVideo");
 
@@ -765,6 +702,14 @@ export const createVideo = async (req: Request, res: Response) => {
     );
 
     sendProgress(channelId, { progress: 100, stage: 'saving', message: '' });
+
+    const subsers = await getAllSubscriptionsByChannel(channelId)
+    
+    
+    const subsersIds = (Array.isArray(subsers) && subsers.length > 0) ? subsers?.map(s => s.id) : []
+    
+    await createNewVideoNotifs(response.id, subsersIds)
+    await broadcastNewVideo(activeNotifConnections, channelId, response)
 
     return res.status(201).json("Video created succesfully");
   } catch (error) {

@@ -12,7 +12,6 @@ import {
     getVideosByChannelUsername,
     getShortVideosByChannelUsername,
     updateVideoViewCount,
-    event,
     createVideo,
     deleteVideo,
     updateVideo,
@@ -22,7 +21,6 @@ import { upload } from '../middlewares/upload';
 
 const router = express.Router();
 
-router.get('/event', event);
 router.get('/tags', getTags);
 
 router.get('/videos', getVideos);
