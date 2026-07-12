@@ -15,7 +15,8 @@ import {
     event,
     createVideo,
     deleteVideo,
-    updateVideo
+    updateVideo,
+    getVideoAnalytics
 } from '../controllers/video'
 import { upload } from '../middlewares/upload';
 
@@ -32,6 +33,7 @@ router.post('/video/:hash', getVideoByHash);
 router.post('/recommended-videos/:hash', getRecommendedVideos);
 router.get('/videos/search/:name', getVideoListByName);
 router.get('/videos/:id', getVideoById);
+router.post('/video-analytics/:videoId', getVideoAnalytics);
 
 router.post('/mark/video/:videoId', updateMarkVideo);
 router.get('/view/video/:videoId', updateVideoViewCount);

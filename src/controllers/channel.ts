@@ -9,6 +9,8 @@ import {
 import {
   createSubscription,
   createUnsubscribeChannel,
+  getSubscription,
+  updateSubscribeChannelRepo,
   updateSubscriptionNotifSettings,
 } from "../repositories/subscriptions";
 import { pool } from "../utils/pg";
@@ -106,7 +108,14 @@ export const updateSubscribeChannel = async (req: Request, res: Response) => {
         isSubscribed: false,
       });
     } else {
-      updatedSub = await createSubscription(channelId, userId);
+      const subEntity = await getSubscription(channelId, userId);
+      
+      if (!subEntity) {
+        updatedSub = await createSubscription(channelId, userId);
+      } else {
+        updatedSub = await updateSubscribeChannelRepo(channelId, userId);
+      }
+
 
       await updateSubsCountChannel(channelId, "inc");
 
@@ -229,12 +238,14 @@ export const getChannelAnalytic = async (req: Request, res: Response) => {
     console.log('tab = ', tab);
     console.log('dateRange = ', dateRange);
 
+    const { analyticData, totalViews, totalSubscriptions } = await getChannelAnalyticService(channelId as string, dateRange, tab)
 
-    const resAnalytic = await getChannelAnalyticService(channelId as string, dateRange, tab)
-
-    console.log('resAnalytic = ', resAnalytic);
-
-    return res.status(200).json({result: resAnalytic})
+    return res.status(200).json({result: {
+        analyticData: analyticData,
+        totalViews: totalViews, 
+        totalSubscriptions: totalSubscriptions
+      }
+    })
 
   } catch (error) {
     console.error("Error notifSetting: ", error);

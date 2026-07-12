@@ -1,4 +1,4 @@
-import { getChannelSubsCount, getChannelSubsCountEvery12Hour, getChannelSubsCountEvery2Hour, getChannelViewsCount, getChannelViewsCountEvery12Hour, getChannelViewsCountEvery2Hour } from "../../repositories/channel"
+import { getChannelSubsCount, getChannelSubsCountEvery12Hour, getChannelSubsCountEvery2Hour, getChannelViewsCount, getChannelViewsCountEvery12Hour, getChannelViewsCountEvery2Hour, getTotalSubscriptionByDateRange, getTotalViewsByDateRange } from "../../repositories/channel"
 import { getDateRangeInfo } from "../../utils/getDateRangeCondition";
 
 type TTab = 'views' | 'subscriptions'
@@ -9,27 +9,36 @@ export const getChannelAnalyticService = async (
     tab: TTab
 ) => {
     const interval = getDateRangeInfo(dateRange);
-    let result;
+    let analyticData;
+    let totalViews;
+    let totalSubscriptions;
 
     if (tab === 'subscriptions') {
         if (interval === '1 day') {
-            result = await getChannelSubsCountEvery2Hour(channelId, interval);
+            analyticData = await getChannelSubsCountEvery2Hour(channelId, interval);
         } else if (interval === '3 days') {
-            result = await getChannelSubsCountEvery12Hour(channelId, interval);
+            analyticData = await getChannelSubsCountEvery12Hour(channelId, interval);
         } else {
-            result = await getChannelSubsCount(channelId, interval);
+            analyticData = await getChannelSubsCount(channelId, interval);
         }
     } else {
         if (interval === '1 day') {
-            result = await getChannelViewsCountEvery2Hour(channelId, interval);
+            analyticData = await getChannelViewsCountEvery2Hour(channelId, interval);
         } else if (interval === '3 days') {
-            result = await getChannelViewsCountEvery12Hour(channelId, interval);
+            analyticData = await getChannelViewsCountEvery12Hour(channelId, interval);
         } else {
-            result = await getChannelViewsCount(channelId, interval);
+            analyticData = await getChannelViewsCount(channelId, interval);
         }
     }
 
-    return result;
+    totalViews = await getTotalViewsByDateRange(channelId, interval)
+    totalSubscriptions = await getTotalSubscriptionByDateRange(channelId, interval)
+
+    return {
+        analyticData: analyticData,
+        totalViews: totalViews, 
+        totalSubscriptions: totalSubscriptions
+    }
 };
 
 

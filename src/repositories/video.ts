@@ -520,8 +520,7 @@ export const updateVideoViews = async (videoId: string) => {
 };
 
 
-export const updateVideoViewsForAnal = async (videoId: string, channelId: string) => {
-  console.log('channelId  ::: ', channelId);
+export const updateVideoViewsForAnal = async (videoId: string, channelId: string = '00000000-0000-0000-0000-000000000000') => {
   
   try {
     const res = await pool.query(
@@ -553,6 +552,114 @@ export const deleteVideoByIdRepo = async (videoId: string) => {
     throw new Error(`Error deleteVideoById repository: ${error}`);
   }
 };
+
+
+export const getVideoAnalyticsRepo = async (videoId: string, dateRange: string) => {
+  try {
+    let query = `
+      SELECT 
+        TO_CHAR(DATE(vv.viewed_date), 'DD.MM.YYYY') as date,
+        COUNT(vv.id)::INTEGER as views_count
+      FROM video_views vv
+      WHERE vv.video_id = $1
+    `;
+    
+    const params: any[] = [videoId];
+    
+    if (dateRange) {
+      query += ` AND vv.viewed_date >= NOW() - INTERVAL '${dateRange}'`;
+    }
+    
+    query += ` GROUP BY DATE(vv.viewed_date) ORDER BY DATE(vv.viewed_date) ASC`;
+    
+    const res = await pool.query(query, params);
+
+    console.log('res.rows: ', res.rows);
+    
+    const result: Record<string, number> = {};
+    res.rows.forEach(row => {
+      result[row.date] = row.views_count;
+    });
+    
+    return result;
+  } catch (error) {
+    throw new Error(`Error getVideoAnalyticsRepo repository: ${error}`);
+  }
+};
+
+
+export const getVideoViewsLast24Hours = async (videoId: string) => {
+  try {
+    const query = `
+      SELECT 
+        TO_CHAR(
+          DATE_TRUNC('hour', vv.viewed_date) - 
+          INTERVAL '2 hours' * (EXTRACT(HOUR FROM vv.viewed_date)::INTEGER % 2) +
+          INTERVAL '2 hours' * (EXTRACT(HOUR FROM vv.viewed_date)::INTEGER % 2),
+          'YYYY-MM-DD HH24:00'
+        ) as time_slot,
+        COUNT(vv.id)::INTEGER as views_count
+      FROM video_views vv
+      WHERE vv.video_id = $1
+        AND vv.viewed_date >= NOW() - INTERVAL '24 hours'
+      GROUP BY time_slot
+      ORDER BY time_slot ASC
+    `;
+    
+    const res = await pool.query(query, [videoId]);
+    
+    // Возвращаем объект { '2026-07-12 10:00': 45, '2026-07-12 12:00': 32, ... }
+    return res.rows.reduce((acc, row) => {
+      acc[row.time_slot] = row.views_count;
+      return acc;
+    }, {} as Record<string, number>);
+  } catch (error) {
+    throw new Error(`Error getVideoViewsLast24Hours repository: ${error}`);
+  }
+};
+
+
+
+export const getVideoViewsLast3Days = async (videoId: string) => {
+  try {
+    const query = `
+      WITH time_slots AS (
+        SELECT generate_series(
+          DATE_TRUNC('day', NOW()) - INTERVAL '2 days',
+          DATE_TRUNC('day', NOW()) + INTERVAL '1 day',
+          INTERVAL '12 hours'
+        ) as slot_start
+      ),
+      views_agg AS (
+        SELECT 
+          DATE_TRUNC('day', vv.viewed_date) + 
+          INTERVAL '12 hours' * FLOOR(EXTRACT(HOUR FROM vv.viewed_date) / 12) as slot,
+          COUNT(*)::INTEGER as views_count
+        FROM video_views vv
+        WHERE vv.video_id = $1
+          AND vv.viewed_date >= NOW() - INTERVAL '3 days'
+        GROUP BY slot
+      )
+      SELECT 
+        TO_CHAR(ts.slot_start, 'YYYY-MM-DD HH24:00') as time_slot,
+        COALESCE(va.views_count, 0) as views_count
+      FROM time_slots ts
+      LEFT JOIN views_agg va ON va.slot = ts.slot_start
+      ORDER BY ts.slot_start ASC
+    `;
+    
+    const res = await pool.query(query, [videoId]);
+    
+    return res.rows.reduce((acc, row) => {
+      acc[row.time_slot] = row.views_count
+      return acc
+    }, {} as Record<string, number>)
+
+  } catch (error) {
+    throw new Error(`Error getVideoViewsLast3Days repository: ${error}`);
+  }
+};
+
 
 export const createVideoRepo = async (
   videoId: string,

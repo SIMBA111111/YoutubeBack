@@ -18,6 +18,7 @@ import {
   getTagById,
   getTagByName,
   getTagList,
+  getVideoAnalyticsRepo,
   getVideoByHashRepo,
   getVideoByIdRepo,
   getVideoList,
@@ -27,6 +28,8 @@ import {
   getVideoListByTag,
   getVideoListByUsername,
   getVideosFollowedChannels,
+  getVideoViewsLast24Hours,
+  getVideoViewsLast3Days,
   getViewedVideosByChannelId,
   updateVideoByIdRepo,
   updateVideoDislikes,
@@ -45,6 +48,7 @@ import {
 } from "../repositories/stats";
 import { sendProgress } from "./event";
 import { deleteVideoService } from "../services/video/deleteVideo";
+import { getDateRangeInfo } from "../utils/getDateRangeCondition";
 
 export const getTags = async (req: Request, res: Response) => {
   console.log("getTags");
@@ -103,7 +107,6 @@ export const getVideos = async (req: Request, res: Response) => {
     } else {
       response = await getVideoListByTag(tag?.id);
     }
-
 
     const result = {
       videos: mapVideosToIVideo(response),
@@ -471,6 +474,39 @@ export const deleteVideo = async (req: Request, res: Response) => {
   }
 };
 
+
+export const getVideoAnalytics = async (req: Request, res: Response) => {
+  console.log("getVideoAnalytics")
+  try {
+    const videoId = req.params.videoId;
+    const { dateRange } = req.body;
+
+    const interval = getDateRangeInfo(dateRange);
+    
+    let result
+
+    switch (interval) {
+      case '1 day':
+        result = await getVideoViewsLast24Hours(videoId as string);
+        break;
+
+      case '3 days':
+        result = await getVideoViewsLast3Days(videoId as string);
+        break;
+    
+      default:
+        result = await getVideoAnalyticsRepo(videoId as string, interval);
+        break;
+    }
+
+    res.status(200).json({result: result});
+  } catch (error) {
+    console.error("Error getVideoAnalytics:", error);
+    res.status(500).json({ error: "Internal server error getVideoAnalytics" });
+  }
+};
+
+
 const activeConnections = new Map();
 
 export const event = async (req: Request, res: Response) => {
@@ -608,7 +644,7 @@ export const createVideo = async (req: Request, res: Response) => {
     // путь к экзешнику дома - D:\\ffmpeg\\ffmpeg-2026-01-29-git-c898ddb8fe-full_build\\bin\\ffmpeg.exe 
     // путь к экзешнику на работе - C:\\ffmpeg-2026-01-12-git-21a3e44fbe-full_build\\bin\\ffmpeg.exe
 
-    const cmd = `C:\\ffmpeg-2026-01-12-git-21a3e44fbe-full_build\\bin\\ffmpeg.exe -i "${absoluteVideoPath}" \
+    const cmd = `D:\\ffmpeg\\ffmpeg-2026-01-29-git-c898ddb8fe-full_build\\bin\\ffmpeg.exe -i "${absoluteVideoPath}" \
       -map 0:v -map 0:a -c:a aac -b:a 128k -c:v libx264 -crf 23 -preset medium -vf "scale=-2:480" -hls_time 4 -hls_playlist_type vod -hls_segment_filename "${playlistDir}/480/output_480_%04d.ts" -f hls "${playlistDir}/480/output_480.m3u8" \
       -map 0:v -map 0:a -c:a aac -b:a 128k -c:v libx264 -crf 22 -preset medium -vf "scale=-2:720" -hls_time 4 -hls_playlist_type vod -hls_segment_filename "${playlistDir}/720/output_720_%04d.ts" -f hls "${playlistDir}/720/output_720.m3u8" \
       -map 0:v -map 0:a -c:a aac -b:a 192k -c:v libx264 -crf 20 -preset medium -vf "scale=-2:1080" -hls_time 4 -hls_playlist_type vod -hls_segment_filename "${playlistDir}/1080/output_1080_%04d.ts" -f hls "${playlistDir}/1080/output_1080.m3u8"`;
@@ -740,8 +776,6 @@ export const createVideo = async (req: Request, res: Response) => {
 export const updateVideo = async (req: Request, res: Response) => {
   console.log("updateVideo");
   try {
-    console.log('req.body = ', req.body);
-
     const videoId = req.params.videoId;
     const { formData } = req.body;
 
@@ -749,14 +783,11 @@ export const updateVideo = async (req: Request, res: Response) => {
     if (!formData) {
       return res.status(400).json({ error: "formData is required" });
     }
-
-    console.log('formData = ', formData);
     
     const base64Data = formData.iconPreview.replace(/^data:image\/\w+;base64,/, '');
     
     const filename = `thumb_${Date.now()}.jpg`;
     const currentDir = process.cwd()
-    console.log('currentDir = ', currentDir);
     const thumbnailPath = currentDir + '/public' + '/videos/' + videoId + '/thumbnail'
     const thumbnailUrl = 'http://localhost:8080' + '/videos/' + videoId + '/thumbnail/' + filename
 

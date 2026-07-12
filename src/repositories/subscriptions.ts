@@ -2,7 +2,7 @@ import { pool } from "../utils/pg"
 
 export const getIsSubscribedChannel = async (channelId: string, meId: string) => {
     try {
-        const res = await pool.query(`SELECT * FROM subscriptions WHERE follower_channel_id = $1 AND channel_id = $2`, [meId, channelId])
+        const res = await pool.query(`SELECT * FROM subscriptions WHERE follower_channel_id = $1 AND channel_id = $2 AND deleted = false`, [meId, channelId])
 
         if (res.rows.length > 0) 
             return res.rows[0]
@@ -18,10 +18,11 @@ export const createUnsubscribeChannel = async (channelId: string, userId: string
 
     try {
         const res = await pool.query(`
-            DELETE FROM subscriptions 
+            UPDATE subscriptions
+            SET deleted = true, updated_date = now()
             WHERE follower_channel_id = $1 AND channel_id = $2
-        `,[userId, channelId]
-        );
+        `, [userId, channelId])
+
         if (res.rows.length > 0) 
             return res.rows[0]
 
@@ -30,6 +31,43 @@ export const createUnsubscribeChannel = async (channelId: string, userId: string
         throw new Error(`Error createSubscribeChannel repository: ${error}`)
     }
 }
+
+export const getSubscription = async (channelId: string, userId: string) => {
+    try {
+        const res = await pool.query(`
+            SELECT * FROM subscriptions
+            WHERE follower_channel_id = $1 AND channel_id = $2 
+        `, [userId, channelId]
+        );
+
+        if (res.rows.length > 0) 
+            return res.rows[0]
+
+        return null
+    } catch (error) {
+        throw new Error(`Error getSubscription repository: ${error}`)
+    }
+}
+
+
+export const updateSubscribeChannelRepo = async (channelId: string, userId: string) => {
+    try {
+        const res = await pool.query(`
+            UPDATE subscriptions
+            SET deleted = false, updated_date = now()
+            WHERE follower_channel_id = $1 AND channel_id = $2
+        `, [userId, channelId]
+        );
+
+        if (res.rows.length > 0) 
+            return res.rows[0]
+
+        return {}
+    } catch (error) {
+        throw new Error(`Error updateSubscribeChannelRepo repository: ${error}`)
+    }
+}
+
 
 export const createSubscription = async (channelId: string, userId: string) => {
     try {
@@ -47,6 +85,7 @@ export const createSubscription = async (channelId: string, userId: string) => {
         throw new Error(`Error createSubscription repository: ${error}`)
     }
 }
+
 
 export const updateSubscriptionNotifSettings = async (channelId: string, userId: string, isNotifSetting: boolean) => {
     try {

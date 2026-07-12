@@ -309,7 +309,8 @@ export const getChannelSubsCount = async (channelId: string, dateRange: string) 
     const query = `
       SELECT 
         DATE(subs.updated_date) as date,
-        COUNT(*)::INTEGER as count
+        COUNT(*) FILTER (WHERE subs.deleted = false)::INTEGER - 
+        COUNT(*) FILTER (WHERE subs.deleted = true)::INTEGER as count
       FROM channels ch
       JOIN subscriptions subs ON subs.follower_channel_id = ch.id
       WHERE subs.channel_id = $1
@@ -320,9 +321,10 @@ export const getChannelSubsCount = async (channelId: string, dateRange: string) 
     
     const res = await pool.query(query, [channelId]);
     
-    const result: Record<string, string> = {};
+    const result: Record<string, number> = {};
     res.rows.forEach(row => {
-      const date = new Date(row.date);
+      const date = new Date(row.date)
+      
       const formattedDate = formatDate(date);
       result[formattedDate] = row.count;
     });
@@ -332,6 +334,29 @@ export const getChannelSubsCount = async (channelId: string, dateRange: string) 
     throw new Error(`Error getChannelSubsCount repository: ${error}`)
   }
 }
+
+export const getTotalSubscriptionByDateRange = async (channelId: string, dateRange: string) => {
+  console.log('getTotalSubscriptionByDateRange');
+  
+  try {
+    const query = `
+      SELECT 
+        COUNT(*) FILTER (WHERE subs.deleted = false)::INTEGER - 
+        COUNT(*) FILTER (WHERE subs.deleted = true)::INTEGER as total_subscribers
+      FROM channels ch
+      JOIN subscriptions subs ON subs.follower_channel_id = ch.id
+      WHERE subs.channel_id = $1
+        AND subs.updated_date >= NOW() - INTERVAL '${dateRange}'
+    `;
+    
+    const res = await pool.query(query, [channelId]);
+    
+    return res.rows[0]?.total_subscribers || 0;
+  } catch (error) {
+    throw new Error(`Error getTotalSubscriptionByDateRange repository: ${error}`);
+  }
+};
+
 
 
 function formatDateWithHour(date: Date): string {
@@ -351,6 +376,33 @@ function formatDateWithHour12(date: Date): string {
   const half = parseInt(hour) < 12 ? '00' : '12';
   return `${day}.${month}.${year} ${half}:00`;
 }
+
+
+export const getTotalViewsByDateRange = async (channelId: string, dateRange: string) => {
+  try {
+    let query = `
+        SELECT 
+            COUNT(vv.id)::INTEGER as total_views
+        FROM channels ch
+        JOIN videos v ON v.channel_id = ch.id
+        JOIN video_views vv ON vv.video_id = v.id
+        WHERE ch.id = $1
+    `;
+    
+    const params: any[] = [channelId];
+    
+    if (dateRange) {
+        query += ` AND vv.viewed_date >= NOW() - INTERVAL '${dateRange}'`;
+    }
+    
+    const res = await pool.query(query, params);
+    
+    return res.rows[0]?.total_views || 0;
+  } catch (error) {
+      throw new Error(`Error getTotalViewsByDateRange repository: ${error}`);
+  }
+};
+
 
 export const getChannelViewsCount = async (channelId: string, dateRange: string) => {
   try {
