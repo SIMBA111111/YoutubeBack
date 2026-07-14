@@ -51,6 +51,7 @@ import { deleteVideoService } from "../services/video/deleteVideo";
 import { getDateRangeInfo } from "../utils/getDateRangeCondition";
 import { broadcastNewVideo } from "../services/channels/broadcastNewVideo";
 import { createNewVideoNotifs } from "../repositories/notifs";
+import { parseJwt } from "../utils/parseJwt";
 
 export const getTags = async (req: Request, res: Response) => {
   console.log("getTags");
@@ -242,20 +243,26 @@ export const getVideoById = async (req: Request, res: Response) => {
   console.log("getVideoById");
   try {
     const videoId = req.params.id;
+    const cookies = req?.cookies;
     const video = await getVideoByIdRepo(videoId as string);
+    let userData
 
+    if (cookies) {
+      userData = await parseJwt(cookies?.jwt)
+    }
+    
     if (!video) {
       return res.status(404).json({ error: "Video not found" });
     }
 
     const channel = await getChannelByVideoHash(video.video_hash as string);
 
-    let isSubscribed = {};
-    let stat = {};
+    let isSubscribed = null;
+    let stat = null;
 
-    if (channel) {
-      isSubscribed = await getIsSubscribedChannel(channel.id, channel.id);
-      stat = await getStatOfVideoForUser(video.id, channel.id);
+    if (channel && userData?.id) {
+      isSubscribed = await getIsSubscribedChannel(channel.id, userData.id);
+      stat = await getStatOfVideoForUser(video.id, userData.id);
     }
 
     res.status(200).json({
