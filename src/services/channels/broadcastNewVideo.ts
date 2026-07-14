@@ -1,5 +1,11 @@
-import { Response } from 'express'
-import { pool } from '../../utils/pg'
+import { Response } from "express";
+import { pool } from "../../utils/pg";
+
+interface IConnection {
+  res: Response;
+  id: string;
+  connectedAt: number;
+}
 
 export const broadcastNewVideo = async (
   activeConnections: Map<string, Set<IConnection>>,
