@@ -28,6 +28,7 @@ import {
   getVideoListByTag,
   getVideoListByUsername,
   getVideosFollowedChannels,
+  getVideosIdsRepo,
   getVideoViewsLast24Hours,
   getVideoViewsLast3Days,
   getViewedVideosByChannelId,
@@ -68,6 +69,26 @@ export const getTags = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Internal server error1" });
   }
 };
+
+export const getVideosIds = async (req: Request, res: Response) => {
+  console.log("getShortVideosIds");
+  try {
+    const { offset, limit, isShortVideo } = req.query;
+
+    const isShorts = isShortVideo === 'true' ? true : false
+
+    const response = await getVideosIdsRepo(offset as string, limit as string, isShorts);
+    const result = {
+      result: response,
+    };
+
+    res.json(result);
+  } catch (error) {
+    console.error("Error getShortVideosIds:", error);
+    res.status(500).json({ error: "getShortVideosIds" });
+  }
+};
+
 
 // надо будеть еще добавить обработку запросов к бд на случай, если юзер не атворизован (нет channel_id)
 export const getVideos = async (req: Request, res: Response) => {
@@ -218,13 +239,14 @@ export const getShortVideosByChannelUsername = async (
 export const getRecommendedVideos = async (req: Request, res: Response) => {
   console.log("getRecommendedVideos");
   try {
-    const videoHash = req.params.videoHash;
+    const videoHash = req.params.hash;
     const { offset, limit } = req.query;
     const { myChannelId } = req.body;
 
     const response = await getRecommendedVideosRepo(
       offset as string,
-      limit as string
+      limit as string,
+      videoHash as string
     );
 
     const result = {
@@ -247,7 +269,7 @@ export const getVideoById = async (req: Request, res: Response) => {
     const video = await getVideoByIdRepo(videoId as string);
     let userData
 
-    if (cookies) {
+    if (cookies?.jwt) {
       userData = await parseJwt(cookies?.jwt)
     }
     

@@ -12,6 +12,28 @@ export const getTagList = async () => {
   }
 };
 
+
+export const getVideosIdsRepo = async (
+  offset: string,
+  limit: string,
+  isShortVideo: boolean
+) => {
+  try {
+    const res = await pool.query(`
+      SELECT id FROM videos
+      WHERE is_short = $3
+      OFFSET $1 LIMIT $2   
+    `, [offset, limit, isShortVideo]);
+    
+    if (res.rows) return res.rows;
+
+    return [];
+  } catch (error) {
+    throw new Error(`Error getVideosIdsRepo repository: ${error}`);
+  }
+};
+
+
 export const getTagById = async (tagId: string) => {
   try {
     const res = await pool.query("SELECT * FROM tags WHERE id=$1", [tagId]);
@@ -399,17 +421,22 @@ export const getViewedShortVideosByChannelId = async (channelId: string, isShort
 
 export const getRecommendedVideosRepo = async (
   offset: string,
-  limit: string
+  limit: string,
+  videoHash?: string
 ) => {
+  console.log('videoHash: ', videoHash);
+  
+
   try {
     const res = await pool.query(
       `
         SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl
         FROM videos v
-        JOIN channels ch ON ch.id = v.channel_id 
-        OFFSET $1 LIMIT $2   
+        JOIN channels ch ON ch.id = v.channel_id   
+        WHERE v.video_hash != $3                   
+        OFFSET $1 LIMIT $2  
     `,
-      [offset, limit]
+      [offset, limit, videoHash]
     );
 
     if (res.rows) return res.rows;
