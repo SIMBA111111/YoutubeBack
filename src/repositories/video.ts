@@ -34,6 +34,25 @@ export const getVideosIdsRepo = async (
 };
 
 
+export const getShortVideosRepo = async (
+) => {
+  try {
+    const res = await pool.query(`
+      SELECT id, thumbnail_url
+      FROM videos
+      WHERE is_short = true
+      LIMIT 3   
+      `,);
+    
+    if (res.rows) return res.rows;
+
+    return [];
+  } catch (error) {
+    throw new Error(`Error getVideosIdsRepo repository: ${error}`);
+  }
+};
+
+
 export const getTagById = async (tagId: string) => {
   try {
     const res = await pool.query("SELECT * FROM tags WHERE id=$1", [tagId]);

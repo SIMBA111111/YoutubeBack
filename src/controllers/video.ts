@@ -15,6 +15,7 @@ import {
   getOrderedVideoList,
   getRecommendedVideosRepo,
   getShortVideoListByUsername,
+  getShortVideosRepo,
   getTagById,
   getTagByName,
   getTagList,
@@ -86,6 +87,23 @@ export const getVideosIds = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error getShortVideosIds:", error);
     res.status(500).json({ error: "getShortVideosIds" });
+  }
+};
+
+
+export const getShortVideos = async (req: Request, res: Response) => {
+  console.log("getShortVideos");
+  try {
+
+    const response = await getShortVideosRepo();
+    const result = {
+      result: response,
+    };
+
+    res.json(result);
+  } catch (error) {
+    console.error("Error getShortVideos:", error);
+    res.status(500).json({ error: "getShortVideos" });
   }
 };
 

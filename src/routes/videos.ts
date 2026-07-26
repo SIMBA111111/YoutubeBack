@@ -16,7 +16,8 @@ import {
     deleteVideo,
     updateVideo,
     getVideoAnalytics,
-    getVideosIds
+    getVideosIds,
+    getShortVideos
 } from '../controllers/video'
 import { upload } from '../middlewares/upload';
 
@@ -31,6 +32,7 @@ router.get('/channel-short-videos/:channelUsername', getShortVideosByChannelUser
 router.post('/video/:hash', getVideoByHash);
 router.post('/recommended-videos/:hash', getRecommendedVideos);
 router.get('/videos-ids', getVideosIds);
+router.get('/short-videos', getShortVideos);
 router.get('/videos/search/:name', getVideoListByName);
 router.get('/videos/:id', getVideoById);
 router.post('/video-analytics/:videoId', getVideoAnalytics);
