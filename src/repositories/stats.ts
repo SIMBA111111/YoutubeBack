@@ -41,8 +41,8 @@ export const createStatOfVideoForUser = async (videoId: string, userId: string, 
 
         } else {
             res = await pool.query(`
-                INSERT INTO stat_of_videos (channel_id, video_id, liked, disliked) 
-                VALUES ($1, $2, $3, $4)
+                INSERT INTO stat_of_videos (channel_id, video_id, liked, disliked, views_count) 
+                VALUES ($1, $2, $3, $4, 1)
             `, [userId, videoId, isLiked, isDisliked]
             );
         }

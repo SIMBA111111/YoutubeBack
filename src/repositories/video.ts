@@ -35,20 +35,22 @@ export const getVideosIdsRepo = async (
 
 
 export const getShortVideosRepo = async (
+  offset: string,
+  limit: string
 ) => {
   try {
     const res = await pool.query(`
       SELECT id, thumbnail_url
       FROM videos
       WHERE is_short = true
-      LIMIT 3   
-      `,);
+      OFFSET $1 LIMIT $2   
+    `, [offset, limit]);
     
     if (res.rows) return res.rows;
 
     return [];
   } catch (error) {
-    throw new Error(`Error getVideosIdsRepo repository: ${error}`);
+    throw new Error(`Error getShortVideosRepo repository: ${error}`);
   }
 };
 
