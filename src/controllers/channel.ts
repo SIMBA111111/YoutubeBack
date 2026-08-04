@@ -48,9 +48,13 @@ export const getChannelInfo = async (req: Request, res: Response) => {
   try {
     const { channelUsername } = req.params;
     const { userId } = req.body
+    let subData = null
 
     const channel = await getChannelByUsername(channelUsername as string);
-    const subData = await getIsSubOnChannelInfo(userId as string, channel.id as string);
+    if(userId) {
+      subData = await getIsSubOnChannelInfo(userId as string, channel.id as string);
+    }
+
     if (!channel) return res.status(404).json({ result: `Нет канала` });
 
     const result = {
