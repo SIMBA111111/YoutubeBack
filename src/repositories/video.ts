@@ -276,13 +276,20 @@ export const getViewedVideoListByTag = async (tagId: string, offset: number = 0,
 };
 
 
-
-
-export const getVideoListByNameRepo = async (videoName: string) => {
+export const getVideoListByNameRepo = async (videoName: string, isFullObj = false, offset = '0', limit = "20") => {
   try {
+
+    let query = ''
+
+    if (isFullObj) {
+      query = "select * from videos where name ilike $1 offset $2 limit $3"
+    } else {
+      query = "select id, name from videos where name ilike $1 offset $2 limit $3"
+    }
+
     const res = await pool.query(
-      "select id, name from videos where name ilike $1",
-      [`%${videoName}%`]
+      query,
+      [`%${videoName}%`, offset, limit]
     );
 
     if (res.rows) return res.rows;
@@ -292,6 +299,7 @@ export const getVideoListByNameRepo = async (videoName: string) => {
     throw new Error(`Error getVideoListByName repository: ${error}`);
   }
 };
+
 
 export const getVideoByHashRepo = async (videoHash: string) => {
   try {

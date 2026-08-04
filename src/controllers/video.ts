@@ -166,6 +166,29 @@ export const getVideos = async (req: Request, res: Response) => {
   }
 };
 
+
+export const getVideosByName = async (req: Request, res: Response) => {
+  console.log("getVideosByName");
+
+  try {
+    const name = req.params.name;
+    const { offset, limit } = req.query;
+
+    const videos = await getVideoListByNameRepo(name as string, true, offset as string, limit as string)
+
+    const result = {
+      videos: mapVideosToIVideo(videos),
+      total: videos.length,
+    };
+
+    res.json(result);
+  } catch (error) {
+    console.error("Error getVideosByName:", error);
+    res.status(500).json({ error: "Internal server error1" });
+  }
+};
+
+
 export const getVideosMySubs = async (req: Request, res: Response) => {
   try {
     const { meId } = req.params;

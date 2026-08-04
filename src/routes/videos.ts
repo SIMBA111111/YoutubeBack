@@ -17,7 +17,8 @@ import {
     updateVideo,
     getVideoAnalytics,
     getVideosIds,
-    getShortVideos
+    getShortVideos,
+    getVideosByName
 } from '../controllers/video'
 import { upload } from '../middlewares/upload';
 
@@ -26,6 +27,7 @@ const router = express.Router();
 router.get('/tags', getTags);
 
 router.get('/videos', getVideos);
+router.get('/videos/by-name/:name', getVideosByName);
 router.get('/videos/my-subs/:meId', getVideosMySubs);
 router.post('/channel-videos/:channelUsername', getVideosByChannelUsername);
 router.get('/channel-short-videos/:channelUsername', getShortVideosByChannelUsername);
@@ -41,7 +43,6 @@ router.post('/mark/video/:videoId', updateMarkVideo);
 router.get('/view/video/:videoId', updateVideoViewCount);
 router.delete('/delete-video/:videoId', deleteVideo);
 router.patch('/update-video/:videoId', updateVideo);
-
 
 // router.post('/videos/create', upload, createVideo);
 router.post('/create-video', upload, createVideo);
