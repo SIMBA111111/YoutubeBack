@@ -282,9 +282,14 @@ export const getVideoListByNameRepo = async (videoName: string, isFullObj = fals
     let query = ''
 
     if (isFullObj) {
-      query = "select * from videos where name ilike $1 offset $2 limit $3"
+      query = `SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl, ch.name as channelname
+      FROM videos v
+      JOIN channels ch ON ch.id = v.channel_id
+      JOIN stat_of_videos sov ON sov.video_id = v.id
+      where v.name ilike $1 
+      offset $2 limit $3`
     } else {
-      query = "select id, name from videos where name ilike $1 offset $2 limit $3"
+      query = "select id, name, video_hash from videos where name ilike $1 offset $2 limit $3"
     }
 
     const res = await pool.query(
