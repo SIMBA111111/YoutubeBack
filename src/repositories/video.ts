@@ -773,7 +773,7 @@ export const createVideoRepo = async (
       masterM3U8Path,       // $6 - master_m3u8_url (text)
       videoDescription,     // $7 - description (text)
       channelId,            // $8 - channel_id (uuid)
-      false,                // $9 - is_short (boolean)
+      isShort,                // $9 - is_short (boolean)
       videoHash,            // $10 - video_hash (text)
       videoAccess,          // $11 - video_access (text) - может быть null
       videoMp4,             // $12 - video_mp4_url (text)

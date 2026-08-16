@@ -52,8 +52,9 @@ import { activeNotifConnections, sendProgress } from "./event";
 import { deleteVideoService } from "../services/video/deleteVideo";
 import { getDateRangeInfo } from "../utils/getDateRangeCondition";
 import { broadcastNewVideo } from "../services/channels/broadcastNewVideo";
-import { createNewVideoNotifs } from "../repositories/notifs";
+import { createNewVideoNotifs, getNotifType } from "../repositories/notifs";
 import { parseJwt } from "../utils/parseJwt";
+import { NOTIF_TYPES } from "../types/notif";
 
 export const getTags = async (req: Request, res: Response) => {
   console.log("getTags");
@@ -175,7 +176,7 @@ export const getVideosByName = async (req: Request, res: Response) => {
     const { offset, limit } = req.query;
 
     const videos = await getVideoListByNameRepo(name as string, true, offset as string, limit as string)
-
+    
     const result = {
       videos: mapVideosToIVideo(videos),
       total: videos.length,
@@ -588,7 +589,7 @@ export const createVideo = async (req: Request, res: Response) => {
 
   try {
     const videoId = req.videoId;
-    const { videoName, videoDescription, videoPreview, playlistIds, fragments, videoAccess, hashTags, tags } = JSON.parse(req.body.videoData);
+    const { videoName, videoDescription, videoPreview, playlistIds, fragments, videoAccess, hashTags, tags, isShort } = JSON.parse(req.body.videoData);
     const channelId = req.body.userId;
 
 
@@ -655,7 +656,7 @@ if (!fs.existsSync(hls1080Dir)) fs.mkdirSync(hls1080Dir, { recursive: true });
 // путь к экзешнику дома - D:\\ffmpeg\\ffmpeg-2026-01-29-git-c898ddb8fe-full_build\\bin\\ffmpeg.exe 
 // путь к экзешнику на работе - C:\\ffmpeg-2026-01-12-git-21a3e44fbe-full_build\\bin\\ffmpeg.exe
 
-const cmd = `C:\\ffmpeg-2026-01-12-git-21a3e44fbe-full_build\\bin\\ffmpeg.exe -i "${absoluteVideoPath}" \
+const cmd = `D:\\ffmpeg\\ffmpeg-2026-01-29-git-c898ddb8fe-full_build\\bin\\ffmpeg.exe  -i "${absoluteVideoPath}" \
 -map 0:v -map 0:a -c:a aac -b:a 128k -c:v libx264 -crf 23 -preset medium -vf "scale=-2:480" -hls_time 4 -hls_playlist_type vod -hls_segment_filename "${playlistDir}/480/output_480_%04d.ts" -f hls "${playlistDir}/480/output_480.m3u8" \
 -map 0:v -map 0:a -c:a aac -b:a 128k -c:v libx264 -crf 22 -preset medium -vf "scale=-2:720" -hls_time 4 -hls_playlist_type vod -hls_segment_filename "${playlistDir}/720/output_720_%04d.ts" -f hls "${playlistDir}/720/output_720.m3u8" \
 -map 0:v -map 0:a -c:a aac -b:a 192k -c:v libx264 -crf 20 -preset medium -vf "scale=-2:1080" -hls_time 4 -hls_playlist_type vod -hls_segment_filename "${playlistDir}/1080/output_1080_%04d.ts" -f hls "${playlistDir}/1080/output_1080.m3u8"`;
@@ -750,32 +751,32 @@ reject(err);
 });
 });
 
-sendProgress(channelId, { progress: 89, stage: 'saving', message: '' });
+    sendProgress(channelId, { progress: 89, stage: 'saving', message: '' });
 
-const thumbnail = "http://localhost:8080/" + thumbnailUrl;
-const m3u8 = "http://localhost:8080/videos/" + videoId + "/playlist/master.m3u8";
-const preview = "http://localhost:8080/videos/" + videoId + "/preview/preview.mp4";
-const videoMp4 = "http://localhost:8080/videos/" + videoId + "/video/" + files.videoFile[0].filename;
+    const thumbnail = "http://localhost:8080/" + thumbnailUrl;
+    const m3u8 = "http://localhost:8080/videos/" + videoId + "/playlist/master.m3u8";
+    const preview = "http://localhost:8080/videos/" + videoId + "/preview/preview.mp4";
+    const videoMp4 = "http://localhost:8080/videos/" + videoId + "/video/" + files.videoFile[0].filename;
 
-const response = await createVideoRepo(
-videoId,
-videoMp4,
-videoName,
-videoDescription,
-m3u8,
-thumbnail,
-preview,
-fragments,
-channelId,
-duration,
-videoAccess,
-hashTags,
-tags,
-playlistIds,
-false
-);
+    const response = await createVideoRepo(
+      videoId,
+      videoMp4,
+      videoName,
+      videoDescription,
+      m3u8,
+      thumbnail,
+      preview,
+      fragments,
+      channelId,
+      duration,
+      videoAccess,
+      hashTags,
+      tags,
+      playlistIds,
+      isShort
+    );
 
-sendProgress(channelId, { progress: 100, stage: 'saving', message: '' });
+    sendProgress(channelId, { progress: 100, stage: 'saving', message: '' });
 
     const subsers = await getAllSubscriptionsByChannel(channelId)
 
@@ -783,8 +784,11 @@ sendProgress(channelId, { progress: 100, stage: 'saving', message: '' });
     
     const subsersIds = (Array.isArray(subsers) && subsers.length > 0) ? subsers?.map(s => s.id) : []
     
-    await createNewVideoNotifs(response.id, subsersIds)
-    await broadcastNewVideo(activeNotifConnections, channelId, response)
+    const notifType = await getNotifType(NOTIF_TYPES.NEW_VIDEO)
+    if (notifType) {
+      await createNewVideoNotifs(response.id, subsersIds, notifType.id)
+      await broadcastNewVideo(activeNotifConnections, channelId, response)
+    }
 
     return res.status(201).json("Video created succesfully");
   } catch (error) {

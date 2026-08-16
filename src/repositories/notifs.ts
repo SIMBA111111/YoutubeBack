@@ -1,3 +1,4 @@
+import { INotif, NOTIF_TYPES } from "../types/notif";
 import { pool } from "../utils/pg";
 
 export const getNotifsByUserId = async (userId: string) => {
@@ -23,13 +24,36 @@ export const getNotifsByUserId = async (userId: string) => {
   }
 };
 
+
+export const getNotifType = async (
+  notifType: keyof typeof NOTIF_TYPES,
+): Promise<INotif | null> => {
+  try {
+    if (!notifType)
+      return null
+    
+
+    const res = await pool.query<INotif>(
+      `SELECT id, name FROM notif_types WHERE name = $1`,
+      [notifType]
+    );
+
+    if (res.rows.length > 0) {
+      return res.rows[0];
+    }
+
+    return null;
+  } catch (error) {
+    throw new Error(`Error getNotifType repository: ${error}`);
+  }
+};
+
+
 export const createNewVideoNotifs = async (
   videoId: string,
-  consumerIds: string[]
+  consumerIds: string[],
+  notifTypeId: string,
 ) => {
-  console.log("createNewVideoNotifs");
-  console.log("videoId", videoId);
-  console.log("consumerIds", consumerIds);
 
   try {
     if (!consumerIds || consumerIds.length === 0) {
@@ -38,11 +62,11 @@ export const createNewVideoNotifs = async (
 
     const res = await pool.query(
       `
-            INSERT INTO notifications (video_id, channel_id, notif_type_id)
-            SELECT $1, unnest($2::uuid[]), $3
-            RETURNING *
-        `,
-      [videoId, consumerIds, "0a5090a8-0435-40c8-8dfe-f884c1ffc357"]
+        INSERT INTO notifications (video_id, channel_id, notif_type_id)
+        SELECT $1, unnest($2::uuid[]), $3
+        RETURNING *
+      `,
+      [videoId, consumerIds, notifTypeId]
     );
 
     if (res.rows.length > 0) {
