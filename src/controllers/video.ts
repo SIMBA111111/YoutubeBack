@@ -318,10 +318,11 @@ export const getRecommendedVideos = async (req: Request, res: Response) => {
 // --------------------------------------------------------------------------------------------------------------
 
 export const getVideoById = async (req: Request, res: Response) => {
-  console.log("getVideoById");
+  console.log("==========getVideoById=======");
   try {
-    const videoId = req.params.id;
-    const { channelId } = req.body;
+    const videoId = req.params.videoId;
+    const { channelId } = req.query;
+
     const video = await getVideoByIdRepo(videoId as string);
     let userData
 
@@ -335,8 +336,8 @@ export const getVideoById = async (req: Request, res: Response) => {
     let stat = null;
 
     if (channel && channelId) {
-      isSubscribed = await getIsSubscribedChannel(channel.id, channelId);
-      stat = await getStatOfVideoForUser(video.id, channelId);
+      isSubscribed = await getIsSubscribedChannel(channel.id, channelId as string);
+      stat = await getStatOfVideoForUser(video.id, channelId as string);
     }
 
     res.status(200).json({
