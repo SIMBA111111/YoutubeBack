@@ -20,7 +20,6 @@ import {
   getTagByName,
   getTagList,
   getVideoAnalyticsRepo,
-  getVideoByHashRepo,
   getVideoByIdRepo,
   getVideoList,
   getVideoListByNameRepo,
@@ -55,6 +54,7 @@ import { broadcastNewVideo } from "../services/channels/broadcastNewVideo";
 import { createNewVideoNotifs, getNotifType } from "../repositories/notifs";
 import { parseJwt } from "../utils/parseJwt";
 import { NOTIF_TYPES } from "../types/notif";
+import { getAverageColor } from "../utils/getAverageColor";
 
 export const getTags = async (req: Request, res: Response) => {
   console.log("getTags");
@@ -126,8 +126,6 @@ export const getVideos = async (req: Request, res: Response) => {
     }
     const channelId = channelData?.id || null;
 
-    // const offset = 0;
-    // const limit = 20;
 
     // Преобразуем query параметры в числа
     const offset = parseInt(req.query.offset as string) || 0;
@@ -135,9 +133,6 @@ export const getVideos = async (req: Request, res: Response) => {
 
     // const startIndex = (page - 1) * limit;
     // const endIndex = page * limit;
-
-    console.log('tagId: ', tagId);
-    
 
     const tag = await getTagByName(tagId as string);
 
@@ -154,6 +149,9 @@ export const getVideos = async (req: Request, res: Response) => {
     } else {
       response = await getVideoListByTag(tag?.id);
     }
+
+    console.log('videos: ', response);
+    console.log('mapVideosToIVideo(videos): ', mapVideosToIVideo(response));
 
     const result = {
       videos: mapVideosToIVideo(response),
@@ -177,6 +175,10 @@ export const getVideosByName = async (req: Request, res: Response) => {
 
     const videos = await getVideoListByNameRepo(name as string, true, offset as string, limit as string)
     
+    console.log('videos: ', videos);
+    console.log('mapVideosToIVideo(videos): ', mapVideosToIVideo(videos));
+    
+
     const result = {
       videos: mapVideosToIVideo(videos),
       total: videos.length,
@@ -285,14 +287,14 @@ export const getShortVideosByChannelUsername = async (
 export const getRecommendedVideos = async (req: Request, res: Response) => {
   console.log("getRecommendedVideos");
   try {
-    const videoHash = req.params.hash;
+    const videoId = req.params.videoId;
     const { offset, limit } = req.query;
     const { myChannelId } = req.body;
 
     const response = await getRecommendedVideosRepo(
       offset as string,
       limit as string,
-      videoHash as string
+      videoId as string
     );
 
     const result = {
@@ -307,18 +309,22 @@ export const getRecommendedVideos = async (req: Request, res: Response) => {
   }
 };
 
+
+
+// --------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------
+
 export const getVideoById = async (req: Request, res: Response) => {
   console.log("getVideoById");
   try {
     const videoId = req.params.id;
-    const cookies = req?.cookies;
+    const { channelId } = req.body;
     const video = await getVideoByIdRepo(videoId as string);
     let userData
 
-    if (cookies?.jwt) {
-      userData = await parseJwt(cookies?.jwt)
-    }
-    
     if (!video) {
       return res.status(404).json({ error: "Video not found" });
     }
@@ -328,9 +334,9 @@ export const getVideoById = async (req: Request, res: Response) => {
     let isSubscribed = null;
     let stat = null;
 
-    if (channel && userData?.id) {
-      isSubscribed = await getIsSubscribedChannel(channel.id, userData.id);
-      stat = await getStatOfVideoForUser(video.id, userData.id);
+    if (channel && channelId) {
+      isSubscribed = await getIsSubscribedChannel(channel.id, channelId);
+      stat = await getStatOfVideoForUser(video.id, channelId);
     }
 
     res.status(200).json({
@@ -347,39 +353,12 @@ export const getVideoById = async (req: Request, res: Response) => {
   }
 };
 
-export const getVideoByHash = async (req: Request, res: Response) => {
-  console.log("getVideoByHash");
-  try {
-    const { channelId } = req.body;
-    const { hash: videoHash } = req.params;
 
-    const video = await getVideoByHashRepo(videoHash as string);
-
-    if (!video) {
-      return res.status(404).json({ error: "Video not found" });
-    }
-
-    const channel = await getChannelByVideoHash(videoHash as string);
-
-    let isSubscribed = {};
-    let stat = {};
-
-    if (channelId) {
-      isSubscribed = await getIsSubscribedChannel(channel.id, channelId);
-      stat = await getStatOfVideoForUser(video.id, channelId);
-    }
-
-    res.status(200).json({
-      video: mapToIVideo(video),
-      channel: channel,
-      isSubscribed: isSubscribed,
-      stat: stat,
-    });
-  } catch (error) {
-    console.error("Error getVideoByHash:", error);
-    res.status(500).json({ error: "Internal server error2" });
-  }
-};
+// --------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------
 
 export const getVideoListByName = async (req: Request, res: Response) => {
   console.log("getVideoListByName");
@@ -656,7 +635,7 @@ if (!fs.existsSync(hls1080Dir)) fs.mkdirSync(hls1080Dir, { recursive: true });
 // путь к экзешнику дома - D:\\ffmpeg\\ffmpeg-2026-01-29-git-c898ddb8fe-full_build\\bin\\ffmpeg.exe 
 // путь к экзешнику на работе - C:\\ffmpeg-2026-01-12-git-21a3e44fbe-full_build\\bin\\ffmpeg.exe
 
-const cmd = `D:\\ffmpeg\\ffmpeg-2026-01-29-git-c898ddb8fe-full_build\\bin\\ffmpeg.exe  -i "${absoluteVideoPath}" \
+const cmd = `C:\\ffmpeg-2026-01-12-git-21a3e44fbe-full_build\\bin\\ffmpeg.exe -i "${absoluteVideoPath}" \
 -map 0:v -map 0:a -c:a aac -b:a 128k -c:v libx264 -crf 23 -preset medium -vf "scale=-2:480" -hls_time 4 -hls_playlist_type vod -hls_segment_filename "${playlistDir}/480/output_480_%04d.ts" -f hls "${playlistDir}/480/output_480.m3u8" \
 -map 0:v -map 0:a -c:a aac -b:a 128k -c:v libx264 -crf 22 -preset medium -vf "scale=-2:720" -hls_time 4 -hls_playlist_type vod -hls_segment_filename "${playlistDir}/720/output_720_%04d.ts" -f hls "${playlistDir}/720/output_720.m3u8" \
 -map 0:v -map 0:a -c:a aac -b:a 192k -c:v libx264 -crf 20 -preset medium -vf "scale=-2:1080" -hls_time 4 -hls_playlist_type vod -hls_segment_filename "${playlistDir}/1080/output_1080_%04d.ts" -f hls "${playlistDir}/1080/output_1080.m3u8"`;
@@ -754,6 +733,13 @@ reject(err);
     sendProgress(channelId, { progress: 89, stage: 'saving', message: '' });
 
     const thumbnail = "http://localhost:8080/" + thumbnailUrl;
+    
+    const fullPath = path.join(process.cwd(), 'public', thumbnailUrl);
+
+    const averageColor = await getAverageColor(fullPath);
+
+    console.log('averageColor: ', averageColor)
+
     const m3u8 = "http://localhost:8080/videos/" + videoId + "/playlist/master.m3u8";
     const preview = "http://localhost:8080/videos/" + videoId + "/preview/preview.mp4";
     const videoMp4 = "http://localhost:8080/videos/" + videoId + "/video/" + files.videoFile[0].filename;
@@ -773,15 +759,14 @@ reject(err);
       hashTags,
       tags,
       playlistIds,
-      isShort
+      isShort,
+      averageColor.hex
     );
 
     sendProgress(channelId, { progress: 100, stage: 'saving', message: '' });
 
     const subsers = await getAllSubscriptionsByChannel(channelId)
 
-    console.log('Его подписчики: ', subsers);
-    
     const subsersIds = (Array.isArray(subsers) && subsers.length > 0) ? subsers?.map(s => s.id) : []
     
     const notifType = await getNotifType(NOTIF_TYPES.NEW_VIDEO)

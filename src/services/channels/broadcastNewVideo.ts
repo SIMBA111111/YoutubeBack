@@ -15,17 +15,14 @@ export const broadcastNewVideo = async (
   console.log("broadcastNewVideo");
   try {
     const activeChannelIds = Array.from(activeConnections.keys());
-    console.log("activeChannelIds: ", activeChannelIds);
 
     const subscribers = await pool.query(
       `
         SELECT * FROM subscriptions
         WHERE channel_id = $1 AND follower_channel_id = ANY($2)
-        `,
+      `,
       [channelId, activeChannelIds]
     );
-
-    console.log("subscribers: ", subscribers);
 
     // Используем for...of вместо forEach для async операций
     for (const sub of subscribers.rows) {

@@ -1,17 +1,16 @@
 import { Request, Response } from "express";
 import { pool } from "../utils/pg";
-import { getVideoByHashRepo, getVideoByIdRepo, updateVideoCommentCount } from "../repositories/video";
+import { getAnalVideoByIdRepo, getVideoByIdRepo, updateVideoCommentCount } from "../repositories/video";
 import { mapCommentsToIComment } from "../utils/maps/mapComment";
 import {
   crateCommentRepo,
   deleteCommentRepo,
   getCommentsByParentCommentId,
-  getCommentsByVideoHashRepo,
+  getCommentsByVideoIdRepo,
 } from "../repositories/comment";
-import { getVideoById } from "./video";
 
 export const getCommentsByVideoId = async (req: Request, res: Response) => {
-  console.log("getCommentsByVideoHash");
+  console.log("getCommentsByVideoId");
   try {
     const { videoId } = req.params;
     const { parentCommentId, filter, userId } = req.body;
@@ -30,13 +29,13 @@ export const getCommentsByVideoId = async (req: Request, res: Response) => {
     } else {
       const videoData = await getVideoByIdRepo(videoId as string)
 
-      const video = await getVideoByHashRepo(videoData.video_hash as string);
+      const video = await getAnalVideoByIdRepo(videoData.video_hash as string);
 
       if (!video) {
         return res.status(404).json({ error: "Video not found" });
       }
 
-      comments = await getCommentsByVideoHashRepo(
+      comments = await getCommentsByVideoIdRepo(
         videoId as string,
         offset,
         limit,
@@ -54,7 +53,7 @@ export const getCommentsByVideoId = async (req: Request, res: Response) => {
 
     res.status(200).json(result);
   } catch (error) {
-    console.error("Error getCommentsByVideoHash:", error);
+    console.error("Error getCommentsByVideoId:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };

@@ -22,6 +22,7 @@ interface IVideo {
     dislikeCount: number
     commentsCount: number
     videoAccess: string
+    averageColor: string
     masterM3u8Url: string
     playlistIds: string[]
     subscribersCount: number,
@@ -52,6 +53,7 @@ export const mapToIVideo = (video: any): IVideo => {
         dislikeCount: video.dislikes_count || 0,
         commentsCount: video.comments_count || 0,
         videoAccess: video.video_access || '',
+        averageColor: video.average_color || '',
         datePublication: video.date_publication,
         isShort: video.is_short,
         tags: video.tags,

@@ -228,8 +228,6 @@ export const getShortVideoListByUsername = async (
 
 export const getVideoListByTag = async (tagId: string) => {
   console.log('getVideoListByTag = ', getVideoListByTag);
-  
-  
   try {
     const res = await pool.query("SELECT * FROM videos WHERE $1 = ANY (tags)", [
       tagId,
@@ -305,7 +303,7 @@ export const getVideoListByNameRepo = async (videoName: string, isFullObj = fals
 };
 
 
-export const getVideoByHashRepo = async (videoHash: string) => {
+export const getAnalVideoByIdRepo = async (videoHash: string) => {
   try {
 
     const res = await pool.query(`
@@ -455,21 +453,20 @@ export const getViewedShortVideosByChannelId = async (channelId: string, isShort
 export const getRecommendedVideosRepo = async (
   offset: string,
   limit: string,
-  videoHash?: string
+  videoId?: string
 ) => {
-  console.log('videoHash: ', videoHash);
+  console.log('videoId: ', videoId);
   
-
   try {
     const res = await pool.query(
       `
         SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl
         FROM videos v
         JOIN channels ch ON ch.id = v.channel_id   
-        WHERE v.video_hash != $3                   
+        WHERE v.id != $3                   
         OFFSET $1 LIMIT $2  
     `,
-      [offset, limit, videoHash]
+      [offset, limit, videoId]
     );
 
     if (res.rows) return res.rows;
@@ -737,6 +734,7 @@ export const createVideoRepo = async (
   tags: any[],
   playlistIds: any[],
   isShort: boolean = false,
+  averageColor: string
 ) => {
   try {
     // Проверка длительности
@@ -761,8 +759,8 @@ export const createVideoRepo = async (
 
     const createdVideo = await pool.query(`
       INSERT INTO videos    
-      (id, name, duration, thumbnail_url, video_preview_url, master_m3u8_url, description, channel_id, is_short, video_hash, video_access, video_mp4_url, tags, hashtags, playlistids)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+      (id, name, duration, thumbnail_url, video_preview_url, master_m3u8_url, description, channel_id, is_short, video_hash, video_access, video_mp4_url, tags, hashtags, playlistids, average_color)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
       RETURNING *
     `, [
       videoId,              // $1 - id (uuid)
@@ -779,7 +777,8 @@ export const createVideoRepo = async (
       videoMp4,             // $12 - video_mp4_url (text)
       preparedTags,         // $13 - tags (uuid[]) - массив UUID
       preparedHashtags,     // $14 - hashtags (text[])
-      preparedPlaylistIds   // $15 - playlistids (text[])
+      preparedPlaylistIds,   // $15 - playlistids (text[])
+      averageColor
     ]);
     
     const createdVideoId = createdVideo.rows[0].id;

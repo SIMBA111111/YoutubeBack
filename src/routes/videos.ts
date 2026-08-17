@@ -4,7 +4,6 @@ import {
     getVideos, 
     getVideosMySubs,
     getVideoById, 
-    getVideoByHash, 
     getRecommendedVideos, 
     getVideoListByName, 
     getTags, 
@@ -31,12 +30,12 @@ router.get('/videos/by-name/:name', getVideosByName);
 router.get('/videos/my-subs/:meId', getVideosMySubs);
 router.post('/channel-videos/:channelUsername', getVideosByChannelUsername);
 router.get('/channel-short-videos/:channelUsername', getShortVideosByChannelUsername);
-router.post('/video/:hash', getVideoByHash);
-router.post('/recommended-videos/:hash', getRecommendedVideos);
+router.post('/video/:videoId', getVideoById);
+router.post('/recommended-videos/:videoId', getRecommendedVideos);
 router.get('/videos-ids', getVideosIds);
 router.get('/short-videos', getShortVideos);
 router.get('/videos/search/:name', getVideoListByName);
-router.get('/videos/:id', getVideoById);
+router.get('/videos/:videoId', getVideoById);
 router.post('/video-analytics/:videoId', getVideoAnalytics);
 
 router.post('/mark/video/:videoId', updateMarkVideo);

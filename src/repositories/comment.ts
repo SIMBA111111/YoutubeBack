@@ -1,6 +1,6 @@
 import { pool } from "../utils/pg";
 
-export const getCommentsByVideoHashRepo = async (
+export const getCommentsByVideoIdRepo = async (
   videoId: string,
   offset: number,
   limit: number,
