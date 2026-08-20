@@ -1,20 +1,16 @@
 import { Request, Response } from "express";
 import express from "express";
 import { RepliesCommentsRequestDTO } from "./dtos/comment.replies-comments.dto";
-import { getNumberParam, getStringParam, getBooleanParam } from "../../shared/utils/paramsParse";
+import { getNumberParam, getStringParam } from "../../shared/utils/paramsParse";
 import { ApiResponseDTO } from "../../shared/dtos/response.dto";
 import { СommentService } from "./comment.service";
 import { CommentRepository } from "./comment.repository";
 import { TCommentFilters } from "./comment.consts";
-import { VideoRepository } from "../video/video.repository";
-import { StatisticRepository } from "../statistic/statistic.repository";
 
 export const router = express.Router();
 
 const commentRepository = new CommentRepository();
-const videoRepository = new VideoRepository();
-const statisticRepository = new StatisticRepository()
-const commentService = new СommentService(commentRepository, videoRepository, statisticRepository);
+const commentService = new СommentService(commentRepository);
 
 router.post("/replies-comments/:parentCommentId", async (req: Request, res: Response) => {
     try {
@@ -64,52 +60,35 @@ router.post("/comments/:videoId", async (req: Request, res: Response) => {
 router.post("/comment/create/:videoId", async (req: Request, res: Response) => {
   console.log("createComment");
   try {
-    const videoId = getStringParam(req.params.videoId);
-    const commentText = getStringParam(req.body.commentText);
-    const userId = getStringParam(req.body.userId);
+    const videoId = req.params.videoId;
+    const commentText = req.body.commentText;
+    const userId = req.body.userId;
 
-    const result = await commentService.createComment(commentText, videoId, userId)
+    
 
-    return res.status(201).json(ApiResponseDTO.success(result));
-  } catch (error: any) {
-    res.status(500).json(ApiResponseDTO.error(error));
-  }
-});
+    const response = await crateCommentRepo(
+      commentText,
+      videoId as string,
+      userId
+    );
 
-router.delete("/comment/delete/:commentId", async (req: Request, res: Response) => {
-  console.log("deleteComment");
-  try {
-    const commentId = getStringParam(req.params.commentId)
-
-    const isDeleted = commentRepository.deleteComment(commentId)
-
-    if (isDeleted) {
-        return res.status(201).json(ApiResponseDTO.success(isDeleted));
-    }
-  } catch (error: any) {
-    return res.status(500).json(ApiResponseDTO.error(error));
-  }
-});
-
-router.post("/comment/mark/:commentId", async (req: Request, res: Response) => {
-  console.log("markComment");
-  try {
-    const commentId = getStringParam(req.params.commentId)
-    const userId =  getStringParam(req.body.userId)
-    const isLiked = getBooleanParam(req.body.isLiked)
-    const isDisliked = getBooleanParam(req.body.isDisliked)
-
-    const result = await commentService.markComment(commentId, userId, isLiked, isDisliked)    
-
-    if (!result) {
-        return res.status(500).json(ApiResponseDTO.error('Unknown error'));
+    if(response) {
+      await updateVideoCommentCount(videoId as string)
     }
 
-    return res.status(200).json(ApiResponseDTO.success(result))
+    const result = {
+      newComment: response,
+    };
 
+    return res.status(201).json(result);
   } catch (error) {
-    return res.status(500).json({ error: "Internal server error" });
+    console.error("Error createComment:", error);
+    res.status(500).json({ error: "Internal server error2" });
   }
-};);
+});
+
+// router.delete("/comment/delete/:commentId", deleteComment);
+
+// router.post("/comment/mark/:commentId", markComment);
 
 // router.post("/comment/reply/:parentCommentId", replyComment);
