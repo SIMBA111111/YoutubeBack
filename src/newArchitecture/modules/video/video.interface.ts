@@ -1,8 +1,9 @@
+import { TagEntity, VideoEntity } from "./video.entity"
 
 export interface IVideoRepository {
-    updateVideoCommentCount: (videoId: string) => Promise<number>
+    getAllTags: () => Promise<TagEntity[]>
 }
 
-
-export interface IVideosService {
+export interface IVideoService {
+    getVideos: () => Promise<VideoEntity[]>
 }

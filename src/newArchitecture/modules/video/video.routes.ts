@@ -1,94 +1,79 @@
+// routes/videos.js
 import { Request, Response } from "express";
-import express from "express";
-import { RepliesCommentsRequestDTO } from "./dto/comment.replies-comments.dto";
-import { getNumberParam, getStringParam } from "../../shared/utils/paramsParse";
+import express from 'express'
+import { upload } from '../../middlewares/upload';
+import { VideoRepository } from "./video.repository";
+import { VideoService } from "./video.service";
 import { ApiResponseDTO } from "../../shared/dtos/response.dto";
-import { СommentService } from "./video.service";
-import { CommentRepository } from "./video.repository";
-import { TCommentFilters } from "./video.consts";
+import { getNumberParam, getStringParam, getBooleanParam } from "../../shared/utils/paramsParse";
 
-export const router = express.Router();
+const router = express.Router();
 
-const commentRepository = new CommentRepository();
-const commentService = new СommentService(commentRepository);
+const videoRepository = new VideoRepository()
+const videoService = new VideoService(videoRepository)
 
-router.post("/replies-comments/:parentCommentId", async (req: Request, res: Response) => {
-    try {
-        const parentCommentId = getStringParam(req.params.parentCommentId);
-        const userId = getStringParam(req.body.userId);
-        const offset = getNumberParam(req.query.offset, 0);
-        const limit = getNumberParam(req.query.limit, 10);
-
-        const requestData = new RepliesCommentsRequestDTO({
-            parentCommentId, 
-            userId,
-            offset, 
-            limit
-        });
-
-        const result = await commentService.getRepliesComment(
-            requestData.parentCommentId,
-            requestData.userId,
-            requestData.offset,
-            requestData.limit
-        ) 
-        
-        res.status(200).json(ApiResponseDTO.success(result));
-
-    } catch (error: any) {
-        res.status(400).json(ApiResponseDTO.error(error.message));
-    }
-});
-
-router.post("/comments/:videoId", async (req: Request, res: Response) => {
+router.get('/tags', async (req: Request, res: Response) => {
+  console.log("getTags");
   try {
-    const videoId = getStringParam(req.params.videoId)
-    const filter = getStringParam(req.body.filter)
-    const userId = getStringParam(req.body.userId)
-    const offset = getNumberParam(req.query.offset, 0)
-    const limit = getNumberParam(req.query.limit, 10)
-
-    const result = await commentService.getComments(videoId, userId, filter as TCommentFilters, offset, limit)
-
-    res.status(200).json(ApiResponseDTO.success(result));
-
+    const response = await videoRepository.getAllTags()
+    
+    return res.status(200).json(ApiResponseDTO.success(response))
   } catch (error: any) {
-    res.status(400).json(ApiResponseDTO.error(error.message));
+    return res.status(500).json(ApiResponseDTO.error(error))
   }
 });
 
-router.post("/comment/create/:videoId", async (req: Request, res: Response) => {
-  console.log("createComment");
+
+router.get('/videos', async (req: Request, res: Response) => {
+  console.log("getVideos");
+
   try {
-    const videoId = req.params.videoId;
-    const commentText = req.body.commentText;
-    const userId = req.body.userId;
+    const tagName = getStringParam(req.query.tagName)
+    const isShorts = getStringParam(req.query.isShorts)
+    const channelData = getStringParam(req.cookies.channelData)
+    const offset = getNumberParam(req.query.offset)
+    const limit = getNumberParam(req.query.limit)
 
-    
 
-    const response = await crateCommentRepo(
-      commentText,
-      videoId as string,
-      userId
-    );
-
-    if(response) {
-      await updateVideoCommentCount(videoId as string)
-    }
+    console.log('videos: ', response);
+    console.log('mapVideosToIVideo(videos): ', mapVideosToIVideo(response));
 
     const result = {
-      newComment: response,
+      videos: mapVideosToIVideo(response),
+      total: response.length,
     };
 
-    return res.status(201).json(result);
+    res.json(result);
   } catch (error) {
-    console.error("Error createComment:", error);
-    res.status(500).json({ error: "Internal server error2" });
+    console.error("Error getVideos:", error);
+    res.status(500).json({ error: "Internal server error1" });
   }
-});
+};);
 
-// router.delete("/comment/delete/:commentId", deleteComment);
 
-// router.post("/comment/mark/:commentId", markComment);
 
-// router.post("/comment/reply/:parentCommentId", replyComment);
+
+
+
+
+router.get('/videos/by-name/:name', getVideosByName);
+router.get('/videos/my-subs/:meId', getVideosMySubs);
+router.post('/channel-videos/:channelUsername', getVideosByChannelUsername);
+router.get('/channel-short-videos/:channelUsername', getShortVideosByChannelUsername);
+router.post('/video/:videoId', getVideoById);
+router.post('/recommended-videos/:videoId', getRecommendedVideos);
+router.get('/videos-ids', getVideosIds);
+router.get('/short-videos', getShortVideos);
+router.get('/videos/search/:name', getVideoListByName);
+router.get('/videos/:videoId', getVideoById);
+router.post('/video-analytics/:videoId', getVideoAnalytics);
+
+router.post('/mark/video/:videoId', updateMarkVideo);
+router.get('/view/video/:videoId', updateVideoViewCount);
+router.delete('/delete-video/:videoId', deleteVideo);
+router.patch('/update-video/:videoId', updateVideo);
+
+// router.post('/videos/create', upload, createVideo);
+router.post('/create-video', upload, createVideo);
+
+export default router;

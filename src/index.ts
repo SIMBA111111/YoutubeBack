@@ -10,7 +10,6 @@ import routesVideo from './routes/videos';
 import {router as RouterAuth} from './routes/auth'
 import {router as RouterChannel} from './routes/channel'
 import {router as RouterComments} from './routes/comments'
-import {router as RouterPosts} from './routes/posts'
 import {router as RouterPlaylists} from './routes/playlists'
 import {router as RouterMe} from './routes/me'
 import {router as RouterEvent} from './routes/events'
@@ -46,7 +45,6 @@ app.use(express.static('public'));
 app.use('/api', routesVideo);
 app.use('/api', RouterChannel);
 app.use('/api', RouterComments);
-app.use('/api', RouterPosts);
 app.use('/api', RouterPlaylists);
 app.use('/api', RouterMe);
 app.use('/api/auth', RouterAuth);

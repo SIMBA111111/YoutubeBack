@@ -21,16 +21,16 @@ export class CommentEntity implements ICommentEntity {
   createdDate: Date;
   updatedDate: Date;
 
-  constructor(data: ICommentEntity) {
+  constructor(data: any) {
     this.id = data.id;
     this.text = data.text || '';
-    this.likeCount = data.likeCount || 0;
-    this.dislikeCount = data.dislikeCount || 0;
-    this.videoId = data.videoId;
-    this.channelId = data.channelId;
-    this.parentCommentId = data.parentCommentId || null;
-    this.createdDate = data.createdDate;
-    this.updatedDate = data.updatedDate;
+    this.likeCount = data.like_count || 0;
+    this.dislikeCount = data.dislike_count || 0;
+    this.videoId = data.video_id;
+    this.channelId = data.channel_id;
+    this.parentCommentId = data.parent_comment_id || null;
+    this.createdDate = data.created_date;
+    this.updatedDate = data.updated_date;
   }
   // Бизнес-методы
 //   getRating(): number {

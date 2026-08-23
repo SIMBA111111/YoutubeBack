@@ -213,19 +213,25 @@ export class CommentRepository implements ICommentRepository{
                 );
             }   
 
-            return new CommentEntity({
-                id: updatedComment?.rows[0].id,
-                text: updatedComment?.rows[0].text,
-                likeCount: updatedComment?.rows[0].likeCount || 0,
-                dislikeCount: updatedComment?.rows[0].dislikeCount || 0,
-                videoId: updatedComment?.rows[0].videoId,
-                channelId: updatedComment?.rows[0].channelId,
-                parentCommentId: updatedComment?.rows[0].parentCommentId,
-                createdDate: updatedComment?.rows[0].createdDate,
-                updatedDate: updatedComment?.rows[0].updatedDate,  
-            })
+            return new CommentEntity(updatedComment?.rows[0])
         } catch (error) {
             throw new Error(`Error updateCommentDislikeCount repository: ${error}`);
         }
+    }
+
+    async createReplyComment(commentText: string, videoId: string, userId: string, parentCommentId: string): Promise<CommentEntity> {
+        try {
+            const createdReplyComment = await pool.query(
+            `
+                INSERT INTO comments (text, video_id, channel_id, parent_comment_id)
+                VALUES ($1, $2, $3, $4)
+                RETURNING *
+            `,
+            [commentText, videoId, userId, parentCommentId])
+        
+            return new CommentEntity(createdReplyComment?.rows[0])
+        } catch (error) {
+            throw new Error(`Error createReplyComment repository: ${error}`);
+        }        
     }
 }

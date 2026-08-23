@@ -1,6 +1,6 @@
 export enum VIDEO_ACCESS {
-    RIVATE = 'RIVATE',
-    PUBLIC = 'PUBLIC'
+    PUBLIC = 'PUBLIC',
+    PRIVATE = 'PRIVATE'
 }
 
 export type TVideoAccess = keyof typeof VIDEO_ACCESS

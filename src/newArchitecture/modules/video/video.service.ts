@@ -1,28 +1,31 @@
-import { TCommentFilters } from "./video.consts";
-import { ICommentEntity } from "./video.entity";
-import { ICommentService, IGetCommentResponse, IGetRepliesCommentResponse } from "./video.interface";
-import { CommentRepository } from './video.repository'
+import { VideoEntity } from "./video.entity";
+import { IVideoRepository, IVideoService } from "./video.interface";
 
-export class СommentService implements ICommentService {
-    constructor(private commentRepository: CommentRepository) {}
+export class VideoService implements IVideoService{
+    constructor(private videoRepository: IVideoRepository) {}
 
-    async getRepliesComment(parentCommentId: string, userId: string, offset: number, limit: number): Promise<IGetRepliesCommentResponse> {
-        const repliesComments = await this.commentRepository.getRepliesComment(parentCommentId, userId, offset, limit)
-        const repliesCommentsCount = await this.commentRepository.getRepliesCommentCount(parentCommentId)
-        
-        return {
-            comments: repliesComments,
-            commentsCount: repliesCommentsCount,
+    async getVideos(
+        tagName: string | null, 
+        channelData: string | null, 
+        offset: number, 
+        limit: number
+    ): Promise<VideoEntity[]> {
+
+        const parsedChannelData = JSON.parse(channelData || '')
+            
+        let response;
+
+        if (tagName === "fresh") {
+            response = await getOrderedVideoList("DESC", offset, limit);
+        } else if (tagName === "newForMe" && channelId) {
+            response = await getVideosFollowedChannels(channelId, offset, limit);
+        } else if (tagName === "viewed" && channelId) {
+            response = await getViewedVideosByChannelId(channelId, offset, limit);
+        } else if (tagName === "all" || !tagName) {
+            response = await getVideoList(offset, limit);
+        } else {
+            response = await getVideoListByTag(tag?.id);
         }
-    }
 
-    async getComments(videoId: string, userId: string, filter: TCommentFilters, offset: number, limit: number): Promise<IGetCommentResponse> {
-        const videoComments = await this.commentRepository.getCommentsByVideoId(videoId, userId, filter, offset, limit)
-        const videoCommentsCount = await this.commentRepository.getVideoCommentsCount(videoId)
-        
-        return {
-            comments: videoComments,
-            commentsCount: videoCommentsCount,
-        } 
     }
 }

@@ -107,9 +107,23 @@ router.post("/comment/mark/:commentId", async (req: Request, res: Response) => {
 
     return res.status(200).json(ApiResponseDTO.success(result))
 
-  } catch (error) {
-    return res.status(500).json({ error: "Internal server error" });
+  } catch (error: any) {
+    return res.status(500).json(ApiResponseDTO.error(error));
   }
-};);
+});
 
-// router.post("/comment/reply/:parentCommentId", replyComment);
+router.post("/comment/reply/:parentCommentId", async (req: Request, res: Response) => {
+  console.log("replyComment");
+  try {
+    const parentCommentId = getStringParam(req.params.parentCommentId);
+    const commentText = getStringParam(req.body.commentText)
+    const userId = getStringParam(req.body.userId)
+    const videoId = getStringParam(req.body.videoId)
+
+    const result = commentRepository.createReplyComment(commentText, videoId, userId, parentCommentId)
+
+    return res.status(200).json(ApiResponseDTO.success(result))
+  } catch (error: any) {
+    return res.status(500).json(ApiResponseDTO.error(error))
+  }
+})

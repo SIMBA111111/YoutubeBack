@@ -1,18 +1,15 @@
-import { pool } from "../../shared/utils/pg";
+import { pool } from "../../../utils/pg";
+import { TagEntity } from "./video.entity";
 import { IVideoRepository } from "./video.interface";
 
-export class VideoRepository implements IVideoRepository{
-    async updateVideoCommentCount(videoId: string): Promise<number> {
+export class VideoRepository implements IVideoRepository {
+    async getAllTags(): Promise<TagEntity[]> {
         try {
-            const res = await pool.query(
-                `UPDATE videos SET comments_count = comments_count + 1 WHERE id = $1 RETURNING comments_count`,
-                [videoId]
-            );
-
-            return res.rows[0];
+            const res = await pool.query("SELECT * FROM tags");
+            return res.rows.map(row => new TagEntity(row))
 
         } catch (error) {
-            throw new Error(`Error updateVideoCommentCount repository: ${error}`);
+            throw new Error(`Error getTagList repository: ${error}`);
         }
     }
 }

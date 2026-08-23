@@ -1,16 +1,41 @@
 import { TVideoAccess } from "./video.consts";
 
+export interface ITagEntity {
+  id: string;
+  name: string;
+  createdDate: string;
+  updatedDate: string;
+}
+
+export class TagEntity implements ITagEntity {
+  id: string;
+  name: string;
+  createdDate: string;
+  updatedDate: string;
+
+  constructor(data: any) {
+    this.id = data.id;
+    this.name = data.name;
+    this.createdDate = data.created_date;
+    this.updatedDate = data.updated_date;
+  }
+}
+
+
+
+
 export interface IVideoEntity {
   id: string;
   name: string;
+  videoHash: string;
   duration: number;
   thumbnailUrl: string;
   videoPreviewUrl: string;
   masterM3u8Url: string;
-  videoMp4Url: string | null;
+  videoMp4_Url: string;
   description: string;
   channelId: string;
-  viewsCount: number;
+  viewersCount: number;
   likesCount: number;
   dislikesCount: number;
   commentsCount: number;
@@ -19,22 +44,24 @@ export interface IVideoEntity {
   isShort: boolean;
   tags: string[];
   hashtags: string[];
-  createdDate: string;
+  playlistIds: string[];
   datePublication: string;
   updatedDate: string;
+  createdDate: string;
 }
 
 export class VideoEntity implements IVideoEntity {
   id: string;
   name: string;
+  videoHash: string;
   duration: number;
   thumbnailUrl: string;
   videoPreviewUrl: string;
   masterM3u8Url: string;
-  videoMp4Url: string | null;
+  videoMp4_Url: string;
   description: string;
   channelId: string;
-  viewsCount: number;
+  viewersCount: number;
   likesCount: number;
   dislikesCount: number;
   commentsCount: number;
@@ -43,31 +70,34 @@ export class VideoEntity implements IVideoEntity {
   isShort: boolean;
   tags: string[];
   hashtags: string[];
-  createdDate: string;
+  playlistIds: string[];
   datePublication: string;
   updatedDate: string;
+  createdDate: string;
 
-  constructor(data: IVideoEntity) {
-    this.id = data.id;
+  constructor(data: any) {
+    this.id= data.id;
     this.name = data.name;
+    this.videoHash = data.video_hash;
     this.duration = data.duration;
-    this.thumbnailUrl = data.thumbnailUrl;
-    this.videoPreviewUrl = data.videoPreviewUrl;
-    this.masterM3u8Url = data.masterM3u8Url;
-    this.videoMp4Url = data.videoMp4Url;
-    this.description = data.description;
-    this.channelId = data.channelId;
-    this.viewsCount = data.viewsCount;
-    this.likesCount = data.likesCount;
-    this.dislikesCount = data.dislikesCount;
-    this.commentsCount = data.commentsCount;
-    this.videoAccess = data.videoAccess;
-    this.averageColor = data.averageColor;
-    this.isShort = data.isShort;
-    this.tags = data.tags;
-    this.hashtags = data.hashtags;
-    this.createdDate = data.createdDate;
-    this.datePublication = data.datePublication;
-    this.updatedDate = data.updatedDate;
+    this.thumbnailUrl = data.thumbnail_url;
+    this.videoPreviewUrl = data.video_preview_url,
+    this.masterM3u8Url = data.master_m3u8_url,
+    this.videoMp4_Url = data.video_mp4_Url,
+    this.description = data.description,
+    this.channelId = data.channel_id;
+    this.viewersCount = data.viewers_count;
+    this.likesCount = data.likes_count;
+    this.dislikesCount = data.dislikes_count;
+    this.commentsCount = data.comments_count;
+    this.videoAccess = data.video_access;
+    this.averageColor = data.average_color;
+    this.isShort = data.is_short;
+    this.tags = data.tags
+    this.hashtags = data.hashtags
+    this.playlistIds = data.playlist_ids;
+    this.datePublication = data.date_publication;
+    this.updatedDate = data.updated_date;
+    this.createdDate = data.created_date;
   }
 }

@@ -11,6 +11,7 @@ export interface ICommentRepository {
     deleteComment: (commentId: string) => Promise<boolean>
     updateCommentLikeCount: (commentId: string, action: TCommentActions) => Promise<CommentEntity>
     updateCommentDislikeCount: (commentId: string, action: TCommentActions) => Promise<CommentEntity>
+    createReplyComment: (commentText: string, videoId: string, userId: string, parentCommentId: string) => Promise<CommentEntity>
 }
 
 
