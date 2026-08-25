@@ -1,15 +1,12 @@
 // index.js
 import express from 'express';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import fs from 'fs';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 
 import routesVideo from './routes/videos';
 import {router as RouterAuth} from './routes/auth'
 import {router as RouterChannel} from './routes/channel'
-import {router as RouterComments} from './routes/comments'
+import {router as RouterComments} from './modules/comment/comment.routes'
 import {router as RouterPosts} from './routes/posts'
 import {router as RouterPlaylists} from './routes/playlists'
 import {router as RouterMe} from './routes/me'
