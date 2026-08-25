@@ -29,36 +29,80 @@ router.get('/videos', async (req: Request, res: Response) => {
 
   try {
     const tagName = getStringParam(req.query.tagName)
-    const isShorts = getStringParam(req.query.isShorts)
+    const isShorts = getBooleanParam(req.query.isShorts)
     const channelData = getStringParam(req.cookies.channelData)
     const offset = getNumberParam(req.query.offset)
     const limit = getNumberParam(req.query.limit)
 
+    const videos = await videoService.getVideos(tagName, isShorts, channelData, offset, limit)
 
-    console.log('videos: ', response);
-    console.log('mapVideosToIVideo(videos): ', mapVideosToIVideo(response));
-
-    const result = {
-      videos: mapVideosToIVideo(response),
-      total: response.length,
-    };
-
-    res.json(result);
-  } catch (error) {
-    console.error("Error getVideos:", error);
-    res.status(500).json({ error: "Internal server error1" });
+    return res.status(200).json(ApiResponseDTO.success(videos))
+  } catch (error: any) {
+    return res.status(500).json(ApiResponseDTO.error(error))
   }
-};);
+})
+
+
+router.get('/videos/by-name/:name', async (req: Request, res: Response) => {
+  console.log("getVideosByName");
+
+  try {
+    const name = getStringParam(req.params.name)
+    const limit = getNumberParam(req.query.limit)
+    const offset = getNumberParam(req.query.offset)
+    
+    const videos = await videoRepository.getVideoListByName(name, offset, limit, true)
+
+    return res.status(200).json(ApiResponseDTO.success(videos))
+  } catch (error: any) {
+    return res.status(500).json(ApiResponseDTO.error(error))
+  }
+});
 
 
 
+router.get('/videos-my-subs/:meId', async (req: Request, res: Response) => {
+  try {
+    const followerId = getStringParam(req.params.followerId)
+    const offset = getNumberParam(req.query.offset)
+    const limit = getNumberParam(req.query.limit)
+    const onlyShorts = getBooleanParam(req.query.onlyShorts)
+    const onlyFull = getBooleanParam(req.query.onlyFull)
+
+    const videos = videoService.getVideoListBySubs(followerId, offset, limit, onlyShorts, onlyFull)
+
+    return res.status(200).json(ApiResponseDTO.success(videos))
+  } catch (error: any) {
+    return res.status(500).json(ApiResponseDTO.error(error))
+  }
+});
+
+
+router.post('/channel-videos/:channelUsername', async (req: Request, res: Response) => {
+  console.log("getVideosByChannelUsername");
+  try {
+    const channelUsername = getStringParam(req.params.channelUsername)
+    const offset = getNumberParam(req.query.offset)
+    const limit = getNumberParam(req.query.limit)
+    const filter = getStringParam(req.body.filter)
+    const isShort = getBooleanParam(req.body.isShort)
+
+    const response = await getVideoListByOwnerUsername(
+      channelUsername as string,
+      filter,
+      isShort,
+      offset as string,
+      limit as string
+    );
+
+    return res.status(200).json(ApiResponseDTO.success(videos))
+  } catch (error: any) {
+    return res.status(500).json(ApiResponseDTO.error(error))
+  }
+});
 
 
 
-
-router.get('/videos/by-name/:name', getVideosByName);
-router.get('/videos/my-subs/:meId', getVideosMySubs);
-router.post('/channel-videos/:channelUsername', getVideosByChannelUsername);
 router.get('/channel-short-videos/:channelUsername', getShortVideosByChannelUsername);
 router.post('/video/:videoId', getVideoById);
 router.post('/recommended-videos/:videoId', getRecommendedVideos);

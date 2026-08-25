@@ -19,8 +19,11 @@ export class TagEntity implements ITagEntity {
     this.createdDate = data.created_date;
     this.updatedDate = data.updated_date;
   }
-}
 
+  static fromDbRows(dbRows: any[]): TagEntity[] {
+    return dbRows.map(row => new TagEntity(row));
+  }
+}
 
 
 
@@ -99,5 +102,10 @@ export class VideoEntity implements IVideoEntity {
     this.datePublication = data.date_publication;
     this.updatedDate = data.updated_date;
     this.createdDate = data.created_date;
+  }
+
+
+  static fromDbRows(dbRows: any[]): VideoEntity[] {
+    return dbRows.map(row => new VideoEntity(row));
   }
 }
