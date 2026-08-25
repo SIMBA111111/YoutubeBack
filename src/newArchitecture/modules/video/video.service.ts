@@ -18,9 +18,9 @@ export class VideoService implements IVideoService{
         if (tagName === "fresh") {
             response = await getOrderedVideoList("DESC", offset, limit);
         } else if (tagName === "newForMe" && channelId) {
-            response = await getVideosFollowedChannels(channelId, offset, limit);
+            response = await getVideosFollowedChannels(parsedChannelData.Id, offset, limit);
         } else if (tagName === "viewed" && channelId) {
-            response = await getViewedVideosByChannelId(channelId, offset, limit);
+            response = await getViewedVideosByChannelId(parsedChannelData.Id, offset, limit);
         } else if (tagName === "all" || !tagName) {
             response = await getVideoList(offset, limit);
         } else {
