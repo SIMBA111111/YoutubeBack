@@ -104,7 +104,6 @@ export class VideoEntity implements IVideoEntity {
     this.createdDate = data.created_date;
   }
 
-
   static fromDbRows(dbRows: any[]): VideoEntity[] {
     return dbRows.map(row => new VideoEntity(row));
   }

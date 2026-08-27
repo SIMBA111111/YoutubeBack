@@ -1,5 +1,5 @@
 import { pool } from "../../../utils/pg";
-import { SORT, TSort, TVideoTypeFilter, VIDEO_TYPE_FILTER } from "./domain/video.consts";
+import { FiltersEnum, SORT, TSort, TVideoAgeFilter, TVideoTypeFilter, VIDEO_TYPE_FILTER } from "./domain/video.consts";
 import { TagEntity, VideoEntity } from "./domain/video.entity";
 import { IVideoRepository } from "./domain/video.interface";
 
@@ -180,6 +180,126 @@ export class VideoRepository implements IVideoRepository {
             return VideoEntity.fromDbRows(res.rows);
         } catch (error) {
             throw new Error(`Error getVideoListBySubs repository: ${error}`);
+        }
+    }
+
+    async getVideoListByOwnerUsername(channelUsername: string, filter: TVideoAgeFilter, isShort: boolean, offset: number, limit: number): Promise<VideoEntity[]> {
+        try {
+            let query = `
+                SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl
+                FROM videos v
+                JOIN channels ch ON ch.id = v.channel_id
+                WHERE ch.username = $1 AND v.is_short = $2
+            `
+            
+            if(filter === FiltersEnum.NEWS) {
+                query += 'ORDER BY date_publication DESC'
+            }
+        
+            if(filter === FiltersEnum.OLD) {
+                query += 'ORDER BY date_publication ASC'
+            }
+            
+            if(filter === FiltersEnum.FAME) {
+                query += 'ORDER BY viewers_count DESC'
+            }
+        
+            query += ` OFFSET $3 LIMIT $4`
+        
+            const res = await pool.query(query, [channelUsername, isShort, offset, limit])
+        
+            return res.rows;
+        } catch (error) {
+            throw new Error(`Error getVideoListByOwnerUsername repository: ${error}`);
+        }
+    }
+
+    async getVideoById(videoId: string): Promise<VideoEntity> {
+         try {
+            const res = await pool.query(`
+                SELECT * FROM videos WHERE id=$1`,
+            [videoId]);
+
+            return res.rows[0];
+
+        } catch (error) {
+            throw new Error(`Error getVideoById repository: ${error}`);
+        }
+    }
+
+    async getRecommendedVideos(videoId: string, offset: number, limit: number): Promise<VideoEntity[]> {
+        try {
+            const res = await pool.query(
+            `
+                SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl
+                FROM videos v
+                JOIN channels ch ON ch.id = v.channel_id   
+                WHERE v.id != $3                   
+                OFFSET $1 LIMIT $2  
+            `,
+            [offset, limit, videoId]
+            );
+
+            if (res.rows) return res.rows;
+
+            return [];
+        } catch (error) {
+            throw new Error(`Error getRecommendedVideosRepo repository: ${error}`);
+        }
+    }
+
+    async getVideosIds(offset: number, limit: number, isShortVideo: boolean): Promise<string[]> {
+        try {
+            const res = await pool.query(`
+            SELECT id FROM videos
+            WHERE is_short = $3
+            OFFSET $1 LIMIT $2   
+            `, [offset, limit, isShortVideo]);
+            
+            if (res.rows) return res.rows;
+
+            return [];
+        } catch (error) {
+            throw new Error(`Error getVideosIds repository: ${error}`);
+        }
+    }
+
+    async updateVideoViewsById(videoId: string): Promise<Boolean> {
+        try {
+            const res = await pool.query(
+            `   WITH updated_video AS (
+                    UPDATE videos 
+                    SET viewers_count = viewers_count + 1 
+                    WHERE id = $1
+                    RETURNING channel_id
+                )
+                UPDATE channels 
+                SET viewers_count = viewers_count + 1
+                FROM updated_video
+                WHERE channels.id = updated_video.channel_id
+                RETURNING updated_video.channel_id;
+            `,
+            [videoId]
+            );
+
+            return !!res.rows[0];
+        } catch (error) {
+            throw new Error(`Error updateVideoViews repository: ${error}`);
+        }
+    }
+
+    async updateVideoViewsForAnal(videoId: string, viewerId: string): Promise<boolean> {
+        try {
+            const res = await pool.query(
+            `INSERT INTO video_views (video_id, channel_id) 
+                VALUES ($1, $2) 
+                RETURNING *`,
+            [videoId, viewerId]
+            );
+
+            return res.rows[0] || {};
+        } catch (error) {
+            throw new Error(`Error updateVideoViewsForAnal repository: ${error}`);
         }
     }
 }

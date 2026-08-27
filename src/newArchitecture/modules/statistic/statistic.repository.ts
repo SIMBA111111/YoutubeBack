@@ -1,6 +1,6 @@
 import { pool } from "../../shared/utils/pg";
-import { CommentStatisticEntity } from "./statistic.entity";
-import { IStatisticRepository } from "./statistic.interface";
+import { CommentStatisticEntity, VideoStatisticEntity } from "./domain/statistic.entity";
+import { IStatisticRepository } from "./domain/statistic.interface";
 
 export class StatisticRepository implements IStatisticRepository {
     async getCommentStatisticByUserId(commentId: string, userId: string): Promise<CommentStatisticEntity> {
@@ -62,5 +62,39 @@ export class StatisticRepository implements IStatisticRepository {
             liked: updatedCommentStatistic.rows[0].liked,
             updatedDate: updatedCommentStatistic.rows[0].updated_date,
         })
+    }
+
+    async getVideoStatisticByFollowerId(videoId: string, channelId: string): Promise<VideoStatisticEntity> {
+            try {
+                const res = await pool.query(`
+                    SELECT * FROM subscriptions WHERE follower_channel_id = $1 AND channel_id = $2 AND deleted = false
+                `, [channelId, channelId])
+        
+                return res.rows[0]
+        
+            } catch (error) {
+                throw new Error(`Error getVideoStatisticByFollowerId repository: ${error}`)
+            }
+    }
+
+    async updateVideoStatViewsCount(videoId: string, viewerId: string): Promise<VideoStatisticEntity> {
+        try {
+            const res = await pool.query('UPDATE stat_of_videos SET views_count = views_count + 1, updated_date = now() WHERE channel_id = $1 AND video_id = $2', [viewerId, videoId]);      
+            
+            return res.rows[0]
+        } catch (error) {
+            throw new Error(`Error updateStatOfVideoViewsCount repository: ${error}`)
+        }
+    }
+
+    async createVideoStatForUser(videoId: string, userId: string, isDisliked: boolean, isLiked: boolean, firstView: boolean): Promise<VideoStatisticEntity> {
+        try {
+    
+            const res = await pool.query('INSERT INTO stat_of_videos (channel_id, video_id, views_count) VALUES ($1, $2, 1)', [userId, videoId]);  
+    
+            return res.rows[0]
+        } catch (error) {
+            throw new Error(`Error createStatOfVideoForUser repository: ${error}`)
+        }
     }
 }
