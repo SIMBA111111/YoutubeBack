@@ -106,7 +106,6 @@ router.post("/comment/mark/:commentId", async (req: Request, res: Response) => {
     }
 
     return res.status(200).json(ApiResponseDTO.success(result))
-
   } catch (error: any) {
     return res.status(500).json(ApiResponseDTO.error(error));
   }

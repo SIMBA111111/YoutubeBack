@@ -1,5 +1,7 @@
-export const getDateRangeInfo = (dateRange: string): string => {
-    const rangeMap: Record<string, string> = {
+import { AnalyticsDateRange } from "../../modules/channel/domain/channel.consts";
+
+export const getDateRangeInfo = (dateRange: string): AnalyticsDateRange => {
+    const rangeMap: Record<string, AnalyticsDateRange> = {
         'lastDay': '1 day',
         'lastThreeDay': '3 days',
         'last7Day': '7 days',

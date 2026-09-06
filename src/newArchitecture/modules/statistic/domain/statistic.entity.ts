@@ -26,6 +26,10 @@ export class CommentStatisticEntity implements ICommentStatisticEntity {
         this.createdDate = data.createdDate;
         this.updatedDate = data.updatedDate;
     }
+
+    static fromDbRows(dbRows: any[]): CommentStatisticEntity[] {
+        return dbRows.map(row => new CommentStatisticEntity(row));
+    }
 }
 
 
@@ -59,5 +63,9 @@ export class VideoStatisticEntity implements IVideoStatisticEntity {
         this.videoId = data.video_id;
         this.createdDate = data.created_date;
         this.updatedDate = data.updated_date;
+    }
+
+    static fromDbRows(dbRows: any[]): VideoStatisticEntity[] {
+        return dbRows.map(row => new VideoStatisticEntity(row));
     }
 }

@@ -5,7 +5,7 @@ import { upload } from '../../middlewares/upload';
 import { VideoRepository } from "./video.repository";
 import { VideoService } from "./video.service";
 import { ApiResponseDTO } from "../../shared/dtos/response.dto";
-import { getNumberParam, getStringParam, getBooleanParam } from "../../shared/utils/paramsParse";
+import { getNumberParam, getStringParam, getBooleanParam, getArrayParam } from "../../shared/utils/paramsParse";
 import { TVideoAgeFilter } from "./domain/video.consts";
 import { ChannelRepository } from "../channel/channel.repository";
 import { StatisticRepository } from "../statistic/statistic.repository";
@@ -110,12 +110,8 @@ router.post('/channel-videos/:channelUsername', async (req: Request, res: Respon
 });
 
 
-
-
 // этот можно выпелить, тк по верхней ручке можно сделать то же самое
 // router.get('/channel-short-videos/:channelUsername', getShortVideosByOwnerUsername);
-
-
 
 router.post('/video/:videoId', async (req: Request, res: Response) => {
   console.log("==========getVideoById=======");
@@ -215,38 +211,91 @@ router.post('/video-analytics/:videoId', async (req: Request, res: Response) => 
 
     const result = await videoService.getVideoAnalytics(videoId, dateRange)
 
-    const interval = getDateRangeInfo(dateRange);
-    
-    let result
-
-    switch (interval) {
-      case '1 day':
-        result = await getVideoViewsLast24Hours(videoId as string);
-        break;
-
-      case '3 days':
-        result = await getVideoViewsLast3Days(videoId as string);
-        break;
-    
-      default:
-        result = await getVideoAnalyticsRepo(videoId as string, interval);
-        break;
-    }
-
-    res.status(200).json({result: result});
-  } catch (error) {
-    console.error("Error getVideoAnalytics:", error);
-    res.status(500).json({ error: "Internal server error getVideoAnalytics" });
+    return res.status(200).json(ApiResponseDTO.success(result))
+  } catch (error: any) {
+    return res.status(500).json(ApiResponseDTO.error(error))
   }
 });
 
 
+router.post('/mark/video/:videoId', async (req: Request, res: Response) => {
+  console.log("updateMarkVideo");
+  try {
+    const videoId = getStringParam(req.params.videoId)
+    const userId = getStringParam(req.body.userId)
+    const isLiked = getBooleanParam(req.body.isLiked)
+    const isDisliked = getBooleanParam(req.body.isDisliked)
 
-router.post('/mark/video/:videoId', updateMarkVideo);
-router.delete('/delete-video/:videoId', deleteVideo);
-router.patch('/update-video/:videoId', updateVideo);
+    const updatedVideoStatEntity = await videoService.updateMarkVideo(videoId, userId, isLiked, isDisliked)
+
+    return res.status(200).json(ApiResponseDTO.success(updatedVideoStatEntity))
+  } catch (error: any) {
+    return res.status(500).json(ApiResponseDTO.error(error))
+  }
+});
+
+
+router.delete('/delete-video/:videoId', async (req: Request, res: Response) => {
+  console.log(
+    "deleteVideo"
+  );
+  try {
+    const videoId = getStringParam(req.params.videoId)
+
+    const isDeleted = await videoService.deleteVideoService(videoId)
+
+    return res.status(200).json(ApiResponseDTO.success(isDeleted))
+  } catch (error: any) {
+    return res.status(500).json(ApiResponseDTO.error(error))
+  }
+});
+
+
+router.patch('/update-video/:videoId', async (req: Request, res: Response) => {
+  console.log("updateVideo");
+  try {
+    const videoId = getStringParam(req.params.videoId)
+    const iconPreview = getStringParam(req.body.formData.iconPreview)
+    const videoName = getStringParam(req.body.formData.videoName)
+    const videoDescription = getStringParam(req.body.formData.videoDescription)
+    const hashTags = getArrayParam(req.body.formData.hashTags)
+    const tags = getArrayParam(req.body.formData.tags)
+    const playlistIds = getArrayParam(req.body.formData.playlistIds)
+
+    const updatedVideo = await videoService.updateVideo(videoId, iconPreview, videoName, videoDescription, hashTags, tags, playlistIds)
+
+    return res.status(200).json(ApiResponseDTO.success(updatedVideo))
+  } catch (error: any) {
+    return res.status(500).json(ApiResponseDTO.error(error))
+  }
+});
+
 
 // router.post('/videos/create', upload, createVideo);
-router.post('/create-video', upload, createVideo);
+router.post('/create-video', upload, async (req: Request, res: Response) => {
+  console.log("createVideo");
+
+  try {
+    const videoId = getStringParam(req.videoId)
+    const channelId = getStringParam(req.body.userId);
+    const videoName = getStringParam(req.body.videoData.videoName);
+    const videoDescription = getStringParam(req.body.videoData.videoDescription);
+    const videoPreview = getStringParam(req.body.videoData.videoPreview);
+    const playlistIds = getArrayParam(req.body.videoData.playlistIds);
+    const fragments = getArrayParam(req.body.videoData.fragments);
+    const videoAccess = getStringParam(req.body.videoData.videoAccess);
+    const hashTags = getArrayParam(req.body.videoData.hashTags);
+    const tags = getArrayParam(req.body.videoData.tags);
+    const isShort = getBooleanParam(req.body.videoData.isShort);
+
+    const videoService.createVideo()
+
+
+    return res.status(201).json("Video created succesfully");
+  } catch (error) {
+    console.error("Error createVideo:", error);
+    res.status(500).json({ error: "Internal server error2" });
+  }
+});
 
 export default router;

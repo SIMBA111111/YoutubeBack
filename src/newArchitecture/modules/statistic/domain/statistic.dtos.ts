@@ -1,0 +1,1 @@
+export type IStatisticVideoDto = Record<string, number>

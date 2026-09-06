@@ -6,7 +6,10 @@ export const router = express.Router();
 
 router.get('/my-channels/:userId', getMyChannels);
 router.post('/channel-info/:channelUsername', getChannelInfo);
-router.get('/channel-info-by-id/:userId', getChannelInfoById);
+
+// router.get('/channel-info-by-id/:channelId', getChannelInfoById);
+
+
 router.post('/channel-analytics/:channelId', getChannelAnalytic);
 // router.get('/check-is-sub/:userId/:channelId', getChannelInfo);
 

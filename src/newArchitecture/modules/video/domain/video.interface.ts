@@ -1,5 +1,8 @@
+import { TIncOrDesc } from "../../../shared/types"
+import { IStatisticVideoDto } from "../../statistic/domain/statistic.dtos"
+import { VideoStatisticEntity } from "../../statistic/domain/statistic.entity"
 import { TSort, TVideoAgeFilter, TVideoTypeFilter } from "./video.consts"
-import { IgetVideoByIdServiceDto, IUpdateViewVideoDto } from "./video.dtos"
+import { IgetVideoByIdServiceDto, IUpdateMarkVideoDto, IUpdateViewVideoDto, IVideoAnalyticDto } from "./video.dtos"
 import { IVideoEntity, TagEntity, VideoEntity } from "./video.entity"
 
 export interface IVideoRepository {
@@ -18,6 +21,19 @@ export interface IVideoRepository {
     getVideosIds: (offset: number, limit: number, isShortVideo: boolean) => Promise<string[]>
     updateVideoViewsById: (videoId: string) => Promise<Boolean>
     updateVideoViewsForAnal: (videoId: string, viewerId: string) => Promise<boolean>
+    getVideoStatByUser: (videoId: string, userId: string) => Promise<VideoStatisticEntity>
+    updateVideoLikes: (videoId: string, operation: TIncOrDesc) => Promise<number>
+    updateVideoDislikes: (videoId: string, operation: TIncOrDesc) => Promise<number>
+    updateVideoById: (
+        videoId: string,
+        hashtags: any[],
+        tags: any[],
+        playlistIds: any[],
+        videoName: string,
+        videoDescription: string,
+        thumbnailUrl: string
+    ) => Promise<VideoEntity>
+    deleteVideoById: (videoId: string) => Promise<VideoEntity>
 }
 
 export interface IVideoService {
@@ -25,5 +41,21 @@ export interface IVideoService {
     getVideoListBySubs: (followerId: string, offset: number, limit: number, onlyShorts: boolean, onlyFull: boolean) => Promise<VideoEntity[]>
     getVideoById: (videoId: string, followerId: string) => Promise<IgetVideoByIdServiceDto | string>
     updateViewVideo: (videoId: string, viewerId: string) => Promise<IUpdateViewVideoDto | string>
-    getVideoAnalytics(videoId: string, dateRange: string) => Promise<VideoAnalyticDto>
+    getVideoAnalytics: (videoId: string, dateRange: string) => Promise<IStatisticVideoDto>
+    updateMarkVideo: (videoId: string, userId: string, isLiked: boolean, isDisliked: boolean) => Promise<IUpdateMarkVideoDto>
+    updateVideo: (videoId: string, iconPreview: string, videoName: string, videoDescription: string, hashTags: [], tags: [], playlistIds: []) => Promise<VideoEntity>
+    deleteVideoService: (videoId: string) => Promise<boolean>
+    createVideo: (
+        videoId: string,
+        channelId: string,
+        videoName: string,
+        videoDescription: string,
+        videoPreview: string,
+        playlistIds: string,
+        fragments: string,
+        videoAccess: string,
+        hashTags: string,
+        tags: string,
+        isShort: string,
+    ) => Promise<VideoEntity>
 }

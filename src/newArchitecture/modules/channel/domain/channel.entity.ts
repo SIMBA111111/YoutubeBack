@@ -50,4 +50,8 @@ export class ChannelEntity implements IChannelEntity {
         this.links = data.links ?? null;
         this.notificationSetting = data.notification_setting ?? null;
     }
+
+    static fromDbRows(dbRows: any[]): ChannelEntity[] {
+        return dbRows.map(row => new ChannelEntity(row));
+    }
 }

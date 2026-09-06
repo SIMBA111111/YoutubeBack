@@ -26,4 +26,8 @@ export class SubscriptionEntity implements ISubscriptionEntity {
         this.updatedDate = data.updated_date;
         this.deleted = data.deleted ?? false;
     }
+
+    static fromDbRows(dbRows: any[]): SubscriptionEntity[] {
+        return dbRows.map(row => new SubscriptionEntity(row));
+    }
 }

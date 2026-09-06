@@ -1,4 +1,5 @@
 import { pool } from "../../../utils/pg";
+import { INC_OR_DESC, TIncOrDesc } from "../../shared/types";
 import { FiltersEnum, SORT, TSort, TVideoAgeFilter, TVideoTypeFilter, VIDEO_TYPE_FILTER } from "./domain/video.consts";
 import { TagEntity, VideoEntity } from "./domain/video.entity";
 import { IVideoRepository } from "./domain/video.interface";
@@ -302,4 +303,98 @@ export class VideoRepository implements IVideoRepository {
             throw new Error(`Error updateVideoViewsForAnal repository: ${error}`);
         }
     }
+
+    // TO DO как тут нахуй может быть undefined
+    async updateVideoLikes(videoId: string, operation: TIncOrDesc): Promise<number> {
+        try {
+            let res;
+
+            if (operation === INC_OR_DESC.INC) {
+                res = await pool.query(
+                    `UPDATE videos SET likes_count = likes_count + 1 WHERE id = $1 RETURNING likes_count`,
+                    [videoId]
+                );
+            } else if (operation === INC_OR_DESC.DESC) {
+                res = await pool.query(
+                    `UPDATE videos SET likes_count = likes_count - 1 WHERE id = $1 RETURNING likes_count`,
+                    [videoId]
+                );
+            }
+
+            return res.rows[0];
+        } catch (error) {
+            throw new Error(`Error updateVideoLikes repository: ${error}`);
+        }
+    }
+
+
+    async updateVideoDislikes(videoId: string, operation: TIncOrDesc): Promise<number> {
+        try {
+            let res;
+
+            if (operation === INC_OR_DESC.INC) {
+                res = await pool.query(
+                    `UPDATE videos SET dislikes_count = dislikes_count + 1 WHERE id = $1`,
+                    [videoId]
+                );
+            } else if (operation === INC_OR_DESC.DESC) {
+                res = await pool.query(
+                    `UPDATE videos SET dislikes_count = dislikes_count - 1 WHERE id = $1`,
+                    [videoId]
+                );
+            }
+
+            return res.rows[0];
+        } catch (error) {
+            throw new Error(`Error updateVideoDislikes repository: ${error}`);
+        }
+    };
+
+    async deleteVideoById(videoId: string): Promise<VideoEntity> {
+        try {
+            const res = await pool.query(
+                `DELETE FROM videos 
+                WHERE id = $1 
+                RETURNING *`,
+                [videoId]
+            );
+
+            return VideoEntity.fromDbRows(res.rows)[0]
+        } catch (error) {
+            throw new Error(`Error deleteVideoById repository: ${error}`);
+        }
+    };
+
+
+    async updateVideoByIdRepo(
+        videoId: string,
+        hashTags: any[],
+        tags: any[],
+        playlistIds: any[],
+        videoName: string,
+        videoDescription: string,
+        thumbnailUrl: string,
+    ): Promise<VideoEntity> {
+        try {
+            const res = await pool.query(
+            `UPDATE videos 
+            SET 
+                name = $1,
+                description = $2,
+                hashtags = $3,
+                tags = $4,
+                playlistIds = $5,
+                thumbnail_url = $6,
+                updated_date = NOW()
+            WHERE id = $7
+            RETURNING *`,
+            [videoName, videoDescription, hashTags, tags, playlistIds, thumbnailUrl, videoId]
+            );
+
+            return VideoEntity.fromDbRows(res.rows)[0]
+        } catch (error) {
+            console.error('updateVideoByIdRepo error details:', error);
+            throw new Error(`Error updateVideoById repository: ${error}`);
+        }
+    };
 }

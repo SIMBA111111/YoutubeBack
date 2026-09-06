@@ -18,3 +18,8 @@ export interface IVideoAnalyticDto {
     timeSlot: any
     viewsCount: number
 }
+
+export interface IUpdateMarkVideoDto {
+    stats: VideoStatisticEntity
+    video: VideoEntity
+}

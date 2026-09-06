@@ -80,3 +80,22 @@ export function getBooleanParam(
     const str = String(param);
     return str === 'true' || str === '1';
 }
+
+export function getArrayParam(
+    param: [], // 👈 Меняем на unknown
+    defaultValue: [] = []
+): [] {
+    if (!param) return defaultValue;
+
+    // Если массив - берем первый элемент
+    if (Array.isArray(param)) {
+        return param
+    }
+
+    // Если объект (ParsedQs) - игнорируем
+    if (typeof param === 'object') {
+        return defaultValue;
+    }
+
+    return defaultValue
+}
