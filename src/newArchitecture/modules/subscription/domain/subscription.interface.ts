@@ -1,5 +1,5 @@
 import { AnalyticsDateRange } from "../../channel/domain/channel.consts";
-import { TAnalyticSubsEntity, TUpdateSubscriptionNotifSettings } from "./subscription.dtos";
+import { TAnalyticSubsEntity, TGetAllSubscriptionsByFollowerIdDto, TUpdateSubscriptionNotifSettings } from "./subscription.dtos";
 import { SubscriptionEntity } from "./subscription.entity";
 
 export interface ISubscriptionRepository {
@@ -13,4 +13,5 @@ export interface ISubscriptionRepository {
     updateSubscriptionNotifSettings(channelId: string, followerId: string, isNotifSetting: boolean): Promise<TUpdateSubscriptionNotifSettings>
     updateSubscribeChannelRepo(channelId: string, followerId: string): Promise<SubscriptionEntity>
     createSubscription(channelId: string, followerId: string): Promise<SubscriptionEntity>
+    getAllSubscriptionsByFollowerId(followerId: string): Promise<TGetAllSubscriptionsByFollowerIdDto[]>
 }

@@ -26,6 +26,44 @@ export class TagEntity implements ITagEntity {
 }
 
 
+export interface IFragmentEntity {
+  id: string;
+  name: string;
+  index: number;
+  startTime: number;
+  endTime: number;
+  videoId: string;
+  createdDate: string;
+  updatedDate: string;
+}
+
+export class FragmentEntity implements IFragmentEntity {
+  id: string;
+  name: string;
+  index: number;
+  startTime: number;
+  endTime: number;
+  videoId: string;
+  createdDate: string;
+  updatedDate: string;
+
+  constructor(data: any) {
+    this.id = data.id;
+    this.name = data.name;
+    this.index = data.index
+    this.startTime = data.start_time
+    this.endTime = data.end_time
+    this.videoId = data.video_id
+    this.createdDate = data.created_date;
+    this.updatedDate = data.updated_date;
+  }
+
+  static fromDbRows(dbRows: any[]): FragmentEntity[] {
+    return dbRows.map(row => new FragmentEntity(row));
+  }
+}
+
+
 export interface IVideoEntity {
   id: string;
   name: string;

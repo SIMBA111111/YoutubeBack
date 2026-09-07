@@ -4,7 +4,7 @@ import { pool } from "../../shared/utils/pg";
 import { AnalyticsDateRange } from "../channel/domain/channel.consts";
 import { TAnalyticEntity } from "../channel/domain/channel.dtos";
 import { formatDateWithHour12 } from "../channel/domain/channel.utils";
-import { TAnalyticSubsEntity, TUpdateSubscriptionNotifSettings } from "./domain/subscription.dtos";
+import { TAnalyticSubsEntity, TGetAllSubscriptionsByFollowerIdDto, TUpdateSubscriptionNotifSettings } from "./domain/subscription.dtos";
 import { SubscriptionEntity } from "./domain/subscription.entity";
 import { ISubscriptionRepository } from "./domain/subscription.interface";
 
@@ -215,6 +215,22 @@ export class SubscriptionRepository implements ISubscriptionRepository {
             return res.rows[0]
         } catch (error) {
             throw new Error(`Error updateSubscriptionNotifSettings repository: ${error}`)
+        }
+    }
+
+
+    async getAllSubscriptionsByFollowerId(followerId: string): Promise<TGetAllSubscriptionsByFollowerIdDto[]> {
+        try {
+            const res = await pool.query(`
+                SELECT ch.id as channelId, ch.username as username
+                FROM channels ch
+                JOIN subscriptions subs ON subs.follower_channel_id = ch.id
+                WHERE subs.channel_id = $1
+            `, [followerId]);      
+
+            return res.rows
+        } catch (error) {
+            throw new Error(`Error getAllSubscriptionsByChannel repository: ${error}`)
         }
     }
 }

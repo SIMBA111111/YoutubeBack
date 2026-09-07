@@ -99,3 +99,24 @@ export function getArrayParam(
 
     return defaultValue
 }
+
+
+export function getFilesParam(
+    files: unknown, // 👈 Используем unknown для безопасности
+    defaultValue: Record<string, Express.Multer.File[]> = {}
+): Record<string, Express.Multer.File[]> {
+    if (!files) return defaultValue;
+
+    // Если это уже объект с полями - возвращаем как есть
+    if (typeof files === 'object' && !Array.isArray(files)) {
+        return files as Record<string, Express.Multer.File[]>;
+    }
+
+    // Если это массив - оборачиваем в объект с полем 'files'
+    if (Array.isArray(files)) {
+        return { files: files as Express.Multer.File[] };
+    }
+
+    // Если это что-то другое - возвращаем дефолт
+    return defaultValue;
+}

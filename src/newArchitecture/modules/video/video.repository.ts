@@ -1,7 +1,7 @@
 import { pool } from "../../../utils/pg";
 import { INC_OR_DESC, TIncOrDesc } from "../../shared/types";
 import { FiltersEnum, SORT, TSort, TVideoAgeFilter, TVideoTypeFilter, VIDEO_TYPE_FILTER } from "./domain/video.consts";
-import { TagEntity, VideoEntity } from "./domain/video.entity";
+import { FragmentEntity, IFragmentEntity, TagEntity, VideoEntity } from "./domain/video.entity";
 import { IVideoRepository } from "./domain/video.interface";
 
 export class VideoRepository implements IVideoRepository {
@@ -396,5 +396,72 @@ export class VideoRepository implements IVideoRepository {
             console.error('updateVideoByIdRepo error details:', error);
             throw new Error(`Error updateVideoById repository: ${error}`);
         }
+    };
+
+    async createVideo(
+        videoId: string, 
+        videoMp4: string, 
+        videoName: string, 
+        videoDescription: string, 
+        masterM3U8Url: string, 
+        thumbnailUrl: string, 
+        previewUrl: string, 
+        fragments: [], 
+        channelId: string, 
+        duration: number, 
+        videoAccess: string, 
+        hashTags: [], 
+        tags: [],
+        playlistIds: [], 
+        isShort: boolean, 
+        averageColor: string
+    ): Promise<VideoEntity> {
+    try {
+        const preparedHashtags = hashTags.reduce((arr, el) => {
+            arr.push(el.name);
+            return arr;
+        }, []);
+
+        const preparedTags = tags ? tags.map(t => t.value) : [];
+        const preparedPlaylistIds = playlistIds ? playlistIds.map(p => p.id) : [];
+
+        const createdVideo = await pool.query(`
+            INSERT INTO videos    
+            (id, name, duration, thumbnail_url, video_preview_url, master_m3u8_url, description, channel_id, is_short, video_access, video_mp4_url, tags, hashtags, playlistids, average_color)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+            RETURNING *
+        `, [
+            videoId,              // $1 - id (uuid)
+            videoName,            // $2 - name (text)
+            duration,       // $3 - duration (double precision) - число!
+            thumbnailUrl,         // $4 - thumbnail_url (text)
+            previewUrl,           // $5 - video_preview_url (text)
+            masterM3U8Url,       // $6 - master_m3u8_url (text)
+            videoDescription,     // $7 - description (text)
+            channelId,            // $8 - channel_id (uuid)
+            isShort,                // $9 - is_short (boolean)
+            videoAccess,          // $11 - video_access (text) - может быть null
+            videoMp4,             // $12 - video_mp4_url (text)
+            preparedTags,         // $13 - tags (uuid[]) - массив UUID
+            preparedHashtags,     // $14 - hashtags (text[])
+            preparedPlaylistIds,   // $15 - playlistids (text[])
+            averageColor
+        ]);
+        
+        const createdVideoId = createdVideo.rows[0].id;
+
+        await Promise.all(fragments.map((frag: IFragmentEntity) => 
+        pool.query(`
+            INSERT INTO video_fragments    
+            (name, index, start_time, end_time, video_id)
+            VALUES ($1, $2, $3, $4, $5)
+        `, [frag.name, frag.index, frag.startTime, frag.endTime, createdVideoId])
+        ));
+
+        return VideoEntity.fromDbRows(createdVideo.rows)[0]
+    } catch (error) {
+        console.error('Ошибка в createVideoRepo:', error);
+        throw new Error(`Error createVideoRepo repository: ${error}`);
+    }
     };
 }

@@ -5,7 +5,7 @@ import { upload } from '../../middlewares/upload';
 import { VideoRepository } from "./video.repository";
 import { VideoService } from "./video.service";
 import { ApiResponseDTO } from "../../shared/dtos/response.dto";
-import { getNumberParam, getStringParam, getBooleanParam, getArrayParam } from "../../shared/utils/paramsParse";
+import { getNumberParam, getStringParam, getBooleanParam, getArrayParam, getFilesParam } from "../../shared/utils/paramsParse";
 import { TVideoAgeFilter } from "./domain/video.consts";
 import { ChannelRepository } from "../channel/channel.repository";
 import { StatisticRepository } from "../statistic/statistic.repository";
@@ -287,14 +287,26 @@ router.post('/create-video', upload, async (req: Request, res: Response) => {
     const hashTags = getArrayParam(req.body.videoData.hashTags);
     const tags = getArrayParam(req.body.videoData.tags);
     const isShort = getBooleanParam(req.body.videoData.isShort);
+    const files = getFilesParam(req.files)
 
-    const videoService.createVideo()
-
-
-    return res.status(201).json("Video created succesfully");
-  } catch (error) {
-    console.error("Error createVideo:", error);
-    res.status(500).json({ error: "Internal server error2" });
+    const createdVideo = await videoService.createVideo(
+      videoId,
+      channelId, 
+      videoName, 
+      videoDescription, 
+      videoPreview, 
+      playlistIds, 
+      fragments, 
+      videoAccess, 
+      hashTags, 
+      tags, 
+      isShort,
+      files
+    )
+    
+    return res.status(200).json(ApiResponseDTO.success(createdVideo))
+  } catch (error: any) {
+    return res.status(500).json(ApiResponseDTO.error(error))
   }
 });
 

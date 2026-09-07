@@ -34,6 +34,24 @@ export interface IVideoRepository {
         thumbnailUrl: string
     ) => Promise<VideoEntity>
     deleteVideoById: (videoId: string) => Promise<VideoEntity>
+    createVideo: (
+        videoId: string,
+        videoMp4: string,
+        videoName: string,
+        videoDescription: string,
+        masterM3U8Url: string,
+        thumbnailUrl: string,
+        previewUrl: string,
+        fragments: [],
+        channelId: string,
+        duration: number,
+        videoAccess: string,
+        hashTags: [],
+        tags: [],
+        playlistIds: [],
+        isShort: boolean,
+        averageColor: string,
+    ) => Promise<VideoEntity>
 }
 
 export interface IVideoService {
@@ -51,11 +69,12 @@ export interface IVideoService {
         videoName: string,
         videoDescription: string,
         videoPreview: string,
-        playlistIds: string,
-        fragments: string,
+        playlistIds: [],
+        fragments: [],
         videoAccess: string,
-        hashTags: string,
-        tags: string,
-        isShort: string,
+        hashTags: [],
+        tags: [],
+        isShort: boolean,
+        files: Record<string, Express.Multer.File[]>
     ) => Promise<VideoEntity>
 }
