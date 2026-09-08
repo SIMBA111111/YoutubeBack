@@ -7,13 +7,16 @@ import { ChannelRepository } from './channel.repository';
 import { AnalyticsDateRange, TTab } from './domain/channel.consts';
 import { SubscriptionRepository } from '../subscription/subscription.repository';
 import { updateChannel } from '../../middlewares/updateChannel';
+import { NotifRepository } from '../notif/notif.repository';
+import { VideoRepository } from '../video/video.repository';
 
 export const router = express.Router();
 
 const channelRepository = new ChannelRepository()
 const subscriptionRepository = new SubscriptionRepository()
 const channelService = new ChannelService(channelRepository, subscriptionRepository)
-
+const notifRepository = new NotifRepository()
+const videoRepository = new VideoRepository()
 
 router.get('/my-channels/:channelId', async (req: Request, res: Response) => {
   try {
@@ -145,3 +148,60 @@ router.put('/channel-update/:channelId', updateChannel, async (req: Request, res
     return res.status(500).json(ApiResponseDTO.error(error));
   }
 });
+
+
+
+// TO DO тут будут все ручки, которые раньше были с /me/
+// по сути это просто инфа о канале, поэтому будет тут
+
+router.get('/channel-data/:channelId', async (req: Request, res: Response) => {
+  console.log("getMeInfo");
+  try {
+    const channelId = getStringParam(req.params.channelId)
+
+    const channel = await channelRepository.getChannelById(channelId);
+
+    return res.status(200).json(ApiResponseDTO.success(channel))
+  } catch (error: any) {
+    return res.status(500).json(ApiResponseDTO.error(error));
+  }
+});
+
+
+router.get('/channel-notifs/:channelId', async (req: Request, res: Response) => {
+  console.log("getMyNotifs");
+  try {
+    const channelId = getStringParam(req.params.channelId)
+
+    const notifList = await notifRepository.getNotifsByUserId(channelId)
+
+    return res.status(200).json(ApiResponseDTO.success(notifList))
+  } catch (error: any) {
+    return res.status(500).json(ApiResponseDTO.error(error));
+  }
+});
+
+
+router.post('/channel-liked-videos/:channelId', async (req: Request, res: Response) => {
+  console.log("getMyLikedVideoList");
+  try {
+    const channelId = getStringParam(req.params.channelId)
+    const offset = getNumberParam(req.query.offset) || 0
+    const limit = getNumberParam(req.query.limit) || 20
+    const isShort = getBooleanParam(req.body?.filter?.isShort)
+
+    const videos = await videoRepository.getLikedVideos(channelId, isShort, offset, limit)
+
+    return res.status(200).json(ApiResponseDTO.success(videos))
+  } catch (error: any) {
+    return res.status(500).json(ApiResponseDTO.error(error));
+  }
+});
+
+router.get('/channel-liked-playlists/:channelId', getMyLikedPlaylists);
+
+router.post('/channel-viewed-history/:channelId', getMyViewsHistory);
+
+router.delete('/channel-delete-views-history/:channelId', deleteMyViewsHistory);
+
+router.patch('/channel-update-save-history/:channelId', updateSaveHistory);

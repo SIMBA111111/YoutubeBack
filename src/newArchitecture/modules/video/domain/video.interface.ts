@@ -18,6 +18,7 @@ export interface IVideoRepository {
     getVideoListByOwnerUsername: (channelUsername: string, filter: TVideoAgeFilter, isShort: boolean, offset: number, limit: number) => Promise<VideoEntity[]>
     getVideoById: (videoId: string) => Promise<VideoEntity>
     getRecommendedVideos: (videoId: string, offset: number, limit: number) => Promise<VideoEntity[]>
+    getLikedVideos(meId: string, isShort: boolean | null, offset: number, limit: number): Promise<VideoEntity[]>
     getVideosIds: (offset: number, limit: number, isShortVideo: boolean) => Promise<string[]>
     updateVideoViewsById: (videoId: string) => Promise<Boolean>
     updateVideoViewsForAnal: (videoId: string, viewerId: string) => Promise<boolean>

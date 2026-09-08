@@ -18,7 +18,7 @@ import { TagEntity, VideoEntity } from "./domain/video.entity";
 import { IVideoRepository, IVideoService } from "./domain/video.interface";
 import { PlaylistEntity } from "../playlist/domain/playlist.entity";
 import { getAverageColor } from "../../shared/utils/getAverageColor";
-import { convertSrtToVTTAndCreateM3U8, createSrtSubtitleFile, getVideoDuration } from "./domain/video.utils";
+import { convertSrtToVTTAndCreateM3U8, createSrtSubtitleFile, getVideoDuration, sendProgress } from "./domain/video.utils";
 import { INotifRepository } from "../notif/domain/notif.interface";
 
 export class VideoService implements IVideoService{
@@ -294,7 +294,7 @@ export class VideoService implements IVideoService{
         files: Record<string, Express.Multer.File[]>
     ): Promise<VideoEntity> {
                 
-        // sendProgress(channelId, { progress: 8, stage: 'saving', message: '' });
+        await sendProgress(channelId, { progress: 8, stage: 'saving', message: '' });
             
         const videoUrl = `/videos/${videoId}/video/${files.videoFile[0].filename}`;
         const thumbnailUrl = `/videos/${videoId}/thumbnail/${files.videoPreview[0].filename}`;
@@ -303,7 +303,7 @@ export class VideoService implements IVideoService{
         const videoIdDir = path.join(publicDir, "videos", videoId);
         const absoluteVideoPath = path.join(publicDir, videoUrl.replace(/^\//, ""));
 
-        // sendProgress(channelId, { progress: 12, stage: 'saving', message: '' });
+        await sendProgress(channelId, { progress: 12, stage: 'saving', message: '' });
             
         let duration;
         try {
@@ -316,7 +316,7 @@ export class VideoService implements IVideoService{
         const srtFilePath = await createSrtSubtitleFile(videoIdDir, absoluteVideoPath, files.videoFile[0].filename);
         console.log("srtFilePath ============ ", srtFilePath);
 
-        // sendProgress(channelId, { progress: 36, stage: 'saving', message: '' });
+        await sendProgress(channelId, { progress: 36, stage: 'saving', message: '' });
 
 
         if (srtFilePath && fs.existsSync(srtFilePath)) {
@@ -381,7 +381,7 @@ export class VideoService implements IVideoService{
         fs.writeFileSync(path.join(playlistDir, "master.m3u8"), masterContent);
         console.log("master.m3u8 создан");
 
-        // sendProgress(channelId, { progress: 41, stage: 'saving', message: '' });
+        await sendProgress(channelId, { progress: 41, stage: 'saving', message: '' });
 
 
         // 3. СОЗДАЕМ СУБТИТРЫ
@@ -389,7 +389,7 @@ export class VideoService implements IVideoService{
         console.log("subtitles +++++++ ", subtitles);
 
 
-        // sendProgress(channelId, { progress: 59, stage: 'saving', message: '' });
+        await sendProgress(channelId, { progress: 59, stage: 'saving', message: '' });
 
         // 4. СОЗДАЕМ PREVIEW (ОБЕРНУТЫЙ В PROMISE)
         await new Promise((resolve, reject) => {
@@ -445,7 +445,7 @@ export class VideoService implements IVideoService{
             });
         });
 
-        // sendProgress(channelId, { progress: 89, stage: 'saving', message: '' });
+        await sendProgress(channelId, { progress: 89, stage: 'saving', message: '' });
 
         const thumbnail = "http://localhost:8080/" + thumbnailUrl;
         
@@ -478,7 +478,7 @@ export class VideoService implements IVideoService{
             averageColor.hex
         );
 
-        // sendProgress(channelId, { progress: 100, stage: 'saving', message: '' });
+        await sendProgress(channelId, { progress: 100, stage: 'saving', message: '' });
 
         const subscriptions = await this.subscriptionRepository.getAllSubscriptionsByFollowerId(channelId)
 
@@ -487,7 +487,7 @@ export class VideoService implements IVideoService{
         const notifType = await this.notifRepository.getNotifType(NOTIF_TYPES.NEW_VIDEO)
         if (notifType) {
             await this.notifRepository.createNewVideoNotifs(createdVideo.id, subsersIds, notifType.id)
-            await broadcastNewVideo(activeNotifConnections, channelId, createdVideo)
+            // await broadcastNewVideo(activeNotifConnections, channelId, createdVideo)
         }
 
         return createdVideo

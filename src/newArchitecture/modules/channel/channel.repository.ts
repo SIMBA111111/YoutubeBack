@@ -17,7 +17,7 @@ export class ChannelRepository implements IChannelRepository {
                 [channelId]
             );
         
-            return res.rows[0];
+            return ChannelEntity.fromDbRows(res.rows)[0]
         } catch (error) {
             throw new Error(`Error getChannelById repository: ${error}`);
         } 
@@ -37,7 +37,7 @@ export class ChannelRepository implements IChannelRepository {
                 [channelId, offset, limit]
             );
 
-            return res.rows;
+            return ChannelEntity.fromDbRows(res.rows)
         } catch (error) {
             throw new Error(`Error getChannelsByFollowerId repository: ${error}`);
         }

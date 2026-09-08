@@ -23,3 +23,9 @@ export interface IUpdateMarkVideoDto {
     stats: VideoStatisticEntity
     video: VideoEntity
 }
+
+export type TSendProgressDto = {
+    progress: number,
+    stage: string, 
+    message: string
+}

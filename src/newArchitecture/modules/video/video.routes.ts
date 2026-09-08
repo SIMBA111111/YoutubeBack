@@ -290,7 +290,6 @@ router.post('/create-video', upload, async (req: Request, res: Response) => {
     const tags = getArrayParam(req.body.videoData.tags);
     const isShort = getBooleanParam(req.body.videoData.isShort);
     const files = getFilesParam(req.files)
-
     const createdVideo = await videoService.createVideo(
       videoId,
       channelId, 
@@ -311,5 +310,45 @@ router.post('/create-video', upload, async (req: Request, res: Response) => {
     return res.status(500).json(ApiResponseDTO.error(error))
   }
 });
+
+
+export const videoCreatingConnections = new Map();
+router.get("/video-process/:userId", (req: Request, res: Response) => {
+  console.log('videoProcess - УСТАНАВЛИВАЕМ СОЕДИНЕНИЯ БЛЯТЬ');
+
+  const userId = getStringParam(req.params.userId)
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  // res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  // res.setHeader('Access-Control-Allow-Origin', '*');
+  res.flushHeaders();
+
+  // Сохраняем connection
+  videoCreatingConnections.set(userId, res);
+  
+  console.log('videoProcess - ДОБАВЛЯЕМ ЕБЛАНА');
+
+  // Отправляем начальное сообщение
+  res.write(`data: ${JSON.stringify({ type: 'connected', progress: 0 })}\n\n`);
+
+  // ✅ Добавляем keep-alive интервал
+  const keepAliveInterval = setInterval(() => {
+      if (res.writableEnded || res.destroyed) {
+          clearInterval(keepAliveInterval);
+          return;
+      }
+      // Отправляем пустой комментарий (не влияет на клиент)
+      res.write(`: keep-alive\n\n`);
+  }, 15000); // Каждые 15 секунд
+
+  req.on('close', () => {
+      console.log(`Соединение закрыто для ${userId}`);
+      clearInterval(keepAliveInterval);
+      videoCreatingConnections.delete(userId); // ✅ Важно удалять!
+  });
+});
+
+
 
 export default router;

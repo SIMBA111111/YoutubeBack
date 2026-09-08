@@ -209,7 +209,7 @@ export class VideoRepository implements IVideoRepository {
         
             const res = await pool.query(query, [channelUsername, isShort, offset, limit])
         
-            return res.rows;
+            return VideoEntity.fromDbRows(res.rows);
         } catch (error) {
             throw new Error(`Error getVideoListByOwnerUsername repository: ${error}`);
         }
@@ -220,9 +220,8 @@ export class VideoRepository implements IVideoRepository {
             const res = await pool.query(`
                 SELECT * FROM videos WHERE id=$1`,
             [videoId]);
-
-            return res.rows[0];
-
+            
+            return VideoEntity.fromDbRows(res.rows)[0]
         } catch (error) {
             throw new Error(`Error getVideoById repository: ${error}`);
         }
@@ -241,13 +240,44 @@ export class VideoRepository implements IVideoRepository {
             [offset, limit, videoId]
             );
 
-            if (res.rows) return res.rows;
-
-            return [];
+            return VideoEntity.fromDbRows(res.rows)
         } catch (error) {
             throw new Error(`Error getRecommendedVideosRepo repository: ${error}`);
         }
     }
+
+
+    async getLikedVideos(
+        meId: string,
+        isShort: boolean | null,
+        offset: number = 0,
+        limit: number = 20
+    ): Promise<VideoEntity[]> {
+        try {
+            let query = `
+                SELECT v.*, ch.id as channelId, ch.username as channelUsername, ch.avatar_url as channelAvatarUrl
+                FROM videos v
+                JOIN stat_of_videos sov ON sov.video_id = v.id 
+                JOIN channels ch ON ch.id = v.channel_id
+                WHERE sov.channel_id = $1 AND sov.liked = true
+            `
+
+            if (isShort) {
+                query += `AND v.is_short = true`
+            } else {
+                query += `AND v.is_short = false`
+            }
+
+            query += ` OFFSET $2 LIMIT $3`
+
+            const res = await pool.query(query, [meId, offset, limit])
+
+            return VideoEntity.fromDbRows(res.rows)
+        } catch (error) {
+            throw new Error(`Error getLikedVideos repository: ${error}`);
+        }
+    };
+
 
     async getVideosIds(offset: number, limit: number, isShortVideo: boolean): Promise<string[]> {
         try {

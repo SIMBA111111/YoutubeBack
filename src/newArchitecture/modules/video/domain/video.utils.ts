@@ -2,6 +2,8 @@ import { exec } from "child_process";
 import util from "util";
 import path from "path";
 import fs from 'fs'
+import { videoCreatingConnections } from "../video.routes";
+import { TSendProgressDto } from "./video.dtos";
 
 const execAsync = util.promisify(exec);
 
@@ -140,3 +142,30 @@ ${vttFilename}
 
   return { m3u8Path, vttPath };
 };
+
+
+export const sendProgress = async (userId: string, data: TSendProgressDto) => {
+    const conn = videoCreatingConnections.get(userId);
+    
+    console.log(`Отправка прогресса для ${userId}:`, data.progress);
+    console.log(`Соединение существует:`, !!conn);
+    
+    if (conn) {
+        // ✅ Правильно: conn это сам Response объект
+        if (!conn.writableEnded && !conn.destroyed) {
+            try {
+                conn.write(`data: ${JSON.stringify(data)}\n\n`);
+                console.log(`✅ Прогресс отправлен: ${data.progress}%`);
+            } catch (error) {
+                console.error(`Ошибка при отправке:`, error);
+                videoCreatingConnections.delete(userId);
+            }
+        } else {
+            console.log(`❌ Соединение уже закрыто для ${userId}`);
+            videoCreatingConnections.delete(userId);
+        }
+    } else {
+        console.log(`❌ Нет соединения для ${userId}`);
+        console.log('Доступные соединения:', Array.from(videoCreatingConnections.keys()));
+    }
+}
