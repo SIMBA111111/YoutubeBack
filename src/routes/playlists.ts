@@ -8,6 +8,73 @@ getPlaylistById
 
 export const router = express.Router();
 
-router.get('/playlists/by-username/:channelUsername', getPlaylistsByChannelUsername);
-router.post('/playlists/create', createPlaylist);
-router.post('/playlists-by-id', getPlaylistById);
+router.get('/playlists/by-username/:channelUsername', async (req: Request, res: Response) => {
+    console.log('getPlaylistsByChannelUsername');
+    try {
+        const { channelUsername } = req.params;
+        const { limit, offset } = req.query;
+
+        const response = await getPlaylistsByUsername(channelUsername as string, offset as string, limit as string)
+
+        const result = {
+            playlists: response,
+        }
+
+        res.status(200).json(result);
+    } catch (error) {
+        console.error('Error getPlaylistsByChannelUsername:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
+
+router.post('/playlists/create', async (req: Request, res: Response) => {
+    console.log('createPlaylist');
+    
+    try {
+        const { name, userId, thumbnail } = req.body; // thumbnail приходит как base64
+        
+        if (!name || !userId || !thumbnail) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        
+        // Декодируем base64 в буфер
+        const base64Data = thumbnail.split(';base64,').pop();
+        const buffer = Buffer.from(base64Data, 'base64');
+        
+        // Сохраняем файл
+        const filename = `playlist-${Date.now()}.png`;
+        const filepath = path.join(__dirname, '../../uploads/playlists', filename);
+        
+        fs.writeFileSync(filepath, buffer);
+        
+        const imagePath = `/uploads/playlists/${filename}`;
+        
+        // Сохраняем в БД
+        const response = await createPlaylistRepo(name, userId, imagePath);
+        
+        const result = {
+            playlist: response,
+        };
+        
+        res.status(200).json(result);
+    } catch (error) {
+        console.error('Error createPlaylist:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
+
+router.post('/playlists-by-id', async (req: Request, res: Response) => {
+    try {
+        const { playlistIds } = req.body
+
+        // getPlaylistByIdRepo()
+        
+        return 200 
+    } catch (error) {
+        throw new Error(`Error getPlaylistById repository: ${error}`)
+    }
+});

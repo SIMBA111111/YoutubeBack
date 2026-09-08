@@ -10,6 +10,7 @@ import { TVideoAgeFilter } from "./domain/video.consts";
 import { ChannelRepository } from "../channel/channel.repository";
 import { StatisticRepository } from "../statistic/statistic.repository";
 import { SubscriptionRepository } from "../subscription/subscription.repository";
+import { NotifRepository } from "../notif/notif.repository";
 
 const router = express.Router();
 
@@ -17,8 +18,9 @@ const videoRepository = new VideoRepository()
 const channelRepository = new ChannelRepository()
 const statisticRepository = new StatisticRepository()
 const subscriptionRepository = new SubscriptionRepository()
+const notifRepository = new NotifRepository()
 
-const videoService = new VideoService(videoRepository, channelRepository, statisticRepository, subscriptionRepository)
+const videoService = new VideoService(videoRepository, channelRepository, statisticRepository, subscriptionRepository, notifRepository)
 
 router.get('/tags', async (req: Request, res: Response) => {
   console.log("getTags");
