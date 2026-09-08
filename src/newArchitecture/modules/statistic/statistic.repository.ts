@@ -134,8 +134,6 @@ export class StatisticRepository implements IStatisticRepository {
             
             const res = await pool.query(query, params);
 
-            console.log('res.rows: ', res.rows);
-            
             const result: Record<string, number> = {};
            
             res.rows.forEach(row => {
@@ -225,6 +223,43 @@ export class StatisticRepository implements IStatisticRepository {
             return VideoStatisticEntity.fromDbRows(res.rows)[0]
         } catch (error) {
             throw new Error(`Error getStatOfVideoForUser repository: ${error}`)
+        }
+    }
+
+    async createVideoStatForUser(videoId: string, userId: string, isDisliked: boolean, isLiked: boolean, firstView?: boolean): Promise<VideoStatisticEntity> {
+        try {
+            let res 
+    
+            if(firstView) {
+                res = await pool.query('INSERT INTO stat_of_videos (channel_id, video_id, views_count) VALUES ($1, $2, 1)', [userId, videoId]);  
+    
+            } else {
+                res = await pool.query(`
+                    INSERT INTO stat_of_videos (channel_id, video_id, liked, disliked, views_count) 
+                    VALUES ($1, $2, $3, $4, 1)
+                `, [userId, videoId, isLiked, isDisliked]
+                );
+            }
+            
+            return VideoStatisticEntity.fromDbRows(res.rows)[0]
+        } catch (error) {
+            throw new Error(`Error createStatOfVideoForUser repository: ${error}`)
+        }
+    }
+
+
+    async updateVideoStatUser(videoId: string, userId: string, isDisliked: boolean, isLiked: boolean): Promise<VideoStatisticEntity> {
+        try {
+            const res = await pool.query(`
+                UPDATE stat_of_videos 
+                SET liked = $1, disliked = $2 
+                WHERE channel_id = $3 AND video_id = $4`,
+                [isLiked, isDisliked, userId, videoId]
+            );
+            
+            return VideoStatisticEntity.fromDbRows(res.rows)[0]
+        } catch (error) {
+            throw new Error(`Error updateStatOfVideoForUser repository: ${error}`)
         }
     }
 }

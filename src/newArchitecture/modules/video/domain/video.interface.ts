@@ -21,7 +21,6 @@ export interface IVideoRepository {
     getVideosIds: (offset: number, limit: number, isShortVideo: boolean) => Promise<string[]>
     updateVideoViewsById: (videoId: string) => Promise<Boolean>
     updateVideoViewsForAnal: (videoId: string, viewerId: string) => Promise<boolean>
-    getVideoStatByUser: (videoId: string, userId: string) => Promise<VideoStatisticEntity>
     updateVideoLikes: (videoId: string, operation: TIncOrDesc) => Promise<number>
     updateVideoDislikes: (videoId: string, operation: TIncOrDesc) => Promise<number>
     updateVideoById: (

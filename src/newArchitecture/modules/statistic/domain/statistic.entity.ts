@@ -17,7 +17,7 @@ export class CommentStatisticEntity implements ICommentStatisticEntity {
     createdDate: string;
     updatedDate: string;
 
-    constructor(data: ICommentStatisticEntity) {
+    constructor(data: any) {
         this.id = data.id;
         this.liked = data.liked ?? false;
         this.disliked = data.disliked ?? false;

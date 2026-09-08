@@ -366,7 +366,7 @@ export class VideoRepository implements IVideoRepository {
     };
 
 
-    async updateVideoByIdRepo(
+    async updateVideoById(
         videoId: string,
         hashTags: any[],
         tags: any[],
@@ -393,7 +393,7 @@ export class VideoRepository implements IVideoRepository {
 
             return VideoEntity.fromDbRows(res.rows)[0]
         } catch (error) {
-            console.error('updateVideoByIdRepo error details:', error);
+            console.error('updateVideoById error details:', error);
             throw new Error(`Error updateVideoById repository: ${error}`);
         }
     };

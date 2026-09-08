@@ -4,7 +4,7 @@ import path from 'path';
 import ffmpeg from "fluent-ffmpeg";
 import { exec } from "child_process";
 
-import { INC_OR_DESC } from "../../shared/types";
+import { INC_OR_DESC, NOTIF_TYPES } from "../../shared/types";
 import { getDateRangeInfo } from "../../shared/utils/getDateRangeCondition";
 import { ChannelEntity } from "../channel/domain/channel.entity";
 import { IChannelRepository } from "../channel/domain/channel.interface";
@@ -19,13 +19,15 @@ import { IVideoRepository, IVideoService } from "./domain/video.interface";
 import { PlaylistEntity } from "../playlist/domain/playlist.entity";
 import { getAverageColor } from "../../shared/utils/getAverageColor";
 import { convertSrtToVTTAndCreateM3U8, createSrtSubtitleFile, getVideoDuration } from "./domain/video.utils";
+import { INotifRepository } from "../notif/domain/notif.interface";
 
 export class VideoService implements IVideoService{
     constructor(
         private videoRepository: IVideoRepository,
         private channelRepository: IChannelRepository,
         private statisticRepository: IStatisticRepository,
-        private subscriptionRepository: ISubscriptionRepository 
+        private subscriptionRepository: ISubscriptionRepository, 
+        private notifRepository: INotifRepository 
     ) {}
 
     async getVideos(
@@ -163,10 +165,7 @@ export class VideoService implements IVideoService{
 
     async updateMarkVideo(videoId: string, userId: string, isLiked: boolean, isDisliked: boolean): Promise<IUpdateMarkVideoDto> {
            // Проверяем, существует ли запись статистики
-        const oldStat = await this.videoRepository.getVideoStatByUser(videoId, userId);
-
-        console.log('oldStat = ', oldStat);
-        
+        const oldStat = await this.statisticRepository.getVideoStatByUser(videoId, userId);
 
         let oldLiked = false;
         let oldDisliked = false;
@@ -176,7 +175,7 @@ export class VideoService implements IVideoService{
             oldDisliked = oldStat.disliked;
 
             // Обновляем существующую запись
-            await this.statisticRepository.updateStatOfVideoForUser(
+            await this.statisticRepository.updateVideoStatUser(
                 videoId as string,
                 userId,
                 isDisliked,
@@ -212,7 +211,7 @@ export class VideoService implements IVideoService{
         }
 
         // Получаем обновленную статистику для ответа
-        const updatedStats = await this.videoRepository.getVideoStatByUser(videoId, userId);
+        const updatedStats = await this.statisticRepository.getVideoStatByUser(videoId, userId);
         const videoData = await this.videoRepository.getVideoById(videoId)
 
         return {
@@ -485,9 +484,9 @@ export class VideoService implements IVideoService{
 
         const subsersIds = (Array.isArray(subscriptions) && subscriptions.length > 0) ? subscriptions?.map(s => s.channelId) : []
         
-        const notifType = await getNotifType(NOTIF_TYPES.NEW_VIDEO)
+        const notifType = await this.notifRepository.getNotifType(NOTIF_TYPES.NEW_VIDEO)
         if (notifType) {
-            await createNewVideoNotifs(createdVideo.id, subsersIds, notifType.id)
+            await this.notifRepository.createNewVideoNotifs(createdVideo.id, subsersIds, notifType.id)
             await broadcastNewVideo(activeNotifConnections, channelId, createdVideo)
         }
 
