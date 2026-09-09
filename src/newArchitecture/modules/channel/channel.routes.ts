@@ -4,19 +4,24 @@ import { getNumberParam, getStringParam, getBooleanParam } from '../../shared/ut
 import { ApiResponseDTO } from '../../shared/dtos/response.dto';
 import { ChannelService } from './channel.service';
 import { ChannelRepository } from './channel.repository';
-import { AnalyticsDateRange, TTab } from './domain/channel.consts';
+import { AnalyticsDateRange, FilterType, TTab } from './domain/channel.consts';
 import { SubscriptionRepository } from '../subscription/subscription.repository';
 import { updateChannel } from '../../middlewares/updateChannel';
 import { NotifRepository } from '../notif/notif.repository';
 import { VideoRepository } from '../video/video.repository';
+import { PlaylistRepository } from '../playlist/playlist.repository';
+import { VideoService } from '../video/video.service';
 
 export const router = express.Router();
 
 const channelRepository = new ChannelRepository()
 const subscriptionRepository = new SubscriptionRepository()
-const channelService = new ChannelService(channelRepository, subscriptionRepository)
 const notifRepository = new NotifRepository()
 const videoRepository = new VideoRepository()
+const playlistRepository = new PlaylistRepository()
+
+const channelService = new ChannelService(channelRepository, subscriptionRepository)
+const videoService = new VideoService(videoRepository, channelRepository, st)
 
 router.get('/my-channels/:channelId', async (req: Request, res: Response) => {
   try {
@@ -198,9 +203,50 @@ router.post('/channel-liked-videos/:channelId', async (req: Request, res: Respon
   }
 });
 
-router.get('/channel-liked-playlists/:channelId', getMyLikedPlaylists);
+router.get('/channel-liked-playlists/:channelId', async (req: Request, res: Response) => {
+  console.log("getMyLikedPlaylists");
+  try {
+    const channelId = getStringParam(req.params.channelId)
+    const offset = getStringParam(req.query.offset)
+    const limit = getStringParam(req.query.limit)
 
-router.post('/channel-viewed-history/:channelId', getMyViewsHistory);
+    const playlists = await playlistRepository.getLikedplaylists(
+      channelId,
+      offset,
+      limit
+    );
+
+    return res.status(200).json(ApiResponseDTO.success(playlists))
+  } catch (error: any) {
+    return res.status(500).json(ApiResponseDTO.error(error));
+  }
+});
+
+router.post('/channel-viewed-history/:channelId', async (req: Request, res: Response) => {
+  console.log("getMyViewsHistory");
+  try {
+    const channelId = getStringParam(req.params.channelId)
+    const offset = getStringParam(req.query.offset)
+    const limit = getStringParam(req.query.limit)
+
+    const filter: FilterType = req.body?.filter || {};
+    const { isShort, tags } = filter;
+    
+    const viewedVideos = videoService.getViewedVideos(channelId, isShort, tags, offset, limit)
+
+
+
+    const result = {
+      viewsHistory: mapVideosToIVideo(response),
+    };
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error getMyViewsHistory:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 
 router.delete('/channel-delete-views-history/:channelId', deleteMyViewsHistory);
 

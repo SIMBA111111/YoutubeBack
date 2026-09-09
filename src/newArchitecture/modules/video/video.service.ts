@@ -101,6 +101,48 @@ export class VideoService implements IVideoService{
         return result
     }
 
+
+    async getViewedVideos(channelId: string, isShort: boolean | null, tags: string | string[] | null, offset: number, limit: number): Promise<VideoEntity> {
+        let viewedVideos
+
+        if (isShort) {
+            viewedVideos = await getViewedShortVideosByChannelId(
+                channelId,
+                true,
+                offset,
+                limit
+            );
+            } else if(!isShort && !tags) {
+            viewedVideos = await getViewedShortVideosByChannelId(
+                channelId,
+                false,
+                offset,
+                limit
+            );
+            } else if (tags === 'all') {
+            viewedVideos = await getViewedVideosByChannelId(
+                channelId,
+                offset,
+                limit
+            );
+            } else if (tags) {      
+            viewedVideos = await getViewedVideoListByTag(
+                tags,
+                offset,
+                limit,
+                channelId,
+            );
+            } else {
+            viewedVideos = await getViewedVideosByChannelId(
+                channelId,
+                offset,
+                limit
+            );
+        }
+        return viewedVideos
+    }
+
+
     async updateViewVideo(videoId: string, viewerId: string): Promise<IUpdateViewVideoDto | string> {
         const video = await this.videoRepository.getVideoById(videoId);
 

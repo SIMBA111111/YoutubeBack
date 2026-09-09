@@ -18,3 +18,8 @@ export const ANALYTICS_DATA_RANGES: AnalyticsDateRange[] = [
     '1 year',
     '100 years',
 ]
+
+export type FilterType = {
+  isShort?: boolean;
+  tags?: string | string[];
+};

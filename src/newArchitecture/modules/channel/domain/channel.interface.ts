@@ -1,3 +1,4 @@
+import { VideoEntity } from "../../video/domain/video.entity";
 import { AnalyticsDateRange, TTab } from "./channel.consts";
 import { IGetChannelAnalyticServiceDto, IGetChannelInfoServiceDto, TAnalyticEntity, TSubscribeChannel } from "./channel.dtos";
 import { ChannelEntity } from "./channel.entity";

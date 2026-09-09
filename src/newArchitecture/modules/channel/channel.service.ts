@@ -1,5 +1,6 @@
 import { getDateRangeInfo } from "../../shared/utils/getDateRangeCondition";
 import { ISubscriptionRepository } from "../subscription/domain/subscription.interface";
+import { VideoEntity } from "../video/domain/video.entity";
 import { AnalyticsDateRange, TTab } from "./domain/channel.consts";
 import { IGetChannelAnalyticServiceDto, IGetChannelInfoServiceDto, TSubscribeChannel } from "./domain/channel.dtos";
 import { ChannelEntity } from "./domain/channel.entity";

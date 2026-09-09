@@ -279,6 +279,31 @@ export class VideoRepository implements IVideoRepository {
     };
 
 
+    async getViewedShortVideosByChannelId(channelId: string, isShort: boolean, offset: number, limit: number): Promise<VideoEntity[]> {
+        console.log('getViewedVideosByChannelId');
+        try {
+            const res = await pool.query(
+            `
+                SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl, ch.name as channelname, sov.updated_date as dateViewed
+                FROM videos v
+                JOIN stat_of_videos sov ON v.id = sov.video_id
+                JOIN channels ch ON ch.id = v.channel_id
+                WHERE sov.views_count > 0 AND sov.channel_id = $1 AND v.is_short=$2
+                ORDER BY sov.updated_date DESC
+                OFFSET $3 LIMIT $4
+                `,
+            [channelId, isShort, offset, limit]
+            );
+
+            if (res.rows) return res.rows;
+
+            return [];
+        } catch (error) {
+            throw new Error(`Error getViewedVideosByChannelId repository: ${error}`);
+        }
+    };
+
+
     async getVideosIds(offset: number, limit: number, isShortVideo: boolean): Promise<string[]> {
         try {
             const res = await pool.query(`
