@@ -11,6 +11,7 @@ import { NotifRepository } from '../notif/notif.repository';
 import { VideoRepository } from '../video/video.repository';
 import { PlaylistRepository } from '../playlist/playlist.repository';
 import { VideoService } from '../video/video.service';
+import { StatisticRepository } from '../statistic/statistic.repository';
 
 export const router = express.Router();
 
@@ -19,9 +20,10 @@ const subscriptionRepository = new SubscriptionRepository()
 const notifRepository = new NotifRepository()
 const videoRepository = new VideoRepository()
 const playlistRepository = new PlaylistRepository()
+const statisticRepository = new StatisticRepository()
 
 const channelService = new ChannelService(channelRepository, subscriptionRepository)
-const videoService = new VideoService(videoRepository, channelRepository, st)
+const videoService = new VideoService(videoRepository, channelRepository, statisticRepository, subscriptionRepository, notifRepository)
 
 router.get('/my-channels/:channelId', async (req: Request, res: Response) => {
   try {
@@ -226,28 +228,48 @@ router.post('/channel-viewed-history/:channelId', async (req: Request, res: Resp
   console.log("getMyViewsHistory");
   try {
     const channelId = getStringParam(req.params.channelId)
-    const offset = getStringParam(req.query.offset)
-    const limit = getStringParam(req.query.limit)
+    const offset = getNumberParam(req.query.offset)
+    const limit = getNumberParam(req.query.limit)
 
-    const filter: FilterType = req.body?.filter || {};
-    const { isShort, tags } = filter;
+    const isShort = getBooleanParam(req.body?.filter.isShort)
+    const tags = getStringParam(req.body?.filter.tags)
     
-    const viewedVideos = videoService.getViewedVideos(channelId, isShort, tags, offset, limit)
+    const viewedVideos = videoService.getViewedVideos(channelId, isShort || false, tags, offset, limit)
 
-
-
-    const result = {
-      viewsHistory: mapVideosToIVideo(response),
-    };
-
-    res.status(200).json(result);
-  } catch (error) {
-    console.error("Error getMyViewsHistory:", error);
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(200).json(ApiResponseDTO.success(viewedVideos))
+  } catch (error: any) {
+    return res.status(500).json(ApiResponseDTO.error(error));
   }
 });
 
 
-router.delete('/channel-delete-views-history/:channelId', deleteMyViewsHistory);
+router.delete('/channel-delete-views-history/:channelId', async (req: Request, res: Response) => {
+  console.log("deleteMyViewsHistory");
+  try {
+    const channelId = getStringParam(req.params.channelId)
 
-router.patch('/channel-update-save-history/:channelId', updateSaveHistory);
+    const response = await statisticRepository.deletHistoryByChannel(channelId);
+
+    return res.status(200).json(ApiResponseDTO.success(response))
+  } catch (error: any) {
+    return res.status(500).json(ApiResponseDTO.error(error));
+  }
+});
+
+
+router.patch('/channel-update-save-history/:channelId', async (req: Request, res: Response) => {
+  console.log("updateSaveHistory");
+  try {
+    const channelId = getStringParam(req.params.channelId)
+    const isSaveHistory = getBooleanParam(req.body.isSaveHistory)
+
+    const response = await channelRepository.updateSaveHistoryByChannel(
+      channelId,
+      isSaveHistory
+    );
+
+    return res.status(200).json(ApiResponseDTO.success(response))
+  } catch (error: any) {
+    return res.status(500).json(ApiResponseDTO.error(error));
+  }
+});

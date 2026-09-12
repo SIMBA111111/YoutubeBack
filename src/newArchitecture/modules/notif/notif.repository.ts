@@ -29,7 +29,7 @@ export class NotifRepository implements INotifRepository {
         }
     }
 
-    async getNotifType(notifType: keyof keyof NOTIF_TYPES): Promise<NotifEntity | null> {
+    async getNotifType(notifType: keyof typeof NOTIF_TYPES): Promise<NotifEntity | null> {
         try {
             if (!notifType)
                 return null

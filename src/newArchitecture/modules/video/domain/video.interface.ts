@@ -20,6 +20,8 @@ export interface IVideoRepository {
     getRecommendedVideos: (videoId: string, offset: number, limit: number) => Promise<VideoEntity[]>
     getLikedVideos(meId: string, isShort: boolean | null, offset: number, limit: number): Promise<VideoEntity[]>
     getViewedShortVideosByChannelId: (channelId: string, isShort: boolean, offset: number, limit: number) => Promise<VideoEntity[]>
+    getViewedVideosByChannelId: (channelId: string, offset: number, limit: number) => Promise<VideoEntity[]>
+    getViewedVideoListByTag: (tagId: string, offset: number, limit: number, channelId: string | null) => Promise<VideoEntity[]>
     getVideosIds: (offset: number, limit: number, isShortVideo: boolean) => Promise<string[]>
     updateVideoViewsById: (videoId: string) => Promise<Boolean>
     updateVideoViewsForAnal: (videoId: string, viewerId: string) => Promise<boolean>
@@ -64,7 +66,7 @@ export interface IVideoService {
     updateMarkVideo: (videoId: string, userId: string, isLiked: boolean, isDisliked: boolean) => Promise<IUpdateMarkVideoDto>
     updateVideo: (videoId: string, iconPreview: string, videoName: string, videoDescription: string, hashTags: [], tags: [], playlistIds: []) => Promise<VideoEntity>
     deleteVideoService: (videoId: string) => Promise<boolean>
-    getViewedVideos: (channelId: string, isShort: boolean | null, tags: string | string[] | null, offset: number, limit: number) => Promise<VideoEntity>
+    getViewedVideos: (channelId: string, isShort: boolean | null, tags: string | null, offset: number, limit: number) => Promise<VideoEntity[]>
     createVideo: (
         videoId: string,
         channelId: string,

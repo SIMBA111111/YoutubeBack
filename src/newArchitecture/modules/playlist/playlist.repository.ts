@@ -19,4 +19,26 @@ export class PlaylistRepository implements IPlaylistRepopsitory {
             throw new Error(`Error getLikedplaylists repository: ${error}`)
         }
     }
+
+    async getPlaylistsByUsername(channelUsername: string, offset: string, limit: string): Promise<PlaylistEntity[]> {
+        console.log('getPlaylistsByUsername');
+        
+        try {
+            const res = await pool.query(`
+                SELECT p.* 
+                FROM playlists p
+                JOIN channels ch ON ch.id = p.channel_id
+                WHERE ch.username = $1
+                OFFSET $2 LIMIT $3
+            `, [channelUsername, offset, limit])
+    
+            if (res.rows.length > 0) 
+                
+                return res.rows
+    
+            return []
+        } catch (error) {
+            throw new Error(`Error getPlaylistsByUsername repository: ${error}`)
+        }
+    }
 }

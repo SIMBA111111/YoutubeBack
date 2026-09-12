@@ -1,6 +1,6 @@
 import { pool } from "../../shared/utils/pg";
 import { AnalyticsDateRange } from "./domain/channel.consts";
-import { TAnalyticEntity } from "./domain/channel.dtos";
+import { TAnalyticEntity, TUpdateSaveHistoryByChannelDto } from "./domain/channel.dtos";
 import { ChannelEntity } from "./domain/channel.entity";
 import { IChannelRepository } from "./domain/channel.interface";
 
@@ -224,6 +224,22 @@ export class ChannelRepository implements IChannelRepository {
             return result.rows[0];
         } catch (error) {
             throw new Error(`Error updateChannelData repository: ${error}`);
+        }
+    }
+
+
+    async updateSaveHistoryByChannel(userId: string, isSaveHistory: boolean): Promise<TUpdateSaveHistoryByChannelDto> {
+        try {
+            const res = await pool.query('UPDATE channels SET is_save_history = $1 WHERE id=$2 RETURNING id, is_save_history', [isSaveHistory, userId]);      
+            
+            const result: TUpdateSaveHistoryByChannelDto =  {
+                id: res.rows[0].id,
+                isSaveHistory: res.rows[0].isSaveHistory
+            }
+
+            return result
+        } catch (error) {
+            throw new Error(`Error updateSaveHistoryByChannel repository: ${error}`)
         }
     }
 }

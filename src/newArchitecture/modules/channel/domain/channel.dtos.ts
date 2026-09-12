@@ -17,3 +17,8 @@ export type TAnalyticEntity = Record<string, string>
 export type TSubscribeChannel = {
     isSubscribed: boolean
 }
+
+export type TUpdateSaveHistoryByChannelDto = {
+    id: string
+    isSaveHistory: boolean
+}

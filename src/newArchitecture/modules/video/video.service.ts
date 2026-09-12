@@ -102,38 +102,40 @@ export class VideoService implements IVideoService{
     }
 
 
-    async getViewedVideos(channelId: string, isShort: boolean | null, tags: string | string[] | null, offset: number, limit: number): Promise<VideoEntity> {
+    async getViewedVideos(channelId: string, isShort: boolean | null, tags: string | null, offset: number, limit: number): Promise<VideoEntity[]> {
         let viewedVideos
 
         if (isShort) {
-            viewedVideos = await getViewedShortVideosByChannelId(
+            viewedVideos = await this.videoRepository.getViewedShortVideosByChannelId(
                 channelId,
                 true,
                 offset,
                 limit
             );
-            } else if(!isShort && !tags) {
-            viewedVideos = await getViewedShortVideosByChannelId(
+        } else if(!isShort && !tags) {
+            viewedVideos = await this.videoRepository.getViewedShortVideosByChannelId(
                 channelId,
                 false,
                 offset,
                 limit
             );
-            } else if (tags === 'all') {
-            viewedVideos = await getViewedVideosByChannelId(
+        } else if (tags === 'all') {
+            viewedVideos = await this.videoRepository.getViewedVideosByChannelId(
                 channelId,
                 offset,
                 limit
             );
-            } else if (tags) {      
-            viewedVideos = await getViewedVideoListByTag(
-                tags,
+        } else if (tags) {     
+            const tag = await this.videoRepository.getTagsByName(tags[0])
+
+            viewedVideos = await this.videoRepository.getViewedVideoListByTag(
+                tag.id,
                 offset,
                 limit,
                 channelId,
             );
-            } else {
-            viewedVideos = await getViewedVideosByChannelId(
+        } else {
+            viewedVideos = await this.videoRepository.getViewedVideosByChannelId(
                 channelId,
                 offset,
                 limit

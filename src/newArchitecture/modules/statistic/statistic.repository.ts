@@ -262,4 +262,14 @@ export class StatisticRepository implements IStatisticRepository {
             throw new Error(`Error updateStatOfVideoForUser repository: ${error}`)
         }
     }
+
+    async deletHistoryByChannel(userId: string): Promise<boolean> {
+        try {
+            const res = await pool.query('UPDATE stat_of_videos SET views_count=0 WHERE channel_id = $1', [userId]);      
+            
+            return true
+        } catch (error) {
+            throw new Error(`Error deletHistoryByChannel repository: ${error}`)
+        }
+    }
 }
