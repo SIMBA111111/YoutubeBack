@@ -6,10 +6,6 @@ import { INotifRepository } from "./domain/notif.interface";
 export class NotifRepository implements INotifRepository {
     async createNewVideoNotifs(videoId: string, consumerIds: string[], notifTypeId: string): Promise<NotifEntity> {
         try {
-            if (!consumerIds || consumerIds.length === 0) {
-                return null;
-            }
-        
             const res = await pool.query(
                 `
                 INSERT INTO notifications (video_id, channel_id, notif_type_id)
@@ -19,11 +15,7 @@ export class NotifRepository implements INotifRepository {
                 [videoId, consumerIds, notifTypeId]
             );
         
-            if (res.rows.length > 0) {
-                return res.rows;
-            }
-        
-            return null;
+            return NotifEntity.fromDbRows(res.rows)[0]
         } catch (error) {
             throw new Error(`Error createNewVideoNotifs repository: ${error}`);
         }

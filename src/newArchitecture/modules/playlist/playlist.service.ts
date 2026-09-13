@@ -4,5 +4,5 @@ import { IPlaylistRepopsitory, IPlaylistService } from "./domain/playlist.interf
 export class PlaylistService implements IPlaylistService {
     constructor(private playlistRepository: IPlaylistRepopsitory) {}
 
-    createPlaylist: () => Promise<PlaylistService>
+    // createPlaylist: () => Promise<PlaylistService>
 }

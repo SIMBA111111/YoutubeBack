@@ -27,6 +27,7 @@ export interface IVideoRepository {
     updateVideoViewsForAnal: (videoId: string, viewerId: string) => Promise<boolean>
     updateVideoLikes: (videoId: string, operation: TIncOrDesc) => Promise<number>
     updateVideoDislikes: (videoId: string, operation: TIncOrDesc) => Promise<number>
+    updateVideoCommentCount: (videoId: string) => Promise<number>
     updateVideoById: (
         videoId: string,
         hashtags: any[],

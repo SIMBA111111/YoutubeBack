@@ -1,15 +1,14 @@
-import { StatisticRepository } from "../statistic/statistic.repository";
-import { VideoRepository } from "../video/video.repository";
+import { IStatisticRepository } from "../statistic/domain/statistic.interface";
+import { IVideoRepository } from "../video/domain/video.interface";
 import { COMMENTS_ACTIONS, TCommentFilters } from "./comment.consts";
 import { CommentEntity, ICommentEntity } from "./comment.entity";
-import { ICommentService, IGetCommentResponse, IGetRepliesCommentResponse, IMarkCommentResponse } from "./comment.interface";
-import { CommentRepository } from './comment.repository'
+import { ICommentRepository, ICommentService, IGetCommentResponse, IGetRepliesCommentResponse, IMarkCommentResponse } from "./comment.interface";
 
 export class СommentService implements ICommentService {
     constructor(
-        private commentRepository: CommentRepository,
-        private videoRepository: VideoRepository, 
-        private statisticRepository: StatisticRepository 
+        private commentRepository: ICommentRepository,
+        private videoRepository: IVideoRepository, 
+        private statisticRepository: IStatisticRepository 
     ) {}
 
     async getRepliesComment(parentCommentId: string, userId: string, offset: number, limit: number): Promise<IGetRepliesCommentResponse> {

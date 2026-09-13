@@ -420,16 +420,28 @@ export class VideoRepository implements IVideoRepository {
         try {
             let res;
 
-            if (operation === INC_OR_DESC.INC) {
-                res = await pool.query(
-                    `UPDATE videos SET likes_count = likes_count + 1 WHERE id = $1 RETURNING likes_count`,
-                    [videoId]
-                );
-            } else if (operation === INC_OR_DESC.DESC) {
-                res = await pool.query(
-                    `UPDATE videos SET likes_count = likes_count - 1 WHERE id = $1 RETURNING likes_count`,
-                    [videoId]
-                );
+            switch (operation) {
+                case INC_OR_DESC.INC:
+                    res = await pool.query(
+                        `UPDATE videos SET likes_count = likes_count + 1 WHERE id = $1 RETURNING likes_count`,
+                        [videoId]
+                    );    
+                    break;
+            
+                case INC_OR_DESC.DESC:
+                    res = await pool.query(
+                        `UPDATE videos SET likes_count = likes_count - 1 WHERE id = $1 RETURNING likes_count`,
+                        [videoId]
+                    );
+                    break
+
+
+                default:
+                    res = await pool.query(
+                        `UPDATE videos SET likes_count = likes_count + 1 WHERE id = $1 RETURNING likes_count`,
+                        [videoId]
+                    ); 
+                    break;
             }
 
             return res.rows[0];
@@ -443,16 +455,28 @@ export class VideoRepository implements IVideoRepository {
         try {
             let res;
 
-            if (operation === INC_OR_DESC.INC) {
-                res = await pool.query(
-                    `UPDATE videos SET dislikes_count = dislikes_count + 1 WHERE id = $1`,
-                    [videoId]
-                );
-            } else if (operation === INC_OR_DESC.DESC) {
-                res = await pool.query(
-                    `UPDATE videos SET dislikes_count = dislikes_count - 1 WHERE id = $1`,
-                    [videoId]
-                );
+            switch (operation) {
+                case INC_OR_DESC.INC:
+                    res = await pool.query(
+                        `UPDATE videos SET dislikes_count = dislikes_count + 1 WHERE id = $1`,
+                        [videoId]
+                    );
+                    break;
+
+                case INC_OR_DESC.DESC:
+                    res = await pool.query(
+                        `UPDATE videos SET dislikes_count = dislikes_count - 1 WHERE id = $1`,
+                        [videoId]
+                    );
+                    break;
+
+            
+                default:
+                    res = await pool.query(
+                        `UPDATE videos SET dislikes_count = dislikes_count + 1 WHERE id = $1`,
+                        [videoId]
+                    );
+                    break;
             }
 
             return res.rows[0];
@@ -460,6 +484,21 @@ export class VideoRepository implements IVideoRepository {
             throw new Error(`Error updateVideoDislikes repository: ${error}`);
         }
     };
+
+
+    async updateVideoCommentCount(videoId: string): Promise<number> {
+        try {
+            const res = await pool.query(
+                `UPDATE videos SET comments_count = comments_count + 1 WHERE id = $1 RETURNING comments_count`,
+                [videoId]
+            );
+
+            return res.rows[0]
+        } catch (error) {
+            throw new Error(`Error updateVideoCommentCount repository: ${error}`);
+        }
+    };
+
 
     async deleteVideoById(videoId: string): Promise<VideoEntity> {
         try {
@@ -528,13 +567,10 @@ export class VideoRepository implements IVideoRepository {
         averageColor: string
     ): Promise<VideoEntity> {
     try {
-        const preparedHashtags = hashTags.reduce((arr, el) => {
-            arr.push(el.name);
-            return arr;
-        }, []);
+        const preparedHashtags = hashTags.map((el: any) => el.name);
 
-        const preparedTags = tags ? tags.map(t => t.value) : [];
-        const preparedPlaylistIds = playlistIds ? playlistIds.map(p => p.id) : [];
+        const preparedTags = tags ? tags.map((t: any) => t.value) : [];
+        const preparedPlaylistIds = playlistIds ? playlistIds.map((p: any) => p.id) : [];
 
         const createdVideo = await pool.query(`
             INSERT INTO videos    

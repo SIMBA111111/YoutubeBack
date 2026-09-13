@@ -1,5 +1,4 @@
 import fs from "fs";
-import {fs as fsp} from "fs/promises";
 import path from 'path';
 import ffmpeg from "fluent-ffmpeg";
 import { exec } from "child_process";
@@ -269,7 +268,7 @@ export class VideoService implements IVideoService{
         const cwd = process.cwd();
         const folderPath = cwd + '/public/videos/' + videoId
         try {
-            await fsp.rm(folderPath, { recursive: true, force: true });
+            await fs.promises.rm(folderPath, { recursive: true, force: true });
             console.log(`✅ Папка ${folderPath} и всё её содержимое удалены`);
             
             const deletedVideo = await this.videoRepository.deleteVideoById(videoId)
