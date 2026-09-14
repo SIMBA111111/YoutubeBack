@@ -41,4 +41,17 @@ export class PlaylistRepository implements IPlaylistRepopsitory {
             throw new Error(`Error getPlaylistsByUsername repository: ${error}`)
         }
     }
+
+
+    async createPlaylist(name: string, userId: string, imagePath: string): Promise<PlaylistEntity> {
+        try {
+            const res = await pool.query(`
+                INSERT INTO playlists (name, channel_id, thumbnail_url) VALUES ($1, $2, $3) RETURNING *
+            `, [name, userId, imagePath])
+            
+            return PlaylistEntity.fromDbRows(res.rows)[0]
+        } catch (error) {
+            throw new Error(`Error createPlaylistRepo repository: ${error}`)
+        }
+    }
 }
