@@ -184,7 +184,7 @@ export class VideoRepository implements IVideoRepository {
         }
     }
 
-    async getVideoListByOwnerUsername(channelUsername: string, filter: TVideoAgeFilter, isShort: boolean, offset: number, limit: number): Promise<VideoEntity[]> {
+    async getVideoListByOwnerUsername(channelUsername: string, filter: TVideoAgeFilter, isShort: boolean | null, offset: number, limit: number): Promise<VideoEntity[]> {
         try {
             let query = `
                 SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl
@@ -359,7 +359,7 @@ export class VideoRepository implements IVideoRepository {
     };
 
 
-    async getVideosIds(offset: number, limit: number, isShortVideo: boolean): Promise<string[]> {
+    async getVideosIds(offset: number, limit: number, isShortVideo: boolean | null): Promise<string[]> {
         try {
             const res = await pool.query(`
             SELECT id FROM videos
@@ -563,7 +563,7 @@ export class VideoRepository implements IVideoRepository {
         hashTags: [], 
         tags: [],
         playlistIds: [], 
-        isShort: boolean, 
+        isShort: boolean | null, 
         averageColor: string
     ): Promise<VideoEntity> {
     try {

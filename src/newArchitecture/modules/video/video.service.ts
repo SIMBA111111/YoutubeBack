@@ -31,7 +31,7 @@ export class VideoService implements IVideoService{
 
     async getVideos(
         tagName: string, 
-        isShort: boolean, 
+        isShort: boolean | null, 
         channelData: string | null, 
         offset: number, 
         limit: number
@@ -58,7 +58,7 @@ export class VideoService implements IVideoService{
         return response
     }
 
-    async getVideoListBySubs(followerId: string, offset: number, limit: number, onlyShorts: boolean, onlyFull: boolean): Promise<VideoEntity[]> {
+    async getVideoListBySubs(followerId: string, offset: number, limit: number, onlyShorts: boolean | null, onlyFull: boolean | null): Promise<VideoEntity[]> {
         
         let videoTypeFilter: TVideoTypeFilter
 
@@ -206,7 +206,7 @@ export class VideoService implements IVideoService{
         return result
     }
 
-    async updateMarkVideo(videoId: string, userId: string, isLiked: boolean, isDisliked: boolean): Promise<IUpdateMarkVideoDto> {
+    async updateMarkVideo(videoId: string, userId: string, isLiked: boolean | null, isDisliked: boolean | null): Promise<IUpdateMarkVideoDto> {
            // Проверяем, существует ли запись статистики
         const oldStat = await this.statisticRepository.getVideoStatByUser(videoId, userId);
 
@@ -333,7 +333,7 @@ export class VideoService implements IVideoService{
         videoAccess: string, 
         hashTags: [], 
         tags: [], 
-        isShort: boolean,
+        isShort: boolean | null,
         files: Record<string, Express.Multer.File[]>
     ): Promise<VideoEntity> {
                 

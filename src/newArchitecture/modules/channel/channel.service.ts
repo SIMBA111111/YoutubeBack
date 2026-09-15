@@ -62,7 +62,7 @@ export class ChannelService implements IChannelServicve {
         }
     }
 
-    async subscribeChannel(channelId: string, userId: string, isSubscribed: boolean): Promise<TSubscribeChannel> {
+    async subscribeChannel(channelId: string, userId: string, isSubscribed: boolean | null): Promise<TSubscribeChannel> {
         let updatedSub;
     
         if (isSubscribed) {

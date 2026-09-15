@@ -228,7 +228,7 @@ export class ChannelRepository implements IChannelRepository {
     }
 
 
-    async updateSaveHistoryByChannel(userId: string, isSaveHistory: boolean): Promise<TUpdateSaveHistoryByChannelDto> {
+    async updateSaveHistoryByChannel(userId: string, isSaveHistory: boolean | null): Promise<TUpdateSaveHistoryByChannelDto> {
         try {
             const res = await pool.query('UPDATE channels SET is_save_history = $1 WHERE id=$2 RETURNING id, is_save_history', [isSaveHistory, userId]);      
             

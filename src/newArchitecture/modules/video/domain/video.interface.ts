@@ -53,7 +53,7 @@ export interface IVideoRepository {
         hashTags: [],
         tags: [],
         playlistIds: [],
-        isShort: boolean,
+        isShort: boolean | null,
         averageColor: string,
     ) => Promise<VideoEntity>
 }

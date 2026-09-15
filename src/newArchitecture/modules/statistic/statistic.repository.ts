@@ -22,7 +22,7 @@ export class StatisticRepository implements IStatisticRepository {
     }
 
     
-    async createCommentStatisticByUserId(commentId: string, userId: string, isLiked: boolean, isDisliked: boolean): Promise<CommentStatisticEntity> {
+    async createCommentStatisticByUserId(commentId: string, userId: string, isLiked: boolean | null, isDisliked: boolean | null): Promise<CommentStatisticEntity> {
         const createdCommentStatistic = await pool.query(
         `
             INSERT INTO stat_of_comments (channel_id, comment_id, liked, disliked) 
@@ -44,7 +44,7 @@ export class StatisticRepository implements IStatisticRepository {
     }
 
 
-    async updateCommentStatisticByUserId(commentId: string, userId: string, isLiked: boolean, isDisliked: boolean): Promise<CommentStatisticEntity> {
+    async updateCommentStatisticByUserId(commentId: string, userId: string, isLiked: boolean | null, isDisliked: boolean | null): Promise<CommentStatisticEntity> {
         const updatedCommentStatistic = await pool.query(
             `
                 UPDATE stat_of_comments 
@@ -226,7 +226,7 @@ export class StatisticRepository implements IStatisticRepository {
         }
     }
 
-    async createVideoStatForUser(videoId: string, userId: string, isDisliked: boolean, isLiked: boolean, firstView?: boolean): Promise<VideoStatisticEntity> {
+    async createVideoStatForUser(videoId: string, userId: string, isDisliked: boolean | null, isLiked: boolean | null, firstView?: boolean): Promise<VideoStatisticEntity> {
         try {
             let res 
     
@@ -248,7 +248,7 @@ export class StatisticRepository implements IStatisticRepository {
     }
 
 
-    async updateVideoStatUser(videoId: string, userId: string, isDisliked: boolean, isLiked: boolean): Promise<VideoStatisticEntity> {
+    async updateVideoStatUser(videoId: string, userId: string, isDisliked: boolean | null, isLiked: boolean | null): Promise<VideoStatisticEntity> {
         try {
             const res = await pool.query(`
                 UPDATE stat_of_videos 

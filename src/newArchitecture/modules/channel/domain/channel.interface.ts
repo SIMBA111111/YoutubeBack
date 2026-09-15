@@ -18,6 +18,6 @@ export interface IChannelRepository {
 export interface IChannelServicve {
     getChannelInfo: (channelUsername: string, followerId: string) => Promise<IGetChannelInfoServiceDto>
     getChannelAnalyticService: (channelId: string, dateRange: AnalyticsDateRange, tab: TTab) => Promise<IGetChannelAnalyticServiceDto>
-    subscribeChannel: (channelId: string, userId: string, isSubscribed: boolean) => Promise<TSubscribeChannel>
+    subscribeChannel: (channelId: string, userId: string, isSubscribed: boolean | null) => Promise<TSubscribeChannel>
     updateChannelData: (channelId: string, channelData: any) => Promise<ChannelEntity>
 }

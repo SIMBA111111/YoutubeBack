@@ -37,5 +37,5 @@ export interface ICommentService {
     getRepliesComment: (parentCommentId: string, userId: string, offset: number, limit: number) => Promise<IGetRepliesCommentResponse>
     getComments: (videoId: string, userId: string, filter: TCommentFilters, offset: number, limit: number) => Promise<IGetCommentResponse>
     createComment: (commentText: string, videoId: string, userId: string) => Promise<CommentEntity>
-    markComment: (commentId: string, userId: string, isLiked: boolean, isDisliked: boolean) => Promise<IMarkCommentResponse | null>
+    markComment: (commentId: string, userId: string, isLiked: boolean | null, isDisliked: boolean | null) => Promise<IMarkCommentResponse | null>
 }

@@ -41,7 +41,7 @@ export class СommentService implements ICommentService {
         return createdComment
     }
 
-    async markComment(commentId: string, userId: string, isLiked: boolean, isDisliked: boolean): Promise<IMarkCommentResponse | null> {
+    async markComment(commentId: string, userId: string, isLiked: boolean | null, isDisliked: boolean | null): Promise<IMarkCommentResponse | null> {
         const commentStat = await this.statisticRepository.getCommentStatisticByUserId(commentId, userId)
 
         let updatedStatistic
