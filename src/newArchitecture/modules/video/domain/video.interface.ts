@@ -2,17 +2,17 @@ import { TIncOrDesc } from "../../../shared/types"
 import { IStatisticVideoDto } from "../../statistic/domain/statistic.dtos"
 import { VideoStatisticEntity } from "../../statistic/domain/statistic.entity"
 import { TSort, TVideoAgeFilter, TVideoTypeFilter } from "./video.consts"
-import { IgetVideoByIdServiceDto, IUpdateMarkVideoDto, IUpdateViewVideoDto, IVideoAnalyticDto } from "./video.dtos"
+import { IgetVideoByIdServiceDto, IGetVideosDto, IUpdateMarkVideoDto, IUpdateViewVideoDto, IVideoAnalyticDto } from "./video.dtos"
 import { IVideoEntity, TagEntity, VideoEntity } from "./video.entity"
 
 export interface IVideoRepository {
     getAllTags: () => Promise<TagEntity[]>
     getTagsByName: (tagName: string) => Promise<TagEntity>
-    getOrderedVideoList: (sortByDatePublication: TSort, offset: number, limit: number) => Promise<VideoEntity[]>
-    getVideosByFollowedChannels: (channelId: string, offset: number, limit: number) => Promise<VideoEntity[]>
-    getViewedVideos: (channelId: string, offset: number, limit: number) => Promise<VideoEntity[]>
-    getVideoList: (offset: number, limit: number, isShort: boolean | null) => Promise<VideoEntity[]>
-    getVideoListByTag: (tagId: string, offset: number, limit: number) => Promise<VideoEntity[]>
+    getOrderedVideoList: (sortByDatePublication: TSort, offset: number, limit: number) => Promise<IGetVideosDto[] | string>
+    getVideosByFollowedChannels: (channelId: string, offset: number, limit: number) => Promise<IGetVideosDto[] | string>
+    getViewedVideos: (channelId: string, offset: number, limit: number) => Promise<IGetVideosDto[] | string>
+    getVideoList: (offset: number, limit: number, isShort: boolean | null) => Promise<IGetVideosDto[] | string>
+    getVideoListByTag: (tagId: string, offset: number, limit: number) => Promise<IGetVideosDto[] | string>
     getVideoListByName: (VideoName: string, offset: number, limit: number, isFullObj: boolean) => Promise<VideoEntity[]>
     getVideoListBySubs: (followerId: string, offset: number, limit: number, videoTypeFiler: TVideoTypeFilter) => Promise<VideoEntity[]>
     getVideoListByOwnerUsername: (channelUsername: string, filter: TVideoAgeFilter, isShort: boolean, offset: number, limit: number) => Promise<VideoEntity[]>
@@ -59,7 +59,7 @@ export interface IVideoRepository {
 }
 
 export interface IVideoService {
-    getVideos: (tagName: string, isShort: boolean, channelData: string | null, offset: number, limit: number) => Promise<VideoEntity[]>
+    getVideos: (tagName: string, isShort: boolean, channelData: string | null, offset: number, limit: number) => Promise<IGetVideosDto[] | string>
     getVideoListBySubs: (followerId: string, offset: number, limit: number, onlyShorts: boolean, onlyFull: boolean) => Promise<VideoEntity[]>
     getVideoById: (videoId: string, followerId: string) => Promise<IgetVideoByIdServiceDto | string>
     updateViewVideo: (videoId: string, viewerId: string) => Promise<IUpdateViewVideoDto | string>

@@ -53,7 +53,7 @@ router.get('/videos', async (req: Request, res: Response) => {
     
     const videos = await videoService.getVideos(tagName, isShorts, channelData, offset, limit)
 
-    return res.status(200).json(ApiResponseDTO.success(videos))
+     return res.status(200).json(ApiResponseDTO.success(videos))
   } catch (error: any) {
     return res.status(500).json(ApiResponseDTO.error(error))
   }

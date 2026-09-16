@@ -12,7 +12,7 @@ import { VideoStatisticEntity } from "../statistic/domain/statistic.entity";
 import { IStatisticRepository } from "../statistic/domain/statistic.interface";
 import { ISubscriptionRepository } from "../subscription/domain/subscription.interface";
 import { TVideoTypeFilter, VIDEO_TYPE_FILTER } from "./domain/video.consts";
-import { IgetVideoByIdServiceDto, IUpdateMarkVideoDto, IUpdateViewVideoDto, IVideoAnalyticDto } from "./domain/video.dtos";
+import { IgetVideoByIdServiceDto, IGetVideosDto, IUpdateMarkVideoDto, IUpdateViewVideoDto, IVideoAnalyticDto } from "./domain/video.dtos";
 import { TagEntity, VideoEntity } from "./domain/video.entity";
 import { IVideoRepository, IVideoService } from "./domain/video.interface";
 import { PlaylistEntity } from "../playlist/domain/playlist.entity";
@@ -35,27 +35,43 @@ export class VideoService implements IVideoService{
         channelData: string | null, 
         offset: number, 
         limit: number
-    ): Promise<VideoEntity[]> {
+    ): Promise<IGetVideosDto[] | string> {
+        try {
+            console.log('1');
+            
 
-        const parsedChannelData = JSON.parse(channelData || '')
+            const parsedChannelData = channelData ? JSON.parse(channelData || '') : null
 
-        const tag = await this.videoRepository.getTagsByName(tagName)
+            console.log('2');
 
-        let response;
+            const tag = await this.videoRepository.getTagsByName(tagName)
 
-        if (tagName === "fresh") {
-            response = await this.videoRepository.getOrderedVideoList("DESC", offset, limit);
-        } else if (tagName === "newForMe" && parsedChannelData.id) {
-            response = await this.videoRepository.getVideosByFollowedChannels(parsedChannelData.id, offset, limit);
-        } else if (tagName === "viewed" && parsedChannelData.id) {
-            response = await this.videoRepository.getViewedVideos(parsedChannelData.id, offset, limit);
-        } else if (tagName === "all" || !tagName) {
-            response = await this.videoRepository.getVideoList(offset, limit, isShort);
-        } else {
-            response = await this.videoRepository.getVideoListByTag(tag.id, offset, limit);
+            let response;
+
+            // console.log('parsedChannelData: ', parsedChannelData);
+            // console.log('tag: ', tag);
+
+            if (tagName === "fresh") {
+                response = await this.videoRepository.getOrderedVideoList("DESC", offset, limit);
+            } else if (tagName === "newForMe" && parsedChannelData.id) {
+                response = await this.videoRepository.getVideosByFollowedChannels(parsedChannelData.id, offset, limit);
+            } else if (tagName === "viewed" && parsedChannelData.id) {
+                response = await this.videoRepository.getViewedVideos(parsedChannelData.id, offset, limit);
+            } else if (tagName === "all" || !tagName) {
+                response = await this.videoRepository.getVideoList(offset, limit, isShort);
+            } else {
+                response = await this.videoRepository.getVideoListByTag(tag.id, offset, limit);
+            }
+
+            // console.log('response: ', response);
+            return response
+            
+                        
+        } catch (error) {
+            console.log('getVideos error:', error);
+            
+            return error as string
         }
-        
-        return response
     }
 
     async getVideoListBySubs(followerId: string, offset: number, limit: number, onlyShorts: boolean | null, onlyFull: boolean | null): Promise<VideoEntity[]> {

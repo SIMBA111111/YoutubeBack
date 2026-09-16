@@ -72,7 +72,7 @@ export interface IVideoEntity {
   thumbnailUrl: string;
   videoPreviewUrl: string;
   masterM3u8Url: string;
-  videoMp4_Url: string;
+  videoMp4Url: string;
   description: string;
   channelId: string;
   viewersCount: number;
@@ -98,7 +98,7 @@ export class VideoEntity implements IVideoEntity {
   thumbnailUrl: string;
   videoPreviewUrl: string;
   masterM3u8Url: string;
-  videoMp4_Url: string;
+  videoMp4Url: string;
   description: string;
   channelId: string;
   viewersCount: number;
@@ -123,7 +123,7 @@ export class VideoEntity implements IVideoEntity {
     this.thumbnailUrl = data.thumbnail_url;
     this.videoPreviewUrl = data.video_preview_url,
     this.masterM3u8Url = data.master_m3u8_url,
-    this.videoMp4_Url = data.video_mp4_Url,
+    this.videoMp4Url = data.video_mp4_url,
     this.description = data.description,
     this.channelId = data.channel_id;
     this.viewersCount = data.viewers_count;
@@ -135,7 +135,7 @@ export class VideoEntity implements IVideoEntity {
     this.isShort = data.is_short;
     this.tags = data.tags
     this.hashtags = data.hashtags
-    this.playlistIds = data.playlist_ids;
+    this.playlistIds = data.playlistids;
     this.datePublication = data.date_publication;
     this.updatedDate = data.updated_date;
     this.createdDate = data.created_date;

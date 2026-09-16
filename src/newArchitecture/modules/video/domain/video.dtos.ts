@@ -3,6 +3,19 @@ import { VideoStatisticEntity } from "../../statistic/domain/statistic.entity";
 import { SubscriptionEntity } from "../../subscription/domain/subscription.entity";
 import { VideoEntity } from "./video.entity";
 
+
+interface IChannelShortInfo {
+    channelId: string
+    channelUsername: string
+    channelName: string
+    channelAvatarUrl: string
+}
+
+export interface IGetVideosDto {
+    video: VideoEntity
+    channel: IChannelShortInfo
+}
+
 export interface IgetVideoByIdServiceDto {
     video: VideoEntity
     videoOwnerChannel: ChannelEntity,
