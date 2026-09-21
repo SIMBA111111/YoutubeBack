@@ -84,30 +84,31 @@ export class VideoService implements IVideoService{
     }
 
     async getVideoById(videoId: string, followerId: string): Promise<IgetVideoByIdServiceDto | string> {
-        const video = await this.videoRepository.getVideoById(videoId as string);
+        const video = await this.videoRepository.getVideoById(videoId);
     
         if (!video) {
             return 'Video not found'
         }
     
-        const channel = await this.channelRepository.getChannelById(followerId);
+        const channel = await this.channelRepository.getChannelById(video.channelId);
+        const fragments = await this.videoRepository.getFragmentsByVideoId(video.id);
     
         let subscriptionData = null;
         let videoStatData = null;
     
-        console.log('video: ', video);
-        console.log('channel: ', channel);
 
-        if (channel instanceof ChannelEntity) {
-            subscriptionData = await this.subscriptionRepository.getSubscriptionDataByFollowerId(channel.id, followerId);
+        if (Object.keys(channel).length > 0) {
+            
+            subscriptionData = await this.subscriptionRepository.getSubscriptionDataByFollowerId(followerId, channel.id);
             videoStatData = await this.statisticRepository.getVideoStatisticByFollowerId(video.id, followerId);
         }
     
         const result = {
             video: video,
+            videoFragments: fragments,
             videoOwnerChannel: channel,
-            subscriptionData: subscriptionData,
-            videoStatData: videoStatData,
+            subscriptionData: subscriptionData || null,
+            videoStatData: videoStatData || null, 
         }
 
         return result
@@ -219,8 +220,10 @@ export class VideoService implements IVideoService{
         return result
     }
 
-    async updateMarkVideo(videoId: string, userId: string, isLiked: boolean | null, isDisliked: boolean | null): Promise<IUpdateMarkVideoDto> {
-           // Проверяем, существует ли запись статистики
+    async updateMarkVideo(videoId: string, userId: string, isLiked: boolean, isDisliked: boolean): Promise<IUpdateMarkVideoDto> {
+        console.log('updateMarkVideo');
+
+        // Проверяем, существует ли запись статистики
         const oldStat = await this.statisticRepository.getVideoStatByUser(videoId, userId);
 
         let oldLiked = false;
@@ -232,15 +235,15 @@ export class VideoService implements IVideoService{
 
             // Обновляем существующую запись
             await this.statisticRepository.updateVideoStatUser(
-                videoId as string,
+                videoId,
                 userId,
                 isDisliked,
                 isLiked
             );
-            } else {
+        } else {
             // Создаем новую запись
             await this.statisticRepository.createVideoStatForUser(
-                videoId as string,
+                videoId,
                 userId,
                 isDisliked,
                 isLiked
@@ -271,8 +274,8 @@ export class VideoService implements IVideoService{
         const videoData = await this.videoRepository.getVideoById(videoId)
 
         return {
-            stats: VideoStatisticEntity.fromDbRows([updatedStats])[0],
-            video: VideoEntity.fromDbRows([videoData])[0]
+            stats: updatedStats,
+            video: videoData
         }
     }
 

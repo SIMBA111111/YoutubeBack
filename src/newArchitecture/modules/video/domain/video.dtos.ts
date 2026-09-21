@@ -1,7 +1,7 @@
 import { ChannelEntity } from "../../channel/domain/channel.entity";
 import { VideoStatisticEntity } from "../../statistic/domain/statistic.entity";
 import { SubscriptionEntity } from "../../subscription/domain/subscription.entity";
-import { VideoEntity } from "./video.entity";
+import { IFragmentEntity, VideoEntity } from "./video.entity";
 
 
 interface IChannelShortInfo {
@@ -18,6 +18,7 @@ export interface IGetVideosDto {
 
 export interface IgetVideoByIdServiceDto {
     video: VideoEntity
+    videoFragments: IFragmentEntity[],
     videoOwnerChannel: ChannelEntity,
     subscriptionData: SubscriptionEntity | null,
     videoStatData: VideoStatisticEntity | null,

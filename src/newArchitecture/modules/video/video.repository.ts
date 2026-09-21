@@ -235,12 +235,26 @@ export class VideoRepository implements IVideoRepository {
         }
     }
 
+
+    async getFragmentsByVideoId(videoId: string): Promise<IFragmentEntity[]> {
+        try {
+            const res = await pool.query(`
+                SELECT * FROM video_fragments WHERE video_id=$1`,
+            [videoId]);
+            
+            return FragmentEntity.fromDbRows(res.rows)
+        } catch (error) {
+            throw new Error(`Error getVideoById repository: ${error}`);
+        }
+    }
+
+
     async getVideoById(videoId: string): Promise<VideoEntity> {
-         try {
+        try {
             const res = await pool.query(`
                 SELECT * FROM videos WHERE id=$1`,
             [videoId]);
-            
+
             return VideoEntity.fromDbRows(res.rows)[0]
         } catch (error) {
             throw new Error(`Error getVideoById repository: ${error}`);

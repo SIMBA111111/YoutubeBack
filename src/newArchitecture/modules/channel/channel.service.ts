@@ -64,18 +64,18 @@ export class ChannelService implements IChannelServicve {
 
     async subscribeChannel(channelId: string, userId: string, isSubscribed: boolean | null): Promise<TSubscribeChannel> {
         let updatedSub;
-    
+
         if (isSubscribed) {
-            updatedSub = await this.subscriptionRepository.createUnsubscribeChannel(channelId, userId);
+            updatedSub = await this.subscriptionRepository.unsubscribeChannel(channelId, userId);
     
             await this.channelRepository.updateSubsCountChannel(channelId, "decr");
-    
+
             return {
                 isSubscribed: false,
             };
         } else {
             const subEntity = await this.subscriptionRepository.getSubscription(channelId, userId);
-            
+
             if (!subEntity) {
                 updatedSub = await this.subscriptionRepository.createSubscription(channelId, userId);
             } else {
@@ -85,7 +85,7 @@ export class ChannelService implements IChannelServicve {
         }
 
         return {
-            isSubscribed: updatedSub.deleted
+            isSubscribed: true
         }
     }
 

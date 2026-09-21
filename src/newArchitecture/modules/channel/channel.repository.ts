@@ -9,14 +9,13 @@ export class ChannelRepository implements IChannelRepository {
         try {
             const res = await pool.query(
                 `
-                    SELECT ch.* 
-                    FROM videos v 
-                    JOIN channels ch ON v.channel_id = ch.id
-                    WHERE video_hash = $1
+                    SELECT * 
+                    FROM channels 
+                    WHERE id = $1
                 `,
                 [channelId]
             );
-        
+
             return ChannelEntity.fromDbRows(res.rows)[0]
         } catch (error) {
             throw new Error(`Error getChannelById repository: ${error}`);

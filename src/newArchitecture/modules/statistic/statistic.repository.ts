@@ -226,23 +226,25 @@ export class StatisticRepository implements IStatisticRepository {
         }
     }
 
-    async createVideoStatForUser(videoId: string, userId: string, isDisliked: boolean | null, isLiked: boolean | null, firstView?: boolean): Promise<VideoStatisticEntity> {
+    async createVideoStatForUser(videoId: string, userId: string, isDisliked: boolean = false, isLiked: boolean = false, firstView?: boolean): Promise<VideoStatisticEntity> {
         try {
             let res 
     
             if(firstView) {
-                res = await pool.query('INSERT INTO stat_of_videos (channel_id, video_id, views_count) VALUES ($1, $2, 1)', [userId, videoId]);  
+                res = await pool.query('INSERT INTO stat_of_videos (channel_id, video_id, views_count) VALUES ($1, $2, 1) RETURNING *', [userId, videoId]);  
     
             } else {
                 res = await pool.query(`
                     INSERT INTO stat_of_videos (channel_id, video_id, liked, disliked, views_count) 
                     VALUES ($1, $2, $3, $4, 1)
+                    RETURNING *
                 `, [userId, videoId, isLiked, isDisliked]
                 );
             }
             
             return VideoStatisticEntity.fromDbRows(res.rows)[0]
         } catch (error) {
+            console.log(`Error createStatOfVideoForUser repository: ${error}`)
             throw new Error(`Error createStatOfVideoForUser repository: ${error}`)
         }
     }

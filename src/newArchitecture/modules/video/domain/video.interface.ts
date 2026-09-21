@@ -3,7 +3,7 @@ import { IStatisticVideoDto } from "../../statistic/domain/statistic.dtos"
 import { VideoStatisticEntity } from "../../statistic/domain/statistic.entity"
 import { TSort, TVideoAgeFilter, TVideoTypeFilter } from "./video.consts"
 import { IgetVideoByIdServiceDto, IGetVideosDto, IUpdateMarkVideoDto, IUpdateViewVideoDto, IVideoAnalyticDto } from "./video.dtos"
-import { IVideoEntity, TagEntity, VideoEntity } from "./video.entity"
+import { IFragmentEntity, IVideoEntity, TagEntity, VideoEntity } from "./video.entity"
 
 export interface IVideoRepository {
     getAllTags: (isAuth: boolean | null) => Promise<TagEntity[]>
@@ -16,6 +16,7 @@ export interface IVideoRepository {
     getVideoListByName: (VideoName: string, offset: number, limit: number, isFullObj: boolean) => Promise<VideoEntity[]>
     getVideoListBySubs: (followerId: string, offset: number, limit: number, videoTypeFiler: TVideoTypeFilter) => Promise<VideoEntity[]>
     getVideoListByOwnerUsername: (channelUsername: string, filter: TVideoAgeFilter, isShort: boolean, offset: number, limit: number) => Promise<VideoEntity[]>
+    getFragmentsByVideoId: (videoId: string) => Promise<IFragmentEntity[]>
     getVideoById: (videoId: string) => Promise<VideoEntity>
     getRecommendedVideos: (videoId: string, offset: number, limit: number) => Promise<VideoEntity[]>
     getLikedVideos(meId: string, isShort: boolean | null, offset: number, limit: number): Promise<VideoEntity[]>

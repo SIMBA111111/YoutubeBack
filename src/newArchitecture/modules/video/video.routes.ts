@@ -131,7 +131,6 @@ router.get('/video/:videoId', async (req: Request, res: Response) => {
 
     const result = await videoService.getVideoById(videoId, channelId)
 
-    console.log('result: ', result)
 
     return res.status(200).json(ApiResponseDTO.success(result))
   } catch (error: any) {
@@ -238,7 +237,7 @@ router.post('/mark/video/:videoId', async (req: Request, res: Response) => {
     const isLiked = getBooleanParam(req.body.isLiked)
     const isDisliked = getBooleanParam(req.body.isDisliked)
 
-    const updatedVideoStatEntity = await videoService.updateMarkVideo(videoId, userId, isLiked, isDisliked)
+    const updatedVideoStatEntity = await videoService.updateMarkVideo(videoId, userId, isLiked || false, isDisliked || false)
 
     return res.status(200).json(ApiResponseDTO.success(updatedVideoStatEntity))
   } catch (error: any) {

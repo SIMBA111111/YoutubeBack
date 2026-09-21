@@ -8,7 +8,7 @@ export interface ISubscriptionRepository {
     getChannelSubsCountEvery12Hour: (channelId: string, dateRange: AnalyticsDateRange) => Promise<TAnalyticSubsEntity>
     getChannelSubsCount: (channelId: string, dateRange: AnalyticsDateRange) => Promise<TAnalyticSubsEntity>
     getTotalSubscriptionByDateRange: (channelId: string, dateRange: AnalyticsDateRange) => Promise<number>
-    createUnsubscribeChannel(channelId: string, followerId: string): Promise<SubscriptionEntity>
+    unsubscribeChannel(channelId: string, followerId: string): Promise<SubscriptionEntity>
     getSubscription(channelId: string, followerId: string): Promise<SubscriptionEntity>
     updateSubscriptionNotifSettings(channelId: string, followerId: string, isNotifSetting: boolean): Promise<TUpdateSubscriptionNotifSettings>
     updateSubscribeChannelRepo(channelId: string, followerId: string): Promise<SubscriptionEntity>
