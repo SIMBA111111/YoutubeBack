@@ -37,12 +37,7 @@ export class VideoService implements IVideoService{
         limit: number
     ): Promise<IGetVideosDto[] | string> {
         try {
-            console.log('1');
-            
-
             const parsedChannelData = channelData ? JSON.parse(channelData || '') : null
-
-            console.log('2');
 
             const tag = await this.videoRepository.getTagsByName(tagName)
 
@@ -69,7 +64,6 @@ export class VideoService implements IVideoService{
                         
         } catch (error) {
             console.log('getVideos error:', error);
-            
             return error as string
         }
     }
@@ -101,6 +95,9 @@ export class VideoService implements IVideoService{
         let subscriptionData = null;
         let videoStatData = null;
     
+        console.log('video: ', video);
+        console.log('channel: ', channel);
+
         if (channel instanceof ChannelEntity) {
             subscriptionData = await this.subscriptionRepository.getSubscriptionDataByFollowerId(channel.id, followerId);
             videoStatData = await this.statisticRepository.getVideoStatisticByFollowerId(video.id, followerId);

@@ -7,9 +7,15 @@ import { IVideoRepository } from "./domain/video.interface";
 import { GetVideoDtoMap } from "./domain/video.map";
 
 export class VideoRepository implements IVideoRepository {
-    async getAllTags(): Promise<TagEntity[]> {
+    async getAllTags(isAuth: boolean | null = false): Promise<TagEntity[]> {
         try {
-            const res = await pool.query("SELECT * FROM tags");
+            let res 
+            if (isAuth) {
+                res = await pool.query("SELECT * FROM tags")
+            } else {
+                res = await pool.query("SELECT * FROM tags WHERE is_auth = $1", [false])
+            }
+
             return TagEntity.fromDbRows(res.rows)
 
         } catch (error) {
@@ -39,7 +45,7 @@ export class VideoRepository implements IVideoRepository {
             `, [offset, limit]);
             
             
-            return res.rows.map(r => GetVideoDtoMap(r));
+            return res.rows.map((r: any) => GetVideoDtoMap(r));
         } catch (error) {
             throw new Error(`Error getOrderedVideoList repository: ${error}`);
         }
@@ -70,7 +76,7 @@ export class VideoRepository implements IVideoRepository {
             // console.log('res.rows.map(r => GetVideoDtoMap(r)): ', res.rows.map(r => GetVideoDtoMap(r)));
                         
 
-            return res.rows.map(r => GetVideoDtoMap(r))
+            return res.rows.map((r: any) => GetVideoDtoMap(r))
         } catch (error) {
             throw new Error(`Error getVideoList repository: ${error}`);
         }
@@ -88,7 +94,7 @@ export class VideoRepository implements IVideoRepository {
                 tagId, offset, limit
             ]);
 
-            return res.rows.map(r => GetVideoDtoMap(r));
+            return res.rows.map((r: any) => GetVideoDtoMap(r));
         } catch (error) {
             throw new Error(`Error getVideoListByTag repository: ${error}`);
         }
@@ -112,7 +118,7 @@ export class VideoRepository implements IVideoRepository {
             [channelId, offset, limit]
             );
 
-            return res.rows.map(r => GetVideoDtoMap(r));
+            return res.rows.map((r: any) => GetVideoDtoMap(r));
         } catch (error) {
             throw new Error(`Error getVideosByFollowedChannels repository: ${error}`);
         }
@@ -136,7 +142,7 @@ export class VideoRepository implements IVideoRepository {
             [channelId, offset, limit]
             );
 
-            return res.rows.map(r => GetVideoDtoMap(r));
+            return res.rows.map((r: any) => GetVideoDtoMap(r));
         } catch (error) {
             throw new Error(`Error getViewedVideosByChannelId repository: ${error}`);
         }

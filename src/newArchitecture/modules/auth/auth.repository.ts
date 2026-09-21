@@ -22,7 +22,7 @@ export class AuthRepository implements IAuthRepository {
                 [channelId, token]
             )
             const createdToken = res.rows[0]
-            return createdToken
+            return createdToken.token
         } catch (error) {
             throw new Error(`Error createToken: ${error}`)
         }
@@ -40,7 +40,7 @@ export class AuthRepository implements IAuthRepository {
 
     async usernameIsExist(username: string): Promise<ChannelEntity> {
         try {
-            const res = await pool.query('SELECT FROM channels WHERE username=$1', [username])
+            const res = await pool.query('SELECT * FROM channels WHERE username=$1', [username.trim()])
 
             return ChannelEntity.fromDbRows(res.rows)[0]
         } catch (error) {

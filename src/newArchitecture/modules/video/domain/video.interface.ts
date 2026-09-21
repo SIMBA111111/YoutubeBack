@@ -6,7 +6,7 @@ import { IgetVideoByIdServiceDto, IGetVideosDto, IUpdateMarkVideoDto, IUpdateVie
 import { IVideoEntity, TagEntity, VideoEntity } from "./video.entity"
 
 export interface IVideoRepository {
-    getAllTags: () => Promise<TagEntity[]>
+    getAllTags: (isAuth: boolean | null) => Promise<TagEntity[]>
     getTagsByName: (tagName: string) => Promise<TagEntity>
     getOrderedVideoList: (sortByDatePublication: TSort, offset: number, limit: number) => Promise<IGetVideosDto[] | string>
     getVideosByFollowedChannels: (channelId: string, offset: number, limit: number) => Promise<IGetVideosDto[] | string>

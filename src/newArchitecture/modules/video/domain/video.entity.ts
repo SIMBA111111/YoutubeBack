@@ -3,6 +3,7 @@ import { TVideoAccess } from "./video.consts";
 export interface ITagEntity {
   id: string;
   name: string;
+  isAuth: boolean;
   createdDate: string;
   updatedDate: string;
 }
@@ -10,12 +11,14 @@ export interface ITagEntity {
 export class TagEntity implements ITagEntity {
   id: string;
   name: string;
+  isAuth: boolean;
   createdDate: string;
   updatedDate: string;
 
   constructor(data: any) {
     this.id = data.id;
     this.name = data.name;
+    this.isAuth = data.is_auth
     this.createdDate = data.created_date;
     this.updatedDate = data.updated_date;
   }

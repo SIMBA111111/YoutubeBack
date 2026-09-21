@@ -25,7 +25,9 @@ const videoService = new VideoService(videoRepository, channelRepository, statis
 router.get('/tags', async (req: Request, res: Response) => {
   console.log("getTags");
   try {
-    const response = await videoRepository.getAllTags()
+    const isAuth = getBooleanParam(req.query.isAuth)
+
+    const response = await videoRepository.getAllTags(isAuth)
     
     return res.status(200).json(ApiResponseDTO.success(response))
   } catch (error: any) {
@@ -44,12 +46,12 @@ router.get('/videos', async (req: Request, res: Response) => {
     const offset = getNumberParam(req.query.offset)
     const limit = getNumberParam(req.query.limit)
 
-    console.log('tagName: ', tagName);
-    console.log('isShorts: ', isShorts);
-    console.log('channelData', channelData);
-    console.log('offset: ', offset);
-    console.log('limit: ', limit);
-    console.log('req.cookies: ', req.cookies);
+    // console.log('tagName: ', tagName);
+    // console.log('isShorts: ', isShorts);
+    // console.log('channelData', channelData);
+    // console.log('offset: ', offset);
+    // console.log('limit: ', limit);
+    // console.log('req.cookies: ', req.cookies);
     
     const videos = await videoService.getVideos(tagName, isShorts, channelData, offset, limit)
 
@@ -75,7 +77,6 @@ router.get('/videos/by-name/:name', async (req: Request, res: Response) => {
     return res.status(500).json(ApiResponseDTO.error(error))
   }
 });
-
 
 
 router.get('/videos-my-subs/:meId', async (req: Request, res: Response) => {
@@ -122,13 +123,15 @@ router.post('/channel-videos/:channelUsername', async (req: Request, res: Respon
 // этот можно выпелить, тк по верхней ручке можно сделать то же самое
 // router.get('/channel-short-videos/:channelUsername', getShortVideosByOwnerUsername);
 
-router.post('/video/:videoId', async (req: Request, res: Response) => {
+router.get('/video/:videoId', async (req: Request, res: Response) => {
   console.log("==========getVideoById=======");
   try {
     const videoId = getStringParam(req.params.videoId)
     const channelId = getStringParam(req.query.channelId)
 
     const result = await videoService.getVideoById(videoId, channelId)
+
+    console.log('result: ', result)
 
     return res.status(200).json(ApiResponseDTO.success(result))
   } catch (error: any) {

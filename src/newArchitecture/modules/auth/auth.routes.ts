@@ -40,7 +40,7 @@ router.post('/login', async (req: Request, res: Response) => {
         });
 
         res.cookie('jwt', userData.token, {
-            httpOnly: true,
+            httpOnly: false,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
             maxAge: 12 * 60 * 60 * 1000
