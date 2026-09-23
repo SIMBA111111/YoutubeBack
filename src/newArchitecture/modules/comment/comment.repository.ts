@@ -1,7 +1,8 @@
 import { pool } from "../../shared/utils/pg";
-import { TCommentFilters, COMMENTS_FILTERS, TCommentActions, COMMENTS_ACTIONS } from "./comment.consts";
-import { CommentEntity, ICommentEntity } from "./comment.entity";
-import { ICommentRepository } from "./comment.interface";
+import { TCommentFilters, COMMENTS_FILTERS, TCommentActions, COMMENTS_ACTIONS } from "./domain/comment.consts";
+import { IGetCommentFullInfoDto } from "./domain/comment.dtos";
+import { CommentEntity, ICommentEntity } from "./domain/comment.entity";
+import { ICommentRepository } from "./domain/comment.interface";
 
 export class CommentRepository implements ICommentRepository{
     async getRepliesComment(parentCommentId: string, userId: string, offset: number, limit: number): Promise<ICommentEntity[]> {
@@ -50,10 +51,15 @@ export class CommentRepository implements ICommentRepository{
         return result.rows[0]
     }
 
-    async getCommentsByVideoId(videoId: string, userId: string, filter: TCommentFilters, offset: number, limit: number): Promise<ICommentEntity[]> {
+    async getCommentsByVideoId(videoId: string, userId: string, filter: TCommentFilters, offset: number, limit: number): Promise<IGetCommentFullInfoDto[]> {
         let query = `
             SELECT 
                 c.*,
+                (
+                    SELECT COUNT(*) 
+                    FROM comments 
+                    WHERE parent_comment_id = c.id
+                ) as "repliesCount",
                 jsonb_build_object(
                     'id', ch.id,
                     'name', ch.name,
@@ -77,34 +83,29 @@ export class CommentRepository implements ICommentRepository{
         query += " LIMIT $2::int OFFSET $3::int";
     
         const params = [videoId, limit, offset, userId]
+
+        console.log('params: ', params)
+
         const result = await pool.query(query, params)
+
+        console.log('result.rows: ', result.rows);
     
-        return result.rows.map(row => new CommentEntity({
-            id: row.id,
-            text: row.text,
-            likeCount: row.likeCount || 0,
-            dislikeCount: row.dislikeCount || 0,
-            videoId: row.videoId,
-            channelId: row.channelId,
-            parentCommentId: row.parentCommentId,
-            createdDate: row.createdDate,
-            updatedDate: row.updatedDate,
-        }));
+        return CommentEntity.getCommentFullInfo(result.rows)
     }
 
     async getVideoCommentsCount(videoId: string): Promise<number> {
         const query = `
             SELECT COUNT(*) 
             FROM comments 
-            WHERE id = $2
+            WHERE video_id = $1
         `
 
         const result = await pool.query(query, [videoId])    
         
-        return result.rows[0]
+        return result.rows ? parseInt(result.rows[0].count) : 0
     }
 
-    async createComment(commentText: string, videoId: string, userId: string): Promise<CommentEntity> {
+    async createComment(commentText: string, videoId: string, userId: string): Promise<CommentEntity | null> {
         try {
             const res = await pool.query(
                 `
@@ -115,7 +116,7 @@ export class CommentRepository implements ICommentRepository{
                 [commentText, videoId, userId]
             );
         
-            return res.rows[0];
+            return res.rows ? new CommentEntity(res.rows[0]) : null
     
         } catch (error) {
             throw new Error(`Error createComment repository: ${error}`);
@@ -179,17 +180,7 @@ export class CommentRepository implements ICommentRepository{
                 );
             }   
 
-            return new CommentEntity({
-                id: updatedComment?.rows[0].id,
-                text: updatedComment?.rows[0].text,
-                likeCount: updatedComment?.rows[0].likeCount || 0,
-                dislikeCount: updatedComment?.rows[0].dislikeCount || 0,
-                videoId: updatedComment?.rows[0].videoId,
-                channelId: updatedComment?.rows[0].channelId,
-                parentCommentId: updatedComment?.rows[0].parentCommentId,
-                createdDate: updatedComment?.rows[0].createdDate,
-                updatedDate: updatedComment?.rows[0].updatedDate,  
-            })
+            return new CommentEntity(updatedComment?.rows[0])
         } catch (error) {
             throw new Error(`Error updateCommentLikeCount repository: ${error}`);
         }

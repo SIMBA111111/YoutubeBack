@@ -84,34 +84,38 @@ export class VideoService implements IVideoService{
     }
 
     async getVideoById(videoId: string, followerId: string): Promise<IgetVideoByIdServiceDto | string> {
-        const video = await this.videoRepository.getVideoById(videoId);
-    
-        if (!video) {
-            return 'Video not found'
-        }
-    
-        const channel = await this.channelRepository.getChannelById(video.channelId);
-        const fragments = await this.videoRepository.getFragmentsByVideoId(video.id);
-    
-        let subscriptionData = null;
-        let videoStatData = null;
-    
+        try {
+            const video = await this.videoRepository.getVideoById(videoId);
+        
+            if (!video) {
+                return 'Video not found'
+            }
+        
+            const channel = await this.channelRepository.getChannelById(video.channelId);
+            const fragments = await this.videoRepository.getFragmentsByVideoId(video.id);
+        
+            let subscriptionData = null;
+            let videoStatData = null;
 
-        if (Object.keys(channel).length > 0) {
-            
-            subscriptionData = await this.subscriptionRepository.getSubscriptionDataByFollowerId(followerId, channel.id);
-            videoStatData = await this.statisticRepository.getVideoStatisticByFollowerId(video.id, followerId);
-        }
-    
-        const result = {
-            video: video,
-            videoFragments: fragments,
-            videoOwnerChannel: channel,
-            subscriptionData: subscriptionData || null,
-            videoStatData: videoStatData || null, 
+            if (Object.keys(channel).length > 0 && followerId) {
+                subscriptionData = await this.subscriptionRepository.getSubscriptionDataByFollowerId(followerId, channel.id);
+                videoStatData = await this.statisticRepository.getVideoStatisticByFollowerId(video.id, followerId);
+            }
+        
+            const result = {
+                video: video,
+                videoFragments: fragments,
+                videoOwnerChannel: channel,
+                subscriptionData: subscriptionData || null,
+                videoStatData: videoStatData || null, 
+            }
+
+            return result    
+        } catch (error) {
+            console.log('getVideoById service error: ', error);
+            return error as string
         }
 
-        return result
     }
 
 

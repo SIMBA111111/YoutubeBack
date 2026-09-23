@@ -131,7 +131,6 @@ router.get('/video/:videoId', async (req: Request, res: Response) => {
 
     const result = await videoService.getVideoById(videoId, channelId)
 
-
     return res.status(200).json(ApiResponseDTO.success(result))
   } catch (error: any) {
     return res.status(500).json(ApiResponseDTO.error(error))

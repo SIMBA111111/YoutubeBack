@@ -5,24 +5,16 @@ import { IStatisticRepository } from "./domain/statistic.interface";
 
 export class StatisticRepository implements IStatisticRepository {
     async getCommentStatisticByUserId(commentId: string, userId: string): Promise<CommentStatisticEntity> {
-        const commentStatistic = await pool.query(
+        const res = await pool.query(
             `SELECT * FROM stat_of_comments WHERE channel_id = $1 AND comment_id = $2`,
             [userId, commentId]
         );
 
-        return new CommentStatisticEntity({
-            id: commentStatistic.rows[0].id,
-            channelId: commentStatistic.rows[0].channel_id,
-            commentId: commentStatistic.rows[0].comment_id,
-            createdDate: commentStatistic.rows[0].created_date,
-            disliked: commentStatistic.rows[0].disliked,
-            liked: commentStatistic.rows[0].liked,
-            updatedDate: commentStatistic.rows[0].updated_date,
-        })
+        return CommentStatisticEntity.fromDbRows(res.rows)[0]
     }
 
     
-    async createCommentStatisticByUserId(commentId: string, userId: string, isLiked: boolean | null, isDisliked: boolean | null): Promise<CommentStatisticEntity> {
+    async createCommentStatisticByUserId(commentId: string, userId: string, isLiked: boolean = false, isDisliked: boolean = false): Promise<CommentStatisticEntity> {
         const createdCommentStatistic = await pool.query(
         `
             INSERT INTO stat_of_comments (channel_id, comment_id, liked, disliked) 
@@ -70,11 +62,10 @@ export class StatisticRepository implements IStatisticRepository {
     async getVideoStatisticByFollowerId(videoId: string, channelId: string): Promise<VideoStatisticEntity> {
             try {
                 const res = await pool.query(`
-                    SELECT * FROM subscriptions WHERE follower_channel_id = $1 AND channel_id = $2 AND deleted = false
-                `, [channelId, channelId])
+                    SELECT * FROM stat_of_videos WHERE channel_id = $1 AND video_id = $2
+                `, [channelId, videoId])
         
-                return res.rows[0]
-        
+                return VideoStatisticEntity.fromDbRows(res.rows)[0]
             } catch (error) {
                 throw new Error(`Error getVideoStatisticByFollowerId repository: ${error}`)
             }

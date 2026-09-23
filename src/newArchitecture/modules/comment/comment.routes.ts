@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
 import express from "express";
-import { RepliesCommentsRequestDTO } from "./dtos/comment.replies-comments.dto";
+import { RepliesCommentsRequestDTO } from "./domain/comment.dtos";
 import { getNumberParam, getStringParam, getBooleanParam } from "../../shared/utils/paramsParse";
 import { ApiResponseDTO } from "../../shared/dtos/response.dto";
 import { СommentService } from "./comment.service";
 import { CommentRepository } from "./comment.repository";
-import { TCommentFilters } from "./comment.consts";
+import { TCommentFilters } from "./domain/comment.consts";
 import { VideoRepository } from "../video/video.repository";
 import { StatisticRepository } from "../statistic/statistic.repository";
 
@@ -17,31 +17,31 @@ const statisticRepository = new StatisticRepository()
 const commentService = new СommentService(commentRepository, videoRepository, statisticRepository);
 
 router.post("/replies-comments/:parentCommentId", async (req: Request, res: Response) => {
-    try {
-        const parentCommentId = getStringParam(req.params.parentCommentId);
-        const userId = getStringParam(req.body.userId);
-        const offset = getNumberParam(req.query.offset, 0);
-        const limit = getNumberParam(req.query.limit, 10);
+  console.log('replies-comments');
+  try {
+    const parentCommentId = getStringParam(req.params.parentCommentId);
+    const userId = getStringParam(req.body.userId);
+    const offset = getNumberParam(req.query.offset, 0);
+    const limit = getNumberParam(req.query.limit, 10);
 
-        const requestData = new RepliesCommentsRequestDTO({
-            parentCommentId, 
-            userId,
-            offset, 
-            limit
-        });
+    const requestData = new RepliesCommentsRequestDTO({
+        parentCommentId, 
+        userId,
+        offset, 
+        limit
+    });
 
-        const result = await commentService.getRepliesComment(
-            requestData.parentCommentId,
-            requestData.userId,
-            requestData.offset,
-            requestData.limit
-        ) 
-        
-        res.status(200).json(ApiResponseDTO.success(result));
-
-    } catch (error: any) {
-        res.status(400).json(ApiResponseDTO.error(error.message));
-    }
+    const result = await commentService.getRepliesComment(
+        requestData.parentCommentId,
+        requestData.userId,
+        requestData.offset,
+        requestData.limit
+    ) 
+    
+    res.status(200).json(ApiResponseDTO.success(result));
+  } catch (error: any) {
+      res.status(400).json(ApiResponseDTO.error(error.message));
+  }
 });
 
 router.post("/comments/:videoId", async (req: Request, res: Response) => {
@@ -55,7 +55,6 @@ router.post("/comments/:videoId", async (req: Request, res: Response) => {
     const result = await commentService.getComments(videoId, userId, filter as TCommentFilters, offset, limit)
 
     res.status(200).json(ApiResponseDTO.success(result));
-
   } catch (error: any) {
     res.status(400).json(ApiResponseDTO.error(error.message));
   }
@@ -112,7 +111,6 @@ router.post("/comment/mark/:commentId", async (req: Request, res: Response) => {
 });
 
 router.post("/comment/reply/:parentCommentId", async (req: Request, res: Response) => {
-  console.log("replyComment");
   try {
     const parentCommentId = getStringParam(req.params.parentCommentId);
     const commentText = getStringParam(req.body.commentText)
