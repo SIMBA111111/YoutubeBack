@@ -2,9 +2,10 @@ import { IStatisticVideoDto } from "./statistic.dtos";
 import { CommentStatisticEntity, VideoStatisticEntity } from "./statistic.entity";
 
 export interface IStatisticRepository {
-    getCommentStatisticByUserId: (commentId: string, userId: string) => Promise<CommentStatisticEntity>
+    getCommentStatisticByCommentId: (commentId: string, userId: string) => Promise<CommentStatisticEntity>
+    getCommentsStatisticByUserId: (userId: string, videoId: string) => Promise<CommentStatisticEntity[] | null>
     updateCommentStatisticByUserId: (commentId: string, userId: string, isLiked: boolean | null, isDisliked: boolean | null) => Promise<CommentStatisticEntity>
-    createCommentStatisticByUserId: (commentId: string, userId: string, isLiked: boolean, isDisliked: boolean) => Promise<CommentStatisticEntity>
+    createCommentStatisticByUserId: (videoId: string, commentId: string, userId: string, isLiked: boolean, isDisliked: boolean) => Promise<CommentStatisticEntity>
     getVideoStatByUser: (videoId: string, userId: string) => Promise<VideoStatisticEntity>
     getVideoStatisticByFollowerId: (videoId: string, channelId: string) => Promise<VideoStatisticEntity>
     updateVideoStatViewsCount: (videoId: string, viewerId: string) => Promise<VideoStatisticEntity>

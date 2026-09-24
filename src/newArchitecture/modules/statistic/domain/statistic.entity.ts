@@ -4,6 +4,7 @@ export interface ICommentStatisticEntity {
     disliked: boolean
     channelId: string
     commentId: string
+    videoId: string;
     createdDate: string
     updatedDate: string
 }
@@ -14,6 +15,7 @@ export class CommentStatisticEntity implements ICommentStatisticEntity {
     disliked: boolean;
     channelId: string;
     commentId: string;
+    videoId: string;
     createdDate: string;
     updatedDate: string;
 
@@ -21,10 +23,11 @@ export class CommentStatisticEntity implements ICommentStatisticEntity {
         this.id = data.id;
         this.liked = data.liked ?? false;
         this.disliked = data.disliked ?? false;
-        this.channelId = data.channelId;
-        this.commentId = data.commentId;
-        this.createdDate = data.createdDate;
-        this.updatedDate = data.updatedDate;
+        this.channelId = data.channel_id;
+        this.commentId = data.comment_id;
+        this.videoId = data.video_id;
+        this.createdDate = data.created_date;
+        this.updatedDate = data.updated_date;
     }
 
     static fromDbRows(dbRows: any[]): CommentStatisticEntity[] {

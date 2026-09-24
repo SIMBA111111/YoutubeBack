@@ -4,7 +4,7 @@ import { CommentStatisticEntity, IVideoStatisticEntity, VideoStatisticEntity } f
 import { IStatisticRepository } from "./domain/statistic.interface";
 
 export class StatisticRepository implements IStatisticRepository {
-    async getCommentStatisticByUserId(commentId: string, userId: string): Promise<CommentStatisticEntity> {
+    async getCommentStatisticByCommentId(commentId: string, userId: string): Promise<CommentStatisticEntity> {
         const res = await pool.query(
             `SELECT * FROM stat_of_comments WHERE channel_id = $1 AND comment_id = $2`,
             [userId, commentId]
@@ -13,26 +13,31 @@ export class StatisticRepository implements IStatisticRepository {
         return CommentStatisticEntity.fromDbRows(res.rows)[0]
     }
 
+
+    async getCommentsStatisticByUserId(userId: string, videoId: string): Promise<CommentStatisticEntity[] | null> {
+        const res = await pool.query(
+            `SELECT * FROM stat_of_comments WHERE channel_id = $1 AND video_id = $2`,
+            [userId, videoId]
+        );
+
+        return res.rows ? CommentStatisticEntity.fromDbRows(res.rows) : null
+    }
+
     
-    async createCommentStatisticByUserId(commentId: string, userId: string, isLiked: boolean = false, isDisliked: boolean = false): Promise<CommentStatisticEntity> {
+    async createCommentStatisticByUserId(videoId: string, commentId: string, userId: string, isLiked: boolean = false, isDisliked: boolean = false): Promise<CommentStatisticEntity> {
+
+        console.log('commentId: ', commentId);
+
         const createdCommentStatistic = await pool.query(
         `
-            INSERT INTO stat_of_comments (channel_id, comment_id, liked, disliked) 
-            VALUES ($1, $2, $3, $4)
+            INSERT INTO stat_of_comments (video_id, channel_id, comment_id, liked, disliked) 
+            VALUES ($1, $2, $3, $4, $5)
             RETURNING *
         `,
-        [userId, commentId, isLiked, isDisliked]
+        [videoId, userId, commentId, isLiked, isDisliked]
         );
         
-        return new CommentStatisticEntity({
-            id: createdCommentStatistic.rows[0].id,
-            channelId: createdCommentStatistic.rows[0].channel_id,
-            commentId: createdCommentStatistic.rows[0].comment_id,
-            createdDate: createdCommentStatistic.rows[0].created_date,
-            disliked: createdCommentStatistic.rows[0].disliked,
-            liked: createdCommentStatistic.rows[0].liked,
-            updatedDate: createdCommentStatistic.rows[0].updated_date,
-        })
+        return CommentStatisticEntity.fromDbRows(createdCommentStatistic.rows)[0]
     }
 
 

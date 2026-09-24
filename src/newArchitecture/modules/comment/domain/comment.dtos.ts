@@ -1,4 +1,6 @@
+import { CommentStatisticEntity } from "../../statistic/domain/statistic.entity";
 import { TCommentFilters } from "../domain/comment.consts";
+import { CommentEntity } from "./comment.entity";
 
 export interface IGetCommentsRequest {
   videoId: string;
@@ -117,3 +119,6 @@ interface ICommentChannelDto {
   name: string;
   avatarUrl: string | null;
 }
+
+
+export type IMapCommentStatistic = Record<string, CommentStatisticEntity>;

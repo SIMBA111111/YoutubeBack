@@ -51,7 +51,7 @@ export class CommentRepository implements ICommentRepository{
         return result.rows[0]
     }
 
-    async getCommentsByVideoId(videoId: string, userId: string, filter: TCommentFilters, offset: number, limit: number): Promise<IGetCommentFullInfoDto[]> {
+    async getCommentsByVideoId(videoId: string, filter: TCommentFilters, offset: number, limit: number): Promise<IGetCommentFullInfoDto[]> {
         let query = `
             SELECT 
                 c.*,
@@ -64,13 +64,9 @@ export class CommentRepository implements ICommentRepository{
                     'id', ch.id,
                     'name', ch.name,
                     'avatar_url', ch.avatar_url
-                ) as channel,
-                soc.liked as user_liked,
-                soc.disliked as user_disliked,
-                soc.id as user_stat_id
+                ) as channel
             FROM comments c
             INNER JOIN channels ch ON c.channel_id = ch.id
-            LEFT JOIN stat_of_comments soc ON soc.comment_id = c.id AND soc.channel_id = $4::uuid
             WHERE c.video_id = $1::uuid AND c.parent_comment_id IS NULL
         `;
     
@@ -82,14 +78,10 @@ export class CommentRepository implements ICommentRepository{
     
         query += " LIMIT $2::int OFFSET $3::int";
     
-        const params = [videoId, limit, offset, userId]
-
-        console.log('params: ', params)
+        const params = [videoId, limit, offset]
 
         const result = await pool.query(query, params)
 
-        console.log('result.rows: ', result.rows);
-    
         return CommentEntity.getCommentFullInfo(result.rows)
     }
 

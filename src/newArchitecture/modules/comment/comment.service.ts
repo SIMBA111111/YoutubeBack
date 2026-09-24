@@ -3,6 +3,7 @@ import { IVideoRepository } from "../video/domain/video.interface";
 import { COMMENTS_ACTIONS, TCommentFilters } from "./domain/comment.consts";
 import { CommentEntity, ICommentEntity } from "./domain/comment.entity";
 import { ICommentRepository, ICommentService, IGetCommentResponse, IGetRepliesCommentResponse, IMarkCommentResponse } from "./domain/comment.interface";
+import { mapCommentStatistic } from "./domain/utils";
 
 export class СommentService implements ICommentService {
     constructor(
@@ -23,15 +24,22 @@ export class СommentService implements ICommentService {
 
     async getComments(videoId: string, userId: string, filter: TCommentFilters, offset: number, limit: number): Promise<IGetCommentResponse | string> {
         try {
-            const videoComments = await this.commentRepository.getCommentsByVideoId(videoId, userId, filter, offset, limit)
+            const videoComments = await this.commentRepository.getCommentsByVideoId(videoId, filter, offset, limit)
             const videoCommentsCount = await this.commentRepository.getVideoCommentsCount(videoId)
             
-            console.log('videoComments: ', videoComments)
-            console.log('videoCommentsCount: ', videoCommentsCount)
-            
+            let commentsStatistic = null
+
+            if (userId) {
+                const res = await this.statisticRepository.getCommentsStatisticByUserId(userId, videoId)
+                
+                if (res) {
+                    commentsStatistic = await mapCommentStatistic(res)
+                }
+            }
 
             return {
                 comments: videoComments,
+                commentsStatistic: commentsStatistic,
                 commentsCount: videoCommentsCount,
             } 
             
@@ -51,9 +59,9 @@ export class СommentService implements ICommentService {
         return createdComment
     }
 
-    async markComment(commentId: string, userId: string, isLiked: boolean | null, isDisliked: boolean | null): Promise<IMarkCommentResponse | null> {
+    async markComment(commentId: string, userId: string, videoId: string, isLiked: boolean | null, isDisliked: boolean | null): Promise<IMarkCommentResponse | null> {
         try {
-            const commentStat = await this.statisticRepository.getCommentStatisticByUserId(commentId, userId)
+            const commentStat = await this.statisticRepository.getCommentStatisticByCommentId(commentId, userId)
 
             console.log('commentStat: ', commentStat)
 
@@ -69,7 +77,7 @@ export class СommentService implements ICommentService {
         
                 updatedStatistic = await this.statisticRepository.updateCommentStatisticByUserId(commentId, userId, !!isLiked, !!isDisliked)
             } else {
-                updatedStatistic = await this.statisticRepository.createCommentStatisticByUserId(commentId, userId, !!isLiked, !!isDisliked)
+                updatedStatistic = await this.statisticRepository.createCommentStatisticByUserId(videoId, commentId, userId, !!isLiked, !!isDisliked)
             }
 
             console.log('пизда');

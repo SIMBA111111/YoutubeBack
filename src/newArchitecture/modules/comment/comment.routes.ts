@@ -95,10 +95,11 @@ router.post("/comment/mark/:commentId", async (req: Request, res: Response) => {
   try {
     const commentId = getStringParam(req.params.commentId)
     const userId =  getStringParam(req.body.userId)
+    const videoId =  getStringParam(req.body.videoId)
     const isLiked = getBooleanParam(req.body.isLiked)
     const isDisliked = getBooleanParam(req.body.isDisliked)
 
-    const result = await commentService.markComment(commentId, userId, isLiked, isDisliked)    
+    const result = await commentService.markComment(commentId, userId, videoId, isLiked, isDisliked)    
 
     if (!result) {
         return res.status(500).json(ApiResponseDTO.error('Unknown error'));
