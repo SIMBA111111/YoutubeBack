@@ -5,38 +5,29 @@ import { CommentEntity, ICommentEntity } from "./domain/comment.entity";
 import { ICommentRepository } from "./domain/comment.interface";
 
 export class CommentRepository implements ICommentRepository{
-    async getRepliesComment(parentCommentId: string, userId: string, offset: number, limit: number): Promise<ICommentEntity[]> {
+    async getRepliesComment(parentCommentId: string, offset: number, limit: number): Promise<IGetCommentFullInfoDto[]> {
         const query = `
             SELECT 
                 c.*,
+                (
+                    SELECT COUNT(*) 
+                    FROM comments 
+                    WHERE parent_comment_id = c.id
+                ) as "repliesCount",
                 jsonb_build_object(
                     'id', ch.id,
                     'name', ch.name,
                     'avatar_url', ch.avatar_url
-                ) as channel,
-                soc.liked as user_liked,
-                soc.disliked as user_disliked,
-                soc.id as user_stat_id
+                ) as channel
             FROM comments c
             INNER JOIN channels ch ON c.channel_id = ch.id
-            LEFT JOIN stat_of_comments soc ON soc.comment_id = c.id AND soc.channel_id = $4::uuid
             WHERE c.parent_comment_id = $1::uuid
             LIMIT $2::int OFFSET $3::int
         `;
 
-        const result = await pool.query(query, [parentCommentId, limit, offset, userId]);
+        const result = await pool.query(query, [parentCommentId, limit, offset]);
 
-        return result.rows.map(row => new CommentEntity({
-            id: row.id,
-            text: row.text,
-            likeCount: row.likeCount || 0,
-            dislikeCount: row.dislikeCount || 0,
-            videoId: row.videoId,
-            channelId: row.channelId,
-            parentCommentId: row.parentCommentId,
-            createdDate: row.createdDate,
-            updatedDate: row.updatedDate,
-        }));
+        return CommentEntity.getCommentFullInfo(result.rows)
     }
 
     async getRepliesCommentCount(parentCommentId: string): Promise<number> {
@@ -51,7 +42,11 @@ export class CommentRepository implements ICommentRepository{
         return result.rows[0]
     }
 
-    async getCommentsByVideoId(videoId: string, filter: TCommentFilters, offset: number, limit: number): Promise<IGetCommentFullInfoDto[]> {
+    async getCommentsByVideoId(videoId: string, filter: string, offset: number, limit: number): Promise<IGetCommentFullInfoDto[]> {
+        
+        console.log('filter: ', filter);
+        
+        
         let query = `
             SELECT 
                 c.*,

@@ -49,6 +49,7 @@ export interface IGetCommentsResponse<T> {
 export interface IRepliesCommentsRequest {
   parentCommentId: string;
   userId: string
+  videoId: string
   limit?: number;
   offset?: number;
 }
@@ -56,17 +57,19 @@ export interface IRepliesCommentsRequest {
 export class RepliesCommentsRequestDTO implements IRepliesCommentsRequest {
     public readonly parentCommentId: string;
     public readonly userId: string;
+    public readonly videoId: string;
     public readonly limit: number;
     public readonly offset: number;
     
     constructor(data: IRepliesCommentsRequest) {
         // 1. Проверка обязательных полей
         if (!data.parentCommentId) {
-        throw new Error('parentCommentId is required');
+            throw new Error('parentCommentId is required');
         }
 
         this.parentCommentId = data.parentCommentId;
         this.userId = data.userId || '';
+        this.videoId = data.videoId || '';
         this.limit = data.limit ?? 10;
         this.offset = data.offset ?? 0;
 
@@ -109,9 +112,6 @@ export interface IGetCommentFullInfoDto {
   createdDate: string;
   updatedDate: string;
   channel: ICommentChannelDto;
-  userLiked: boolean | null;
-  userDisliked: boolean | null;
-  userStatId: string | null;
 }
 
 interface ICommentChannelDto {

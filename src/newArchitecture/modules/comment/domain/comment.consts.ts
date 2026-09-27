@@ -1,6 +1,6 @@
 export enum COMMENTS_FILTERS {
-    NEW = 'NEW',
-    FAMOUS = 'FAMOUS' 
+    NEW = 'new',
+    FAMOUS = 'famous' 
 }
 
 export enum COMMENTS_ACTIONS {

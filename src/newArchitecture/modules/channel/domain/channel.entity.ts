@@ -14,6 +14,7 @@ export interface IChannelEntity {
     createdAt: string;
     links: string[] | null;
     notificationSetting: string[] | null;
+    isSaveHistory: boolean
 }
 
 export class ChannelEntity implements IChannelEntity {
@@ -32,6 +33,7 @@ export class ChannelEntity implements IChannelEntity {
     createdAt: string;
     links: string[] | null;
     notificationSetting: string[] | null;
+    isSaveHistory: boolean
 
     constructor(data: any) {
         this.id = data.id;
@@ -49,6 +51,7 @@ export class ChannelEntity implements IChannelEntity {
         this.createdAt = data.created_at;
         this.links = data.links ?? null;
         this.notificationSetting = data.notification_setting ?? null;
+        this.isSaveHistory = data.isSaveHistory;
     }
 
     static fromDbRows(dbRows: any[]): ChannelEntity[] {

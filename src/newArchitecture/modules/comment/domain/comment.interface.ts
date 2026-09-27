@@ -4,9 +4,9 @@ import { IGetCommentFullInfoDto, IMapCommentStatistic } from "./comment.dtos";
 import { CommentEntity, ICommentEntity } from "./comment.entity";
 
 export interface ICommentRepository {
-    getRepliesComment: (parentCommentId: string, userId: string, offset: number, limit: number) => Promise<ICommentEntity[]>
+    getRepliesComment: (parentCommentId: string, offset: number, limit: number) => Promise<IGetCommentFullInfoDto[]>
     getRepliesCommentCount: (parentCommentId: string) => Promise<number>
-    getCommentsByVideoId: (videoId: string, filter: TCommentFilters, offset: number, limit: number) => Promise<IGetCommentFullInfoDto[]>
+    getCommentsByVideoId: (videoId: string, filter: string, offset: number, limit: number) => Promise<IGetCommentFullInfoDto[]>
     getVideoCommentsCount: (videoId: string) => Promise<number>
     createComment: (commentText: string, videoId: string, userId: string) => Promise<CommentEntity | null>
     deleteComment: (commentId: string) => Promise<boolean>
@@ -19,7 +19,8 @@ export interface ICommentRepository {
 
 // TO DO это в дто переместить ?
 export interface IGetRepliesCommentResponse {
-    comments: ICommentEntity[]
+    comments: IGetCommentFullInfoDto[]
+    commentsStatistic: IMapCommentStatistic | null
     commentsCount: number
 }
 
@@ -36,8 +37,8 @@ export interface IMarkCommentResponse {
 }
 
 export interface ICommentService {
-    getRepliesComment: (parentCommentId: string, userId: string, offset: number, limit: number) => Promise<IGetRepliesCommentResponse>
-    getComments: (videoId: string, userId: string, filter: TCommentFilters, offset: number, limit: number) => Promise<IGetCommentResponse | string>
+    getRepliesComment: (parentCommentId: string, userId: string, videoId: string, offset: number, limit: number) => Promise<IGetRepliesCommentResponse | null>
+    getComments: (videoId: string, userId: string, filter: string, offset: number, limit: number) => Promise<IGetCommentResponse | string>
     createComment: (commentText: string, videoId: string, userId: string) => Promise<CommentEntity | null>
     markComment: (videoId:string, commentId: string, userId: string, isLiked: boolean | null, isDisliked: boolean | null) => Promise<IMarkCommentResponse | null>
 }

@@ -12,17 +12,34 @@ export class СommentService implements ICommentService {
         private statisticRepository: IStatisticRepository 
     ) {}
 
-    async getRepliesComment(parentCommentId: string, userId: string, offset: number, limit: number): Promise<IGetRepliesCommentResponse> {
-        const repliesComments = await this.commentRepository.getRepliesComment(parentCommentId, userId, offset, limit)
-        const repliesCommentsCount = await this.commentRepository.getRepliesCommentCount(parentCommentId)
+    async getRepliesComment(parentCommentId: string, userId: string, videoId: string, offset: number, limit: number): Promise<IGetRepliesCommentResponse | null> {
+        try {
+            const repliesComments = await this.commentRepository.getRepliesComment(parentCommentId, offset, limit)
+            const repliesCommentsCount = await this.commentRepository.getRepliesCommentCount(parentCommentId)
         
-        return {
-            comments: repliesComments,
-            commentsCount: repliesCommentsCount,
+            let commentsStatistic = null
+                
+            if (userId) {
+                const res = await this.statisticRepository.getCommentsStatisticByUserId(userId, videoId)
+                
+                if (res) {
+                    commentsStatistic = await mapCommentStatistic(res)
+                }
+            }
+            
+            return {
+                comments: repliesComments,
+                commentsStatistic: commentsStatistic || null,
+                commentsCount: repliesCommentsCount,
+            }
+            
+        } catch (error) {
+            console.log('ERROR getRepliesComment sertvice: ', error);
+            return null
         }
     }
 
-    async getComments(videoId: string, userId: string, filter: TCommentFilters, offset: number, limit: number): Promise<IGetCommentResponse | string> {
+    async getComments(videoId: string, userId: string, filter: string, offset: number, limit: number): Promise<IGetCommentResponse | string> {
         try {
             const videoComments = await this.commentRepository.getCommentsByVideoId(videoId, filter, offset, limit)
             const videoCommentsCount = await this.commentRepository.getVideoCommentsCount(videoId)

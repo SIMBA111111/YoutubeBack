@@ -4,6 +4,7 @@ export interface ITagEntity {
   id: string;
   name: string;
   isAuth: boolean;
+  weight: number;
   createdDate: string;
   updatedDate: string;
 }
@@ -12,6 +13,7 @@ export class TagEntity implements ITagEntity {
   id: string;
   name: string;
   isAuth: boolean;
+  weight: number;
   createdDate: string;
   updatedDate: string;
 
@@ -19,6 +21,7 @@ export class TagEntity implements ITagEntity {
     this.id = data.id;
     this.name = data.name;
     this.isAuth = data.is_auth
+    this.weight = data.weight
     this.createdDate = data.created_date;
     this.updatedDate = data.updated_date;
   }
@@ -146,5 +149,19 @@ export class VideoEntity implements IVideoEntity {
 
   static fromDbRows(dbRows: any[]): VideoEntity[] {
     return dbRows.map(row => new VideoEntity(row));
+  }
+}
+
+
+export class ViewedVideoEntity extends VideoEntity {
+  dateViewed: string
+  
+  constructor(data: any) {
+    super(data)
+    this.dateViewed = data.dateviewed || ''
+  }
+
+  static fromDbRows(dbRows: any[]): ViewedVideoEntity[] {
+    return dbRows.map(row => new ViewedVideoEntity(row))
   }
 }

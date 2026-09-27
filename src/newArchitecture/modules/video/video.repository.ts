@@ -1,19 +1,19 @@
 import { pool } from "../../../utils/pg";
 import { INC_OR_DESC, TIncOrDesc } from "../../shared/types";
 import { FiltersEnum, SORT, TSort, TVideoAgeFilter, TVideoTypeFilter, VIDEO_TYPE_FILTER } from "./domain/video.consts";
-import { IGetVideosDto } from "./domain/video.dtos";
-import { FragmentEntity, IFragmentEntity, TagEntity, VideoEntity } from "./domain/video.entity";
+import { IGetVideosDto, IViewedVideosDto } from "./domain/video.dtos";
+import { FragmentEntity, IFragmentEntity, TagEntity, VideoEntity, ViewedVideoEntity } from "./domain/video.entity";
 import { IVideoRepository } from "./domain/video.interface";
-import { GetVideoDtoMap } from "./domain/video.map";
+import { GetVideoDtoMap, GetViewedVideoDtoMap } from "./domain/video.map";
 
 export class VideoRepository implements IVideoRepository {
     async getAllTags(isAuth: boolean | null = false): Promise<TagEntity[]> {
         try {
             let res 
             if (isAuth) {
-                res = await pool.query("SELECT * FROM tags")
+                res = await pool.query("SELECT * FROM tags ORDER BY weight ASC")
             } else {
-                res = await pool.query("SELECT * FROM tags WHERE is_auth = $1", [false])
+                res = await pool.query("SELECT * FROM tags WHERE is_auth = $1 ORDER BY weight ASC", [false])
             }
 
             return TagEntity.fromDbRows(res.rows)
@@ -33,6 +33,8 @@ export class VideoRepository implements IVideoRepository {
     }
 
     async getOrderedVideoList(sortByDatePublication: TSort, offset: number, limit: number): Promise<IGetVideosDto[] | string> {
+        console.log('getOrderedVideoList');
+        
         try {
             const order = sortByDatePublication === SORT.DESC ? SORT.DESC : SORT.ASC;
             const res = await pool.query(`
@@ -53,7 +55,7 @@ export class VideoRepository implements IVideoRepository {
 
 
     async getVideoList(offset: number, limit: number, isShort: boolean | null = null): Promise<IGetVideosDto[] | string> {
-        console.log('getVideoList REPO REPO REPO REPO');
+        console.log('getVideoList');
         try {
             let query = `
                 SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl, ch.name as channelname
@@ -86,7 +88,7 @@ export class VideoRepository implements IVideoRepository {
         console.log('getVideoListByTag');
         try {
             const res = await pool.query(`
-                SELECT *, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl, ch.name as channelname
+                SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl, ch.name as channelname
                 FROM videos v
                 JOIN channels ch ON ch.id = v.channel_id
                 WHERE $1 = ANY (tags)
@@ -126,7 +128,7 @@ export class VideoRepository implements IVideoRepository {
 
 
     async getViewedVideos(channelId: string, offset: number, limit: number): Promise<IGetVideosDto[] | string> {
-        console.log('getViewedVideosByChannelId');
+        console.log('getViewedVideos');
         
         try {
             const res = await pool.query(
@@ -313,8 +315,8 @@ export class VideoRepository implements IVideoRepository {
     };
 
 
-    async getViewedShortVideosByChannelId(channelId: string, isShort: boolean, offset: number, limit: number): Promise<VideoEntity[]> {
-        console.log('getViewedVideosByChannelId');
+    async getViewedShortVideosByChannelId(channelId: string, isShort: boolean, offset: number, limit: number): Promise<IViewedVideosDto[]> {
+        console.log('getViewedShortVideosByChannelId');
         try {
             const res = await pool.query(
             `
@@ -329,16 +331,17 @@ export class VideoRepository implements IVideoRepository {
             [channelId, isShort, offset, limit]
             );
 
-            if (res.rows) return res.rows;
+            if (res.rows) 
+                return res.rows.map(r => GetViewedVideoDtoMap(r))
 
             return [];
         } catch (error) {
-            throw new Error(`Error getViewedVideosByChannelId repository: ${error}`);
+            throw new Error(`Error getViewedShortVideosByChannelId repository: ${error}`);
         }
     };
 
 
-    async getViewedVideosByChannelId(channelId: string, offset: number, limit: number): Promise<VideoEntity[]> {
+    async getViewedVideosByChannelId(channelId: string, offset: number, limit: number): Promise<IViewedVideosDto[]> {
         console.log('getViewedVideosByChannelId');
         
         try {
@@ -355,7 +358,9 @@ export class VideoRepository implements IVideoRepository {
             [channelId, offset, limit]
             );
 
-            if (res.rows) return res.rows;
+            console.log('res: ', res.rows);
+            
+            return res.rows.map(r => GetViewedVideoDtoMap(r))
 
             return [];
         } catch (error) {
@@ -364,7 +369,7 @@ export class VideoRepository implements IVideoRepository {
     };
 
 
-    async getViewedVideoListByTag(tagId: string, offset: number = 0, limit: number = 20, channelId: string | null = null): Promise<VideoEntity[]> {
+    async getViewedVideoListByTag(tagId: string, offset: number = 0, limit: number = 20, channelId: string | null = null): Promise<IViewedVideosDto[]> {
         console.log('getViewedVideoListByTag');
         
         try {
@@ -384,7 +389,7 @@ export class VideoRepository implements IVideoRepository {
 
             const res = await pool.query(query, params);
             
-            if (res.rows) return res.rows;
+            return res.rows.map(r => GetViewedVideoDtoMap(r))
 
             return [];
         } catch (error) {

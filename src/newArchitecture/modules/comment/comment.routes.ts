@@ -21,12 +21,14 @@ router.post("/replies-comments/:parentCommentId", async (req: Request, res: Resp
   try {
     const parentCommentId = getStringParam(req.params.parentCommentId);
     const userId = getStringParam(req.body.userId);
+    const videoId = getStringParam(req.body.videoId);
     const offset = getNumberParam(req.query.offset, 0);
     const limit = getNumberParam(req.query.limit, 10);
 
     const requestData = new RepliesCommentsRequestDTO({
         parentCommentId, 
         userId,
+        videoId,
         offset, 
         limit
     });
@@ -34,13 +36,14 @@ router.post("/replies-comments/:parentCommentId", async (req: Request, res: Resp
     const result = await commentService.getRepliesComment(
         requestData.parentCommentId,
         requestData.userId,
+        requestData.videoId,
         requestData.offset,
         requestData.limit
     ) 
     
     res.status(200).json(ApiResponseDTO.success(result));
   } catch (error: any) {
-      res.status(400).json(ApiResponseDTO.error(error.message));
+    res.status(400).json(ApiResponseDTO.error(error.message));
   }
 });
 
@@ -52,7 +55,7 @@ router.post("/comments/:videoId", async (req: Request, res: Response) => {
     const offset = getNumberParam(req.query.offset, 0)
     const limit = getNumberParam(req.query.limit, 10)
 
-    const result = await commentService.getComments(videoId, userId, filter as TCommentFilters, offset, limit)
+    const result = await commentService.getComments(videoId, userId, filter, offset, limit)
 
     res.status(200).json(ApiResponseDTO.success(result));
   } catch (error: any) {

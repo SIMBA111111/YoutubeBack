@@ -41,19 +41,11 @@ router.get('/videos', async (req: Request, res: Response) => {
 
   try {
     const tagName = getStringParam(req.query.tagName)
-    const isShorts = getBooleanParam(req.query.isShorts)
     const channelData = getStringParam(req.cookies.channelData)
     const offset = getNumberParam(req.query.offset)
     const limit = getNumberParam(req.query.limit)
 
-    // console.log('tagName: ', tagName);
-    // console.log('isShorts: ', isShorts);
-    // console.log('channelData', channelData);
-    // console.log('offset: ', offset);
-    // console.log('limit: ', limit);
-    // console.log('req.cookies: ', req.cookies);
-    
-    const videos = await videoService.getVideos(tagName, isShorts, channelData, offset, limit)
+    const videos = await videoService.getVideos(tagName, channelData, offset, limit)
 
      return res.status(200).json(ApiResponseDTO.success(videos))
   } catch (error: any) {

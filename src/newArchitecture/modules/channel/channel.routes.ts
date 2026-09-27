@@ -231,13 +231,14 @@ router.post('/channel-viewed-history/:channelId', async (req: Request, res: Resp
     const offset = getNumberParam(req.query.offset)
     const limit = getNumberParam(req.query.limit)
 
-    const isShort = getBooleanParam(req.body?.filter.isShort)
-    const tags = getStringParam(req.body?.filter.tags)
+    const isShort = getBooleanParam(req.body?.filter?.isShort)
+    const tags = getStringParam(req.body?.filter?.tags)
     
-    const viewedVideos = videoService.getViewedVideos(channelId, isShort || false, tags, offset, limit)
+    const viewedVideos = await videoService.getViewedVideos(channelId, isShort || false, tags, offset, limit)
 
     return res.status(200).json(ApiResponseDTO.success(viewedVideos))
   } catch (error: any) {
+    console.log('ERROR channel-viewed-history: ', error);
     return res.status(500).json(ApiResponseDTO.error(error));
   }
 });

@@ -1,7 +1,7 @@
 import { ChannelEntity } from "../../channel/domain/channel.entity";
 import { VideoStatisticEntity } from "../../statistic/domain/statistic.entity";
 import { SubscriptionEntity } from "../../subscription/domain/subscription.entity";
-import { IFragmentEntity, VideoEntity } from "./video.entity";
+import { IFragmentEntity, VideoEntity, ViewedVideoEntity } from "./video.entity";
 
 
 interface IChannelShortInfo {
@@ -42,4 +42,9 @@ export type TSendProgressDto = {
     progress: number,
     stage: string, 
     message: string
+}
+
+export interface IViewedVideosDto {
+    video: ViewedVideoEntity
+    channel: IChannelShortInfo
 }

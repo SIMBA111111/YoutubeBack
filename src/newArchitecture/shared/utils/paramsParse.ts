@@ -60,21 +60,20 @@ export function getStringParam(
  */
 export function getBooleanParam(
     param: unknown, // 👈 Меняем на unknown
-    defaultValue: boolean = false
 ): boolean | null {
     if (param === null || param === undefined) return null;
 
     // Если массив - берем первый элемент
     if (Array.isArray(param)) {
         const first = param[0];
-        if (!first) return defaultValue;
+        if (!first) return null;
         const str = typeof first === 'object' ? JSON.stringify(first) : String(first);
         return str === 'true' || str === '1';
     }
 
     // Если объект (ParsedQs) - игнорируем
     if (typeof param === 'object') {
-        return defaultValue;
+        return null
     }
 
     const str = String(param);
