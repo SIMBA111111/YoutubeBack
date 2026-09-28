@@ -19,7 +19,7 @@ export interface IVideoRepository {
     getFragmentsByVideoId: (videoId: string) => Promise<IFragmentEntity[]>
     getVideoById: (videoId: string) => Promise<VideoEntity>
     getRecommendedVideos: (videoId: string, offset: number, limit: number) => Promise<VideoEntity[]>
-    getLikedVideos(meId: string, isShort: boolean | null, offset: number, limit: number): Promise<VideoEntity[]>
+    getLikedVideos(meId: string, isShort: boolean | null, offset: number, limit: number): Promise<IGetVideosDto[]>
     getViewedShortVideosByChannelId: (channelId: string, isShort: boolean, offset: number, limit: number) => Promise<IViewedVideosDto[]>
     getViewedVideosByChannelId: (channelId: string, offset: number, limit: number) => Promise<IViewedVideosDto[]>
     getViewedVideoListByTag: (tagId: string, offset: number, limit: number, channelId: string | null) => Promise<IViewedVideosDto[]>

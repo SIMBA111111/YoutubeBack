@@ -193,7 +193,7 @@ router.get('/view/video/:videoId', async (req: Request, res: Response) => {
   );
   try {
     const videoId = getStringParam(req.params.videoId)
-    const viewerId = getStringParam(req.query.viewerId)
+    const viewerId = getStringParam(req.query.userId)
 
     const result = await videoService.updateViewVideo(videoId, viewerId) 
 

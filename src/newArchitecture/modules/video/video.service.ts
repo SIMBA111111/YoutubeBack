@@ -118,11 +118,6 @@ export class VideoService implements IVideoService{
 
     async getViewedVideos(channelId: string, isShort: boolean | null, tags: string | null, offset: number, limit: number): Promise<IViewedVideosDto[] | string> {
         try {
-            console.log('getViewedVideos');
-            console.log('tags: ', tags);
-            console.log('isShort: ', isShort);
-            console.log('getViewedVideos');
-        
             let viewedVideos
 
             if (isShort) {
@@ -133,7 +128,6 @@ export class VideoService implements IVideoService{
                     limit
                 );
             } else if(!isShort && !tags) {
-                console.log('getViewedShortVideosByChannelId')
                 viewedVideos = await this.videoRepository.getViewedShortVideosByChannelId(
                     channelId,
                     false,
@@ -147,7 +141,7 @@ export class VideoService implements IVideoService{
                     limit
                 );
             } else if (tags) {     
-                const tag = await this.videoRepository.getTagsByName(tags[0])
+                const tag = await this.videoRepository.getTagsByName(tags)
 
                 viewedVideos = await this.videoRepository.getViewedVideoListByTag(
                     tag.id,
@@ -163,8 +157,6 @@ export class VideoService implements IVideoService{
                 );
             }
 
-            console.log('viewedVideos: ', viewedVideos)
-            
             return viewedVideos   
         } catch (error) {
             console.log('ERROR getViewedVideos: ', error)

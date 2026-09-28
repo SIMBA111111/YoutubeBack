@@ -14,7 +14,7 @@ export class SubscriptionRepository implements ISubscriptionRepository {
             const res = await pool.query(`
                 SELECT * FROM subscriptions WHERE follower_channel_id = $1 AND channel_id = $2 AND deleted = false
             `, [followerId, channelId])
-    
+
             return SubscriptionEntity.fromDbRows(res.rows)[0]
         } catch (error) {
             throw new Error(`Error getIsSubscribedChannel repository: ${error}`)
@@ -184,14 +184,14 @@ export class SubscriptionRepository implements ISubscriptionRepository {
     }
 
 
-    async updateSubscribeChannelRepo(channelId: string, followerId: string): Promise<SubscriptionEntity> {
+    async updateSubscribeChannelRepo(channelId: string, followerId: string, isSubscribed: boolean | null): Promise<SubscriptionEntity> {
         try {
             const res = await pool.query(`
                 UPDATE subscriptions
-                SET deleted = false, updated_date = now()
+                SET deleted = $3, updated_date = now()
                 WHERE follower_channel_id = $1 AND channel_id = $2
                 RETURNING *;
-            `, [followerId, channelId]
+            `, [followerId, channelId, isSubscribed]
             );
     
             return SubscriptionEntity.fromDbRows(res.rows)[0]

@@ -62,33 +62,35 @@ export class ChannelService implements IChannelServicve {
         }
     }
 
-    async subscribeChannel(channelId: string, userId: string, isSubscribed: boolean | null): Promise<TSubscribeChannel> {
-        let updatedSub;
+    async subscribeChannel(
+        channelId: string,
+        userId: string,
+        isSubscribed: boolean | null
+    ): Promise<TSubscribeChannel> {
+        try {
+            if (isSubscribed) {
+                await this.subscriptionRepository.unsubscribeChannel(channelId, userId);
+                await this.channelRepository.updateSubsCountChannel(channelId, 'decr');
+                return { isSubscribed: false };
+            }
 
-        if (isSubscribed) {
-            updatedSub = await this.subscriptionRepository.unsubscribeChannel(channelId, userId);
-    
-            await this.channelRepository.updateSubsCountChannel(channelId, "decr");
-
-            return {
-                isSubscribed: false,
-            };
-        } else {
             const subEntity = await this.subscriptionRepository.getSubscription(channelId, userId);
 
             if (!subEntity) {
-                updatedSub = await this.subscriptionRepository.createSubscription(channelId, userId);
+                await this.subscriptionRepository.createSubscription(channelId, userId);
             } else {
-                updatedSub = await this.subscriptionRepository.updateSubscribeChannelRepo(channelId, userId);
+                await this.subscriptionRepository.updateSubscribeChannelRepo(channelId, userId, isSubscribed);
             }
-            await this.channelRepository.updateSubsCountChannel(channelId, "inc");
-        }
+            await this.channelRepository.updateSubsCountChannel(channelId, 'inc');
 
-        return {
-            isSubscribed: true
+            return { isSubscribed: true };
+        } catch (error) {
+            console.log(`ERROR subscribeChannel: ${error instanceof Error ? error.message : String(error)}`);
+            throw new Error(
+                `ERROR subscribeChannel: ${error instanceof Error ? error.message : String(error)}`
+            );
         }
     }
-
     async updateChannelData(channelId: string, newChannelData: any): Promise<ChannelEntity> {
         // Field name mapping (frontend -> database)
         const fieldMapping: Record<string, string> = {

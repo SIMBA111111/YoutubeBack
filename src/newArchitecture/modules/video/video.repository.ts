@@ -288,7 +288,7 @@ export class VideoRepository implements IVideoRepository {
         isShort: boolean | null,
         offset: number = 0,
         limit: number = 20
-    ): Promise<VideoEntity[]> {
+    ): Promise<IGetVideosDto[]> {
         try {
             let query = `
                 SELECT v.*, ch.id as channelId, ch.username as channelUsername, ch.avatar_url as channelAvatarUrl
@@ -298,8 +298,11 @@ export class VideoRepository implements IVideoRepository {
                 WHERE sov.channel_id = $1 AND sov.liked = true
             `
 
-            if (isShort) {
+            if (isShort === null) {
+
+            } else if (isShort) {
                 query += `AND v.is_short = true`
+
             } else {
                 query += `AND v.is_short = false`
             }
@@ -308,8 +311,9 @@ export class VideoRepository implements IVideoRepository {
 
             const res = await pool.query(query, [meId, offset, limit])
 
-            return VideoEntity.fromDbRows(res.rows)
+            return res.rows.map(r => GetVideoDtoMap(r))
         } catch (error) {
+            console.log('ERROR getLikedVideos: ', error);
             throw new Error(`Error getLikedVideos repository: ${error}`);
         }
     };
@@ -357,12 +361,8 @@ export class VideoRepository implements IVideoRepository {
                 `,
             [channelId, offset, limit]
             );
-
-            console.log('res: ', res.rows);
             
             return res.rows.map(r => GetViewedVideoDtoMap(r))
-
-            return [];
         } catch (error) {
             throw new Error(`Error getViewedVideosByChannelId repository: ${error}`);
         }
@@ -374,24 +374,22 @@ export class VideoRepository implements IVideoRepository {
         
         try {
             let query = `
-                SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl, ch.name as channelname
+                SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl, ch.name as channelname, sov.updated_date as dateViewed
                 FROM videos v
                 JOIN channels ch ON ch.id = v.channel_id
                 JOIN stat_of_videos sov ON sov.video_id = v.id
-                WHERE $1 = ANY (v.tags) AND sov.channel_id = $2
+                WHERE $1 = ANY (v.tags) AND sov.channel_id = $2 AND sov.views_count > 0
             `;
 
             const params: any[] = [tagId, channelId, offset, limit];
 
 
-            query += `ORDER BY sov.updated_date DESC`;
+            query += `ORDER BY sov.updated_date DESC `;
             query += `OFFSET $3 LIMIT $4`;
 
             const res = await pool.query(query, params);
             
             return res.rows.map(r => GetViewedVideoDtoMap(r))
-
-            return [];
         } catch (error) {
             throw new Error(`Error getVideoListByTag repository: ${error}`);
         }
