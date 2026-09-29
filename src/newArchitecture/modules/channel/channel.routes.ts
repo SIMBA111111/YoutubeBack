@@ -165,8 +165,10 @@ router.get('/channel-data/:channelId', async (req: Request, res: Response) => {
   console.log("getMeInfo");
   try {
     const channelId = getStringParam(req.params.channelId)
+    const followerId = getStringParam(req.params.followerId)
 
     const channel = await channelRepository.getChannelById(channelId);
+    const subscription = await subscriptionRepository.getSubscription( channelId, followerId)
 
     return res.status(200).json(ApiResponseDTO.success(channel))
   } catch (error: any) {

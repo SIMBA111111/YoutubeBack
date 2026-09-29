@@ -73,7 +73,7 @@ router.get('/videos/by-name/:name', async (req: Request, res: Response) => {
 
 router.get('/videos-my-subs/:meId', async (req: Request, res: Response) => {
   try {
-    const followerId = getStringParam(req.params.followerId)
+    const followerId = getStringParam(req.params.meId)
     const offset = getNumberParam(req.query.offset)
     const limit = getNumberParam(req.query.limit)
     const onlyShorts = getBooleanParam(req.query.onlyShorts)

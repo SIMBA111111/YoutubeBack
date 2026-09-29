@@ -15,6 +15,10 @@ export class ChannelService implements IChannelServicve {
     async getChannelInfo(channelUsername: string, followerId: string): Promise<IGetChannelInfoServiceDto> {
         let subData = null
 
+        console.log('followerId: ', followerId);
+        console.log('channelUsername: ', );
+        
+
         const channel = await this.channelRepository.getChannelByUsername(channelUsername);
         if(followerId) {
             subData = await this.subscriptionRepository.getSubscriptionDataByFollowerId(followerId, channel.id);

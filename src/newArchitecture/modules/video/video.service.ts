@@ -65,7 +65,9 @@ export class VideoService implements IVideoService{
         }
     }
 
-    async getVideoListBySubs(followerId: string, offset: number, limit: number, onlyShorts: boolean | null, onlyFull: boolean | null): Promise<VideoEntity[]> {
+    async getVideoListBySubs(followerId: string, offset: number, limit: number, onlyShorts: boolean | null, onlyFull: boolean | null): Promise<IGetVideosDto[]> {
+        console.log('getVideoListBySubs');
+        console.log('followerId:', followerId);
         
         let videoTypeFilter: TVideoTypeFilter
 
@@ -77,6 +79,9 @@ export class VideoService implements IVideoService{
 
         const videos = await this.videoRepository.getVideoListBySubs(followerId, offset, limit, videoTypeFilter)
         
+        console.log('videos: ', videos);
+        
+
         return videos
     }
 

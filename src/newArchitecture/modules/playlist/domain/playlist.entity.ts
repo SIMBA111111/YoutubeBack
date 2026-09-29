@@ -1,7 +1,7 @@
 export interface IPlaylistEntity {
     id: string;
-    name: boolean;
-    thumbnailUrl: boolean;
+    name: string;
+    thumbnailUrl: string;
     channelId: string;
     videoCount: string;
     createdDate: string;
@@ -10,8 +10,8 @@ export interface IPlaylistEntity {
 
 export class PlaylistEntity implements IPlaylistEntity {
     id: string;
-    name: boolean;
-    thumbnailUrl: boolean;
+    name: string;
+    thumbnailUrl: string;
     channelId: string;
     videoCount: string;
     createdDate: string;

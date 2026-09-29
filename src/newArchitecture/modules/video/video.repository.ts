@@ -176,7 +176,7 @@ export class VideoRepository implements IVideoRepository {
         }
     }
 
-    async getVideoListBySubs(followerId: string, offset: number, limit: number, videoTypeFilter: TVideoTypeFilter): Promise<VideoEntity[]> {
+    async getVideoListBySubs(followerId: string, offset: number, limit: number, videoTypeFilter: TVideoTypeFilter): Promise<IGetVideosDto[]> {
         try {
             let filterCondition = '';
             const params: any[] = [followerId];
@@ -198,9 +198,13 @@ export class VideoRepository implements IVideoRepository {
                 OFFSET $2 LIMIT $3
             `;
 
+            console.log('query: ', query);
+            console.log('[...params, offset, limit]: ', [...params, offset, limit]);
+            
+
             const res = await pool.query(query, [...params, offset, limit]);
             
-            return VideoEntity.fromDbRows(res.rows);
+            return res.rows.map((r: any) => GetVideoDtoMap(r))
         } catch (error) {
             throw new Error(`Error getVideoListBySubs repository: ${error}`);
         }
