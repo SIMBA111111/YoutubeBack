@@ -175,8 +175,8 @@ router.get('/videos/search/:name', async (req: Request, res: Response) => {
   console.log("getVideoListByName");
   try {
     const videoName = getStringParam(req.params.name)
-    const offset = getNumberParam(req.params.offset)
-    const limit = getNumberParam(req.params.limit)
+    const offset = getNumberParam(req.query.offset)
+    const limit = getNumberParam(req.query.limit)
 
     const videos = await videoRepository.getVideoListByName(videoName, offset, limit, true);
 

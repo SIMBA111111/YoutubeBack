@@ -151,6 +151,7 @@ export class VideoRepository implements IVideoRepository {
     }
 
     async getVideoListByName(VideoName: string, offset: number, limit: number, isFullObj: boolean = false): Promise<VideoEntity[]> {
+        console.log('VideoName: ', VideoName);
         try {
 
             let query = ''
@@ -172,6 +173,7 @@ export class VideoRepository implements IVideoRepository {
 
             return VideoEntity.fromDbRows(res.rows)
         } catch (error) {
+            console.log('error: ', error);
             throw new Error(`Error getVideoListByName repository: ${error}`);
         }
     }
@@ -206,11 +208,12 @@ export class VideoRepository implements IVideoRepository {
             
             return res.rows.map((r: any) => GetVideoDtoMap(r))
         } catch (error) {
+            
             throw new Error(`Error getVideoListBySubs repository: ${error}`);
         }
     }
 
-    async getVideoListByOwnerUsername(channelUsername: string, filter: TVideoAgeFilter, isShort: boolean | null, offset: number, limit: number): Promise<VideoEntity[]> {
+    async getVideoListByOwnerUsername(channelUsername: string, filter: TVideoAgeFilter, isShort: boolean | null, offset: number, limit: number): Promise<IGetVideosDto[]> {
         try {
             let query = `
                 SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl
@@ -235,7 +238,7 @@ export class VideoRepository implements IVideoRepository {
         
             const res = await pool.query(query, [channelUsername, isShort, offset, limit])
         
-            return VideoEntity.fromDbRows(res.rows);
+            return res.rows.map((r: any) => GetVideoDtoMap(r))
         } catch (error) {
             throw new Error(`Error getVideoListByOwnerUsername repository: ${error}`);
         }

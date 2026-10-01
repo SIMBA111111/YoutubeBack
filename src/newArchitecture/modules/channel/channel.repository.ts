@@ -53,7 +53,7 @@ export class ChannelRepository implements IChannelRepository {
                 [channelUsername]
             );
     
-        return res.rows[0];
+        return ChannelEntity.fromDbRows(res.rows)[0];
         } catch (error) {
             throw new Error(`Error getChannelsByUsername repository: ${error}`);
         }
