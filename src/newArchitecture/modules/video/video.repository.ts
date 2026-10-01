@@ -1,5 +1,5 @@
-import { pool } from "../../../utils/pg";
 import { INC_OR_DESC, TIncOrDesc } from "../../shared/types";
+import { pool } from "../../shared/utils/pg";
 import { FiltersEnum, SORT, TSort, TVideoAgeFilter, TVideoTypeFilter, VIDEO_TYPE_FILTER } from "./domain/video.consts";
 import { IGetVideosDto, IViewedVideosDto } from "./domain/video.dtos";
 import { FragmentEntity, IFragmentEntity, TagEntity, VideoEntity, ViewedVideoEntity } from "./domain/video.entity";
@@ -315,7 +315,7 @@ export class VideoRepository implements IVideoRepository {
 
             const res = await pool.query(query, [meId, offset, limit])
 
-            return res.rows.map(r => GetVideoDtoMap(r))
+            return res.rows.map((r: any) => GetVideoDtoMap(r))
         } catch (error) {
             console.log('ERROR getLikedVideos: ', error);
             throw new Error(`Error getLikedVideos repository: ${error}`);
@@ -340,7 +340,7 @@ export class VideoRepository implements IVideoRepository {
             );
 
             if (res.rows) 
-                return res.rows.map(r => GetViewedVideoDtoMap(r))
+                return res.rows.map((r: any) => GetViewedVideoDtoMap(r))
 
             return [];
         } catch (error) {
@@ -366,7 +366,7 @@ export class VideoRepository implements IVideoRepository {
             [channelId, offset, limit]
             );
             
-            return res.rows.map(r => GetViewedVideoDtoMap(r))
+            return res.rows.map((r: any) => GetViewedVideoDtoMap(r))
         } catch (error) {
             throw new Error(`Error getViewedVideosByChannelId repository: ${error}`);
         }
@@ -393,7 +393,7 @@ export class VideoRepository implements IVideoRepository {
 
             const res = await pool.query(query, params);
             
-            return res.rows.map(r => GetViewedVideoDtoMap(r))
+            return res.rows.map((r: any) => GetViewedVideoDtoMap(r))
         } catch (error) {
             throw new Error(`Error getVideoListByTag repository: ${error}`);
         }
