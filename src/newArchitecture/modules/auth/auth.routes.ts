@@ -46,7 +46,7 @@ router.post('/login', async (req: Request, res: Response) => {
             maxAge: 12 * 60 * 60 * 1000
         });
 
-        return res.status(200).json(
+        return res.status(201).json(
             ApiResponseDTO.success({ 
                 id: userData.id,
                 name: userData.name,
