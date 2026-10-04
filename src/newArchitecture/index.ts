@@ -8,6 +8,7 @@ import {router as RouterAuth} from './modules/auth/auth.routes'
 import {router as RouterChannel} from './modules/channel/channel.routes'
 import {router as RouterComments} from './modules/comment/comment.routes'
 import {router as RouterPlaylists} from './modules/playlist/playlist.routes'
+import {router as RouterSearching} from './modules/searching/searching.routes'
 import { authCheck } from './middlewares/middleware';
 
 
@@ -30,7 +31,6 @@ app.use(cors({
 }));
 
 // Парсеры
-app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static('public'));
@@ -40,6 +40,7 @@ app.use('/api', routesVideo);
 app.use('/api', RouterChannel);
 app.use('/api', RouterComments);
 app.use('/api', RouterPlaylists);
+app.use('/api', RouterSearching);
 app.use('/api/auth', RouterAuth);
 
 // Запуск сервера

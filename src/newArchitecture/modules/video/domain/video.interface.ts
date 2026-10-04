@@ -13,7 +13,7 @@ export interface IVideoRepository {
     getViewedVideos: (channelId: string, offset: number, limit: number) => Promise<IGetVideosDto[] | string>
     getVideoList: (offset: number, limit: number, isShort: boolean | null) => Promise<IGetVideosDto[] | string>
     getVideoListByTag: (tagId: string, offset: number, limit: number) => Promise<IGetVideosDto[] | string>
-    getVideoListByName: (VideoName: string, offset: number, limit: number, isFullObj: boolean) => Promise<VideoEntity[]>
+    getVideoListByName: (VideoName: string, offset: number, limit: number) => Promise<IGetVideosDto[]>
     getVideoListBySubs: (followerId: string, offset: number, limit: number, videoTypeFiler: TVideoTypeFilter) => Promise<IGetVideosDto[]>
     getVideoListByOwnerUsername: (channelUsername: string, filter: TVideoAgeFilter, isShort: boolean, offset: number, limit: number) => Promise<IGetVideosDto[]>
     getFragmentsByVideoId: (videoId: string) => Promise<IFragmentEntity[]>

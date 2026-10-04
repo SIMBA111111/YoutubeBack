@@ -150,28 +150,23 @@ export class VideoRepository implements IVideoRepository {
         }
     }
 
-    async getVideoListByName(VideoName: string, offset: number, limit: number, isFullObj: boolean = false): Promise<VideoEntity[]> {
+    async getVideoListByName(VideoName: string, offset: number, limit: number): Promise<IGetVideosDto[]> {
         console.log('VideoName: ', VideoName);
         try {
 
-            let query = ''
-
-            if (isFullObj) {
-                query = `SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl, ch.name as channelname
+            const query = `SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl, ch.name as channelname
                 FROM videos v
                 JOIN channels ch ON ch.id = v.channel_id
                 where v.name ilike $1 
-                offset $2 limit $3`
-            } else {
-                query = "select id, name, video_hash from videos where name ilike $1 offset $2 limit $3"
-            }
+                offset $2 limit $3
+            `
 
             const res = await pool.query(
                 query,
                 [`%${VideoName}%`, offset, limit]
             );
 
-            return VideoEntity.fromDbRows(res.rows)
+            return res.rows.map((r: any) => GetVideoDtoMap(r));
         } catch (error) {
             console.log('error: ', error);
             throw new Error(`Error getVideoListByName repository: ${error}`);

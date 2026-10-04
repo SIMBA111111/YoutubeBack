@@ -62,7 +62,7 @@ router.get('/videos/by-name/:name', async (req: Request, res: Response) => {
     const limit = getNumberParam(req.query.limit)
     const offset = getNumberParam(req.query.offset)
     
-    const videos = await videoRepository.getVideoListByName(name, offset, limit, true)
+    const videos = await videoRepository.getVideoListByName(name, offset, limit)
 
     return res.status(200).json(ApiResponseDTO.success(videos))
   } catch (error: any) {
@@ -178,7 +178,7 @@ router.get('/videos/search/:name', async (req: Request, res: Response) => {
     const offset = getNumberParam(req.query.offset)
     const limit = getNumberParam(req.query.limit)
 
-    const videos = await videoRepository.getVideoListByName(videoName, offset, limit, true);
+    const videos = await videoRepository.getVideoListByName(videoName, offset, limit);
 
     return res.status(200).json(ApiResponseDTO.success(videos))
   } catch (error: any) {
