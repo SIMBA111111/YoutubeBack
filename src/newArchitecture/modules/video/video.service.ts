@@ -30,7 +30,7 @@ export class VideoService implements IVideoService{
     ) {}
 
     async getVideos(
-        tagName: string, 
+        tagName: string | null, 
         channelData: string | null, 
         offset: number, 
         limit: number
@@ -38,7 +38,10 @@ export class VideoService implements IVideoService{
         try {
             const parsedChannelData = channelData ? JSON.parse(channelData || '') : null
 
-            const tag = await this.videoRepository.getTagsByName(tagName)
+            let tag = null
+            if (tagName) {
+                tag = await this.videoRepository.getTagsByName(tagName)
+            }
 
             let response;
 
@@ -50,7 +53,7 @@ export class VideoService implements IVideoService{
                 response = await this.videoRepository.getVideosByFollowedChannels(parsedChannelData.id, offset, limit);
             } else if (tagName === "viewed" && parsedChannelData.id) {
                 response = await this.videoRepository.getViewedVideos(parsedChannelData.id, offset, limit);
-            } else if (tagName === "all" || !tagName) {
+            } else if (tagName === "all" || !tagName || !tag) {
                 response = await this.videoRepository.getVideoList(offset, limit, null);
             } else {
                 response = await this.videoRepository.getVideoListByTag(tag.id, offset, limit);
@@ -67,7 +70,6 @@ export class VideoService implements IVideoService{
 
     async getVideoListBySubs(followerId: string, offset: number, limit: number, onlyShorts: boolean | null, onlyFull: boolean | null): Promise<IGetVideosDto[]> {
         console.log('getVideoListBySubs');
-        console.log('followerId:', followerId);
         
         let videoTypeFilter: TVideoTypeFilter
 
@@ -79,9 +81,6 @@ export class VideoService implements IVideoService{
 
         const videos = await this.videoRepository.getVideoListBySubs(followerId, offset, limit, videoTypeFilter)
         
-        console.log('videos: ', videos);
-        
-
         return videos
     }
 

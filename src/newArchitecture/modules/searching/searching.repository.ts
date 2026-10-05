@@ -10,7 +10,8 @@ export class SearchingRepository implements ISearchingRepository {
                 SELECT * FROM searching
                 WHERE query ILIKE $1
                 ORDER BY weight DESC
-                LIMIT $2 OFFSET $3
+                OFFSET $2
+                LIMIT $3
             `
 
             const res = await pool.query(sql, [`%${query}%`, offset, limit])

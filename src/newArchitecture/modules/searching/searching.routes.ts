@@ -16,7 +16,7 @@ router.get('/search-query/:query', async (req: Request, res: Response) => {
     const limit = getNumberParam(req.query.limit)
 
     const response = await searchingRepository.getQueries(query, offset, limit)
-    
+
     return res.status(200).json(ApiResponseDTO.success(response))
   } catch (error: any) {
     return res.status(500).json(ApiResponseDTO.error(error))
