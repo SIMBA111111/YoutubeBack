@@ -117,16 +117,18 @@ router.post('/register', async (req: Request, res: Response) => {
 
 router.post('/logout', async (req: Request, res: Response) => {
     try {
-        const channelId = getStringParam(req.cookies.channelId)
+        const cookies = getStringParam(req.cookies.channelData || '')
         const jwt = getStringParam(req.cookies.jwt)
 
-        const isLogouted = authRepository.deleteToken(channelId, jwt)
+        const id = JSON.parse(cookies).id
+        const isLogouted = authRepository.deleteToken(id, jwt)
 
         res.clearCookie('channelData')
-        res.clearCookie('token')
+        res.clearCookie('jwt')
         
     return res.status(200).json(ApiResponseDTO.success(isLogouted))
   } catch (error: any) {
+    console.log('/logout:', error);
     return res.status(500).json(ApiResponseDTO.error(error));
   }
 })

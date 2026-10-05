@@ -163,15 +163,24 @@ router.put('/channel-update/:channelId', updateChannel, async (req: Request, res
 
 router.get('/channel-data/:channelId', async (req: Request, res: Response) => {
   console.log("getMeInfo");
-  try {
-    const channelId = getStringParam(req.params.channelId)
+  try {const channelId = getStringParam(req.params.channelId)
     const followerId = getStringParam(req.params.followerId)
 
     const channel = await channelRepository.getChannelById(channelId);
-    const subscription = await subscriptionRepository.getSubscription( channelId, followerId)
+    let subscription = null
+    
+    if (followerId) {
+      subscription = await subscriptionRepository.getSubscription(channelId, followerId)                                                                                                        
+    }
 
-    return res.status(200).json(ApiResponseDTO.success(channel))
+    const result = {
+      channel: channel,
+      subscription: subscription
+    }
+
+    return res.status(200).json(ApiResponseDTO.success(result))
   } catch (error: any) {
+    console.log('ERROR route channel-data/:channelId: ', error);
     return res.status(500).json(ApiResponseDTO.error(error));
   }
 });
