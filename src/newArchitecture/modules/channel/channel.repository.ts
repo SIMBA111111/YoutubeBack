@@ -220,7 +220,7 @@ export class ChannelRepository implements IChannelRepository {
             `;
 
             const result = await pool.query(sql, values);
-            return result.rows[0];
+            return ChannelEntity.fromDbRows(result.rows)[0];
         } catch (error) {
             throw new Error(`Error updateChannelData repository: ${error}`);
         }

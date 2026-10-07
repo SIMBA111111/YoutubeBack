@@ -150,7 +150,26 @@ router.put('/channel-update/:channelId', updateChannel, async (req: Request, res
 
     const updatedChannel = await channelService.updateChannelData(channelId, body)
 
-    return res.status(200).json(ApiResponseDTO.success(updatedChannel))
+    console.log('updateChannel: ', updateChannel)
+
+    const newCookie = {
+      ...JSON.parse(req.cookies['channelData']),
+      avatarUrl: updatedChannel.avatarUrl
+    }
+
+    console.log('newCookie: ', newCookie)
+
+    res.cookie(
+      'channelData', 
+      JSON.stringify(newCookie),
+      {
+        maxAge: 3600 * 1000
+      }
+    )
+
+    console.log('все хорошо');
+    
+    return res.status(200).json(ApiResponseDTO.success(''))
   } catch (error: any) {
     return res.status(500).json(ApiResponseDTO.error(error));
   }
