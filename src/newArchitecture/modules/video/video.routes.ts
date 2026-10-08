@@ -277,19 +277,23 @@ router.patch('/update-video/:videoId', async (req: Request, res: Response) => {
 router.post('/create-video', upload, async (req: Request, res: Response) => {
   console.log("createVideo");
 
+  console.log('req.body: ', req.body)
+  const videoData = JSON.parse(req.body.videoData)
+
   try {
     const videoId = getStringParam(req.videoId)
     const channelId = getStringParam(req.body.userId);
-    const videoName = getStringParam(req.body.videoData.videoName);
-    const videoDescription = getStringParam(req.body.videoData.videoDescription);
-    const videoPreview = getStringParam(req.body.videoData.videoPreview);
-    const playlistIds = getArrayParam(req.body.videoData.playlistIds);
-    const fragments = getArrayParam(req.body.videoData.fragments);
-    const videoAccess = getStringParam(req.body.videoData.videoAccess);
-    const hashTags = getArrayParam(req.body.videoData.hashTags);
-    const tags = getArrayParam(req.body.videoData.tags);
-    const isShort = getBooleanParam(req.body.videoData.isShort);
+    const videoName = getStringParam(videoData.videoName);
+    const videoDescription = getStringParam(videoData.videoDescription);
+    const videoPreview = getStringParam(videoData.videoPreview);
+    const playlistIds = getArrayParam(videoData.playlistIds);
+    const fragments = getArrayParam(videoData.fragments);
+    const videoAccess = getStringParam(videoData.videoAccess);
+    const hashTags = getArrayParam(videoData.hashTags);
+    const tags = getArrayParam(videoData.tags);
+    const isShort = getBooleanParam(videoData.isShort);
     const files = getFilesParam(req.files)
+
     const createdVideo = await videoService.createVideo(
       videoId,
       channelId, 

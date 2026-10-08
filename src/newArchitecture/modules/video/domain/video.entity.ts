@@ -32,6 +32,13 @@ export class TagEntity implements ITagEntity {
 }
 
 
+export interface IFragment {
+  name: string;
+  index: number;
+  start: number;
+  end: number;
+}
+
 export interface IFragmentEntity {
   id: string;
   name: string;

@@ -50,7 +50,7 @@ export class ChannelEntity implements IChannelEntity {
         this.country = data.country ?? null;
         this.createdAt = data.created_at;
         this.links = data.links ?? null;
-        this.notificationSetting = data.notification_setting ?? null;
+        this.notificationSetting = data.notification_settings ?? null;
         this.isSaveHistory = data.isSaveHistory;
     }
 

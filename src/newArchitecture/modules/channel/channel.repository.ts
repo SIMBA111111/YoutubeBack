@@ -30,6 +30,7 @@ export class ChannelRepository implements IChannelRepository {
                     FROM channels c
                     JOIN subscriptions subs ON subs.channel_id = c.id
                     WHERE subs.follower_channel_id = $1
+                    AND subs.deleted = false
                     OFFSET $2
                     LIMIT $3
                 `,

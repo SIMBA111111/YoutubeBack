@@ -2,7 +2,7 @@ import { INC_OR_DESC, TIncOrDesc } from "../../shared/types";
 import { pool } from "../../shared/utils/pg";
 import { FiltersEnum, SORT, TSort, TVideoAgeFilter, TVideoTypeFilter, VIDEO_TYPE_FILTER } from "./domain/video.consts";
 import { IGetVideosDto, IViewedVideosDto } from "./domain/video.dtos";
-import { FragmentEntity, IFragmentEntity, TagEntity, VideoEntity, ViewedVideoEntity } from "./domain/video.entity";
+import { FragmentEntity, IFragment, IFragmentEntity, TagEntity, VideoEntity, ViewedVideoEntity } from "./domain/video.entity";
 import { IVideoRepository } from "./domain/video.interface";
 import { GetVideoDtoMap, GetViewedVideoDtoMap } from "./domain/video.map";
 
@@ -595,7 +595,7 @@ export class VideoRepository implements IVideoRepository {
         masterM3U8Url: string, 
         thumbnailUrl: string, 
         previewUrl: string, 
-        fragments: [], 
+        fragments: IFragment[], 
         channelId: string, 
         duration: number, 
         videoAccess: string, 
@@ -625,7 +625,7 @@ export class VideoRepository implements IVideoRepository {
             masterM3U8Url,       // $6 - master_m3u8_url (text)
             videoDescription,     // $7 - description (text)
             channelId,            // $8 - channel_id (uuid)
-            isShort,                // $9 - is_short (boolean)
+            !!isShort,                // $9 - is_short (boolean)
             videoAccess,          // $11 - video_access (text) - может быть null
             videoMp4,             // $12 - video_mp4_url (text)
             preparedTags,         // $13 - tags (uuid[]) - массив UUID
@@ -636,12 +636,12 @@ export class VideoRepository implements IVideoRepository {
         
         const createdVideoId = createdVideo.rows[0].id;
 
-        await Promise.all(fragments.map((frag: IFragmentEntity) => 
+        await Promise.all(fragments.map((frag: IFragment) => 
         pool.query(`
             INSERT INTO video_fragments    
             (name, index, start_time, end_time, video_id)
             VALUES ($1, $2, $3, $4, $5)
-        `, [frag.name, frag.index, frag.startTime, frag.endTime, createdVideoId])
+        `, [frag.name, frag.index, frag.start, frag.end, createdVideoId])
         ));
 
         return VideoEntity.fromDbRows(createdVideo.rows)[0]
