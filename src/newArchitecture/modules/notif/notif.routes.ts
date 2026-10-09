@@ -1,14 +1,16 @@
 import { Request, Response } from "express";
 import express from 'express'
+import { getStringParam } from "../../shared/utils/paramsParse";
 
-const router = express.Router();
+export const router = express.Router();
 
 export const activeNotifConnections = new Map();
+
 router.get('/notif-event/:userId', async (req: Request, res: Response) => {
   console.log('📡 notifEvent called');
   
   try {
-    const userId = req.params.userId as string;
+    const userId = getStringParam(req.params.userId)
     
     if (!userId) {
       console.error('❌ userId is required');

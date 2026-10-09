@@ -13,5 +13,5 @@ export interface ISubscriptionRepository {
     updateSubscriptionNotifSettings(channelId: string, followerId: string, isNotifSetting: boolean): Promise<TUpdateSubscriptionNotifSettings>
     updateSubscribeChannelRepo(channelId: string, followerId: string, isSubscribed: boolean | null): Promise<SubscriptionEntity>
     createSubscription(channelId: string, followerId: string): Promise<SubscriptionEntity>
-    getAllSubscriptionsByFollowerId(followerId: string): Promise<TGetAllSubscriptionsByFollowerIdDto[]>
+    getAllFollowers(followerId: string): Promise<TGetAllSubscriptionsByFollowerIdDto[]>
 }

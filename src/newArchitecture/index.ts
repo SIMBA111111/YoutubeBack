@@ -9,6 +9,7 @@ import {router as RouterChannel} from './modules/channel/channel.routes'
 import {router as RouterComments} from './modules/comment/comment.routes'
 import {router as RouterPlaylists} from './modules/playlist/playlist.routes'
 import {router as RouterSearching} from './modules/searching/searching.routes'
+import {router as RouterNotif} from './modules/notif/notif.routes'
 import { authCheck } from './middlewares/middleware';
 
 
@@ -41,6 +42,7 @@ app.use('/api', RouterChannel);
 app.use('/api', RouterComments);
 app.use('/api', RouterPlaylists);
 app.use('/api', RouterSearching);
+app.use('/api', RouterNotif);
 app.use('/api/auth', RouterAuth);
 
 // Запуск сервера

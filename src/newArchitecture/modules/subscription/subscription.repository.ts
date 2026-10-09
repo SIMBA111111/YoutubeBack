@@ -218,18 +218,18 @@ export class SubscriptionRepository implements ISubscriptionRepository {
     }
 
 
-    async getAllSubscriptionsByFollowerId(followerId: string): Promise<TGetAllSubscriptionsByFollowerIdDto[]> {
+    async getAllFollowers(channelId: string): Promise<TGetAllSubscriptionsByFollowerIdDto[]> {
         try {
             const res = await pool.query(`
                 SELECT ch.id as channelId, ch.username as username
                 FROM channels ch
                 JOIN subscriptions subs ON subs.follower_channel_id = ch.id
-                WHERE subs.channel_id = $1
-            `, [followerId]);      
+                WHERE subs.channel_id = $1 AND subs.deleted = false
+            `, [channelId]);      
 
             return res.rows
         } catch (error) {
-            throw new Error(`Error getAllSubscriptionsByChannel repository: ${error}`)
+            throw new Error(`Error getAllFollowers repository: ${error}`)
         }
     }
 }

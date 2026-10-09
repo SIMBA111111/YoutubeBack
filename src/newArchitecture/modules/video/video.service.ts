@@ -19,6 +19,7 @@ import { PlaylistEntity } from "../playlist/domain/playlist.entity";
 import { getAverageColor } from "../../shared/utils/getAverageColor";
 import { convertSrtToVTTAndCreateM3U8, createSrtSubtitleFile, getVideoDuration, sendProgress } from "./domain/video.utils";
 import { INotifRepository } from "../notif/domain/notif.interface";
+import { broadcastNewVideo } from "../notif/notif.service";
 
 export class VideoService implements IVideoService{
     constructor(
@@ -557,14 +558,14 @@ export class VideoService implements IVideoService{
 
         await sendProgress(channelId, { progress: 100, stage: 'saving', message: '' });
 
-        const subscriptions = await this.subscriptionRepository.getAllSubscriptionsByFollowerId(channelId)
+        const subscriptions = await this.subscriptionRepository.getAllFollowers(channelId)
 
-        const subsersIds = (Array.isArray(subscriptions) && subscriptions.length > 0) ? subscriptions?.map(s => s.channelId) : []
-        
+        const subsersIds = subscriptions.length > 0 ? subscriptions?.map(s => s.channelid) : []
+
         const notifType = await this.notifRepository.getNotifType(NOTIF_TYPES.NEW_VIDEO)
         if (notifType) {
             await this.notifRepository.createNewVideoNotifs(createdVideo.id, subsersIds, notifType.id)
-            // await broadcastNewVideo(activeNotifConnections, channelId, createdVideo)
+            await broadcastNewVideo(channelId, createdVideo)
         }
 
         return createdVideo

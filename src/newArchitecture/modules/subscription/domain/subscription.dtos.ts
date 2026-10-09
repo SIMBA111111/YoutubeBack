@@ -5,6 +5,6 @@ export type TUpdateSubscriptionNotifSettings = {
 }
 
 export type TGetAllSubscriptionsByFollowerIdDto = {
-   channelId: string
+   channelid: string
    username: string
 }
