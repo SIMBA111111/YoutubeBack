@@ -239,9 +239,6 @@ export const getChannelAnalytic = async (req: Request, res: Response) => {
     const { channelId } = req.params;
     const { dateRange, tab } = req.body
 
-    console.log('tab = ', tab);
-    console.log('dateRange = ', dateRange);
-
     const { analyticData, totalViews, totalSubscriptions } = await getChannelAnalyticService(channelId as string, dateRange, tab)
 
     return res.status(200).json({result: {

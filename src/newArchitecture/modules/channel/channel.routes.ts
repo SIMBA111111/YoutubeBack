@@ -205,18 +205,18 @@ router.get('/channel-data/:channelId', async (req: Request, res: Response) => {
 });
 
 
-router.get('/channel-notifs/:channelId', async (req: Request, res: Response) => {
-  console.log("getMyNotifs");
-  try {
-    const channelId = getStringParam(req.params.channelId)
+// router.get('/channel-notifs/:channelId', async (req: Request, res: Response) => {
+//   console.log("getMyNotifs");
+//   try {
+//     const channelId = getStringParam(req.params.channelId)
 
-    const notifList = await notifRepository.getNotifsByUserId(channelId)
+//     const notifList = await notifRepository.getNotifsByUserId(channelId)
 
-    return res.status(200).json(ApiResponseDTO.success(notifList))
-  } catch (error: any) {
-    return res.status(500).json(ApiResponseDTO.error(error));
-  }
-});
+//     return res.status(200).json(ApiResponseDTO.success(notifList))
+//   } catch (error: any) {
+//     return res.status(500).json(ApiResponseDTO.error(error));
+//   }
+// });
 
 
 router.post('/channel-liked-videos/:channelId', async (req: Request, res: Response) => {

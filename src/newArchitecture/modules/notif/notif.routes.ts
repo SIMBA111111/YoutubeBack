@@ -1,10 +1,46 @@
 import { Request, Response } from "express";
 import express from 'express'
-import { getStringParam } from "../../shared/utils/paramsParse";
+import { getNumberParam, getStringParam } from "../../shared/utils/paramsParse";
+import { ApiResponseDTO } from "../../shared/dtos/response.dto";
+import { NotifRepository } from "./notif.repository";
 
 export const router = express.Router();
 
 export const activeNotifConnections = new Map();
+
+const notifRepository = new NotifRepository()
+
+router.get("/get-notifs/:channelId", async (req: Request, res: Response) => {
+  try {
+    const channelId = getStringParam(req.params.channelId)
+    const offset = getNumberParam(req.query.offset)
+    const limit = getNumberParam(req.query.limit)
+
+    const result = await notifRepository.getNotifsByUserId(channelId, offset, limit)
+
+    console.log('result: ', result);
+
+    res.status(200).json(ApiResponseDTO.success(result));
+  } catch (error: any) {
+    res.status(400).json(ApiResponseDTO.error(error.message));
+  }
+});
+
+
+router.patch("/update-notif-view/:notifId", async (req: Request, res: Response) => {
+  try {
+    const notifId = getStringParam(req.params.notifId)
+
+    const result = await notifRepository.updateNotifById(notifId)
+
+    console.log('result: ', result);
+
+    res.status(200).json(ApiResponseDTO.success(result));
+  } catch (error: any) {
+    res.status(400).json(ApiResponseDTO.error(error.message));
+  }
+});
+
 
 router.get('/notif-event/:userId', async (req: Request, res: Response) => {
   console.log('📡 notifEvent called');

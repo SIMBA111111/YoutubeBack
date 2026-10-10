@@ -1,5 +1,5 @@
+import { pool } from "../newArchitecture/shared/utils/pg";
 import { INotif, NOTIF_TYPES } from "../types/notif";
-import { pool } from "../utils/pg";
 
 export const getNotifsByUserId = async (userId: string) => {
   try {
