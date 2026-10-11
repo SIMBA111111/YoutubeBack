@@ -1,5 +1,6 @@
 import { NOTIF_TYPES } from "../../shared/types";
 import { pool } from "../../shared/utils/pg";
+import { IUnviewedNotifsCountDTO } from "./domain/notif.dtos";
 import { NotifEntity } from "./domain/notif.entity";
 import { INotifRepository } from "./domain/notif.interface";
 import { INotifExtendInfo, mapNotifExtendInfo } from "./domain/notif.map";
@@ -21,6 +22,24 @@ export class NotifRepository implements INotifRepository {
             throw new Error(`Error createNewVideoNotifs repository: ${error}`);
         }
     }
+
+
+    async getUnviewedNotifCount(channelId: string): Promise<IUnviewedNotifsCountDTO> {
+        try {
+            const res = await pool.query(
+                `
+                    SELECT COUNT(*) FROM notifications
+                    WHERE channel_id=$1 AND viewed=false
+                `,
+                [channelId]
+            );
+        
+            return res.rows[0]
+        } catch (error) {
+            throw new Error(`Error getUnviewedNotifCount repository: ${error}`);
+        }
+    }
+
 
     async getNotifType(notifType: keyof typeof NOTIF_TYPES): Promise<NotifEntity | null> {
         try {

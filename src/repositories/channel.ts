@@ -433,8 +433,6 @@ export const getChannelViewsCount = async (channelId: string, dateRange: string)
         result[row.date] = row.views_count;
     });
     
-    console.log('result: ', result); // { '01.01.2026': '110', '02.01.2026': '85' }
-    
     return result;
   } catch (error) {
       throw new Error(`Error getChannelViewsCount repository: ${error}`);

@@ -18,7 +18,18 @@ router.get("/get-notifs/:channelId", async (req: Request, res: Response) => {
 
     const result = await notifRepository.getNotifsByUserId(channelId, offset, limit)
 
-    console.log('result: ', result);
+    res.status(200).json(ApiResponseDTO.success(result));
+  } catch (error: any) {
+    res.status(400).json(ApiResponseDTO.error(error.message));
+  }
+});
+
+
+router.get("/get-unviewed-notifs-count/:channelId", async (req: Request, res: Response) => {
+  try {
+    const channelId = getStringParam(req.params.channelId)
+
+    const result = await notifRepository.getUnviewedNotifCount(channelId)
 
     res.status(200).json(ApiResponseDTO.success(result));
   } catch (error: any) {
@@ -32,8 +43,6 @@ router.patch("/update-notif-view/:notifId", async (req: Request, res: Response) 
     const notifId = getStringParam(req.params.notifId)
 
     const result = await notifRepository.updateNotifById(notifId)
-
-    console.log('result: ', result);
 
     res.status(200).json(ApiResponseDTO.success(result));
   } catch (error: any) {
