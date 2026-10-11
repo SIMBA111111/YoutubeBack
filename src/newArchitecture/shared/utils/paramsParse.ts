@@ -37,7 +37,7 @@ export function getStringParam(
     param: unknown, // 👈 Меняем на unknown
     defaultValue: string = ''
 ): string {
-    if (!param || param === 'undefined') return defaultValue;
+    if (!param || param === 'undefined' || param === 'null') return defaultValue;
 
     // Если массив - берем первый элемент
     if (Array.isArray(param)) {
@@ -61,7 +61,7 @@ export function getStringParam(
 export function getBooleanParam(
     param: unknown, // 👈 Меняем на unknown
 ): boolean | null {
-    if (param === null || param === undefined) return null;
+    if (param === null || param === undefined || param === 'null' || param === 'undefined') return null;
 
     // Если массив - берем первый элемент
     if (Array.isArray(param)) {

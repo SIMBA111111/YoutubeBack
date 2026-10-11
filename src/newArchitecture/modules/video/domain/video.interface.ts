@@ -17,7 +17,7 @@ export interface IVideoRepository {
     getVideoListBySubs: (followerId: string, offset: number, limit: number, videoTypeFiler: TVideoTypeFilter) => Promise<IGetVideosDto[]>
     getVideoListByOwnerUsername: (channelUsername: string, filter: TVideoAgeFilter, isShort: boolean, offset: number, limit: number) => Promise<IGetVideosDto[]>
     getFragmentsByVideoId: (videoId: string) => Promise<IFragmentEntity[]>
-    getVideoById: (videoId: string) => Promise<VideoEntity>
+    getVideoById: (videoId: string, isShort?: boolean | null) => Promise<VideoEntity>
     getRecommendedVideos: (videoId: string, offset: number, limit: number) => Promise<VideoEntity[]>
     getLikedVideos(meId: string, isShort: boolean | null, offset: number, limit: number): Promise<IGetVideosDto[]>
     getViewedShortVideosByChannelId: (channelId: string, isShort: boolean, offset: number, limit: number) => Promise<IViewedVideosDto[]>
@@ -62,7 +62,7 @@ export interface IVideoRepository {
 export interface IVideoService {
     getVideos: (tagName: string, channelData: string | null, offset: number, limit: number) => Promise<IGetVideosDto[] | string>
     getVideoListBySubs: (followerId: string, offset: number, limit: number, onlyShorts: boolean, onlyFull: boolean) => Promise<IGetVideosDto[]>
-    getVideoById: (videoId: string, followerId: string) => Promise<IgetVideoByIdServiceDto | string>
+    getVideoById: (videoId: string, followerId: string, isShort: boolean | null) => Promise<IgetVideoByIdServiceDto | string>
     updateViewVideo: (videoId: string, viewerId: string) => Promise<IUpdateViewVideoDto | string>
     getVideoAnalytics: (videoId: string, dateRange: string) => Promise<IStatisticVideoDto>
     updateMarkVideo: (videoId: string, userId: string, isLiked: boolean, isDisliked: boolean) => Promise<IUpdateMarkVideoDto>

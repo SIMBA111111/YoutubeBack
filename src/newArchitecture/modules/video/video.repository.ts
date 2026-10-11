@@ -253,11 +253,23 @@ export class VideoRepository implements IVideoRepository {
     }
 
 
-    async getVideoById(videoId: string): Promise<VideoEntity> {
+    async getVideoById(videoId: string, isShort: boolean | null = null): Promise<VideoEntity> {
         try {
-            const res = await pool.query(`
-                SELECT * FROM videos WHERE id=$1`,
-            [videoId]);
+            let query
+            let params
+
+            if (isShort === null) {
+                query = `SELECT * FROM videos WHERE id=$1`
+                params = [videoId]
+            } else {
+                query = `
+                    SELECT * FROM videos
+                    WHERE id=$1 AND is_short = $2
+                `
+                params = [videoId, isShort]
+            }
+
+            const res = await pool.query(query, params);
 
             return VideoEntity.fromDbRows(res.rows)[0]
         } catch (error) {

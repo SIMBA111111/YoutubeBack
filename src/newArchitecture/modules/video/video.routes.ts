@@ -120,8 +120,9 @@ router.get('/video/:videoId', async (req: Request, res: Response) => {
   try {
     const videoId = getStringParam(req.params.videoId)
     const channelId = getStringParam(req.query.channelId)
+    const isShort = getBooleanParam(req.query.isShort)
 
-    const result = await videoService.getVideoById(videoId, channelId)
+    const result = await videoService.getVideoById(videoId, channelId, isShort)
 
     return res.status(200).json(ApiResponseDTO.success(result))
   } catch (error: any) {

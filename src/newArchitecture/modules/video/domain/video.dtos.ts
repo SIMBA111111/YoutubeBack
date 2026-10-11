@@ -19,7 +19,7 @@ export interface IGetVideosDto {
 export interface IgetVideoByIdServiceDto {
     video: VideoEntity
     videoFragments: IFragmentEntity[],
-    videoOwnerChannel: ChannelEntity,
+    channel: ChannelEntity,
     subscriptionData: SubscriptionEntity | null,
     videoStatData: VideoStatisticEntity | null,
 }

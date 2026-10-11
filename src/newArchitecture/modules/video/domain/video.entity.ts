@@ -80,7 +80,6 @@ export class FragmentEntity implements IFragmentEntity {
 export interface IVideoEntity {
   id: string;
   name: string;
-  videoHash: string;
   duration: number;
   thumbnailUrl: string;
   videoPreviewUrl: string;
@@ -106,7 +105,6 @@ export interface IVideoEntity {
 export class VideoEntity implements IVideoEntity {
   id: string;
   name: string;
-  videoHash: string;
   duration: number;
   thumbnailUrl: string;
   videoPreviewUrl: string;
@@ -131,7 +129,6 @@ export class VideoEntity implements IVideoEntity {
   constructor(data: any) {
     this.id= data.id;
     this.name = data.name;
-    this.videoHash = data.video_hash;
     this.duration = data.duration;
     this.thumbnailUrl = data.thumbnail_url;
     this.videoPreviewUrl = data.video_preview_url,

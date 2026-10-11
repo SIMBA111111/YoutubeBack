@@ -85,10 +85,10 @@ export class VideoService implements IVideoService{
         return videos
     }
 
-    async getVideoById(videoId: string, followerId: string): Promise<IgetVideoByIdServiceDto | string> {
+    async getVideoById(videoId: string, followerId: string, isShort: boolean | null): Promise<IgetVideoByIdServiceDto | string> {
         try {
-            const video = await this.videoRepository.getVideoById(videoId);
-        
+            const video = await this.videoRepository.getVideoById(videoId, isShort);
+
             if (!video) {
                 return 'Video not found'
             }
@@ -107,7 +107,7 @@ export class VideoService implements IVideoService{
             const result = {
                 video: video,
                 videoFragments: fragments,
-                videoOwnerChannel: channel,
+                channel: channel,
                 subscriptionData: subscriptionData || null,
                 videoStatData: videoStatData || null, 
             }
@@ -117,7 +117,6 @@ export class VideoService implements IVideoService{
             console.log('getVideoById service error: ', error);
             return error as string
         }
-
     }
 
 
