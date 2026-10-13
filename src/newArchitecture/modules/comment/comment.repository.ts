@@ -42,11 +42,45 @@ export class CommentRepository implements ICommentRepository{
         return result.rows[0]
     }
 
+    async getCommentById(commentId: string): Promise<ICommentEntity | null> {
+        try {
+            const query = `
+                SELECT *
+                FROM comments 
+                WHERE id = $1
+            `
+
+            const res = await pool.query(query, [commentId])
+
+            return CommentEntity.fromDbRows(res.rows)[0]            
+        } catch (error) {
+            console.log(`Error getCommentById: `, error);
+            return null
+        }
+
+    }
+
+
+    async getAttachedCommentByVideoId(videoId: string): Promise<ICommentEntity | null> {
+        try {
+            const query = `
+                SELECT *
+                FROM comments
+                WHERE video_id = $1
+                AND is_attached = true
+            `
+
+            const res = await pool.query(query, [videoId])
+
+            return CommentEntity.fromDbRows(res.rows)[0]            
+        } catch (error) {
+            console.log(`Error getAttachedCommentByVideoId: `, error);
+            return null
+        }
+    }
+
+
     async getCommentsByVideoId(videoId: string, filter: string, offset: number, limit: number): Promise<IGetCommentFullInfoDto[]> {
-        
-        console.log('filter: ', filter);
-        
-        
         let query = `
             SELECT 
                 c.*,
@@ -106,6 +140,7 @@ export class CommentRepository implements ICommentRepository{
             return res.rows ? new CommentEntity(res.rows[0]) : null
     
         } catch (error) {
+            console.log(`Error createComment: `, error);
             throw new Error(`Error createComment repository: ${error}`);
         }
     }
@@ -145,9 +180,43 @@ export class CommentRepository implements ICommentRepository{
 
             return false
         } catch (error) {
+            console.log(`Error deleteComment: `, error);
             throw new Error(`Error deleteComment repository: ${error}`);
         }
     }
+
+
+    async attachCommentById(commentId: string): Promise<ICommentEntity | null> {
+        try {
+            const query = `
+                UPDATE comments SET is_attached = true WHERE id = $1 RETURNING *
+            `
+
+            const res = await pool.query(query, [commentId])
+
+            return CommentEntity.fromDbRows(res.rows)[0]            
+        } catch (error) {
+            console.log(`Error attachCommentById: `, error);
+            return null
+        }
+    }
+
+
+    async detachCommentById(commentId: string): Promise<ICommentEntity | null> {
+        try {
+            const query = `
+                UPDATE comments SET is_attached = false WHERE id = $1 RETURNING *
+            `
+
+            const res = await pool.query(query, [commentId])
+
+            return CommentEntity.fromDbRows(res.rows)[0]            
+        } catch (error) {
+            console.log(`Error detachCommentById: `, error);
+            return null
+        }
+    }
+
 
     async updateCommentLikeCount(commentId: string, action: TCommentActions): Promise<CommentEntity> {
         try {
@@ -169,6 +238,7 @@ export class CommentRepository implements ICommentRepository{
 
             return new CommentEntity(updatedComment?.rows[0])
         } catch (error) {
+            console.log(`Error updateCommentLikeCount: `, error);
             throw new Error(`Error updateCommentLikeCount repository: ${error}`);
         }
     }
@@ -193,6 +263,7 @@ export class CommentRepository implements ICommentRepository{
 
             return new CommentEntity(updatedComment?.rows[0])
         } catch (error) {
+            console.log(`Error updateCommentDislikeCount: `, error);
             throw new Error(`Error updateCommentDislikeCount repository: ${error}`);
         }
     }
@@ -209,6 +280,7 @@ export class CommentRepository implements ICommentRepository{
         
             return new CommentEntity(createdReplyComment?.rows[0])
         } catch (error) {
+            console.log(`Error createReplyComment: `, error);
             throw new Error(`Error createReplyComment repository: ${error}`);
         }        
     }

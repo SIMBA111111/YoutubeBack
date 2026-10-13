@@ -82,16 +82,37 @@ router.delete("/comment/delete/:commentId", async (req: Request, res: Response) 
   console.log("deleteComment");
   try {
     const commentId = getStringParam(req.params.commentId)
+    const videoId = getStringParam(req.query.videoId)
 
-    const isDeleted = commentRepository.deleteComment(commentId)
+    const isDeleted = commentService.deleteComment(commentId, videoId)
 
     if (isDeleted) {
-        return res.status(201).json(ApiResponseDTO.success(isDeleted));
+        return res.status(200).json(ApiResponseDTO.success(isDeleted));
     }
   } catch (error: any) {
     return res.status(500).json(ApiResponseDTO.error(error));
   }
 });
+
+
+router.post("/comment/attach/:commentId", async (req: Request, res: Response) => {
+  console.log("attachComment");
+  try {
+    const commentId = getStringParam(req.params.commentId)
+    const videoId = getStringParam(req.query.videoId)
+
+    const attachedComment = await commentService.attachComment(commentId, videoId)
+
+    if (attachedComment) {
+        return res.status(200).json(ApiResponseDTO.success(attachedComment));
+    } else {
+        return res.status(500).json(ApiResponseDTO.success(attachedComment));
+    }
+  } catch (error: any) {
+    return res.status(500).json(ApiResponseDTO.error(error));
+  }
+});
+
 
 router.post("/comment/mark/:commentId", async (req: Request, res: Response) => {
   console.log("markComment");

@@ -76,6 +76,41 @@ export class СommentService implements ICommentService {
         return createdComment
     }
 
+    async deleteComment(commentId: string, videoId: string): Promise<boolean | null> {
+        const deletedComment = await this.commentRepository.deleteComment(commentId)
+
+        if (deletedComment) {
+            await this.videoRepository.reduceVideoCommentCount(videoId)
+        }
+        
+        return deletedComment
+    }
+
+
+    async attachComment(commentId: string, videoId: string): Promise<ICommentEntity | null> {
+        const comment = await this.commentRepository.getCommentById(commentId)
+
+        if (!comment) {
+            return null
+        }
+
+        if (comment.isAttached) {
+            return comment
+        }
+
+        const isExistAttachedComment = await this.commentRepository.getAttachedCommentByVideoId(videoId)
+
+        if (isExistAttachedComment) {
+            const detachedComment = await this.commentRepository.detachCommentById(isExistAttachedComment.id)
+            const newAttachedComment = await this.commentRepository.attachCommentById(commentId)
+            return newAttachedComment
+        } else {
+            const attachedComment = await this.commentRepository.attachCommentById(commentId)
+            return attachedComment
+        }
+    }
+
+
     async markComment(commentId: string, userId: string, videoId: string, isLiked: boolean | null, isDisliked: boolean | null): Promise<IMarkCommentResponse | null> {
         try {
             const commentStat = await this.statisticRepository.getCommentStatisticByCommentId(commentId, userId)

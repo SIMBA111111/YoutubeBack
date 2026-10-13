@@ -5,11 +5,15 @@ import { CommentEntity, ICommentEntity } from "./comment.entity";
 
 export interface ICommentRepository {
     getRepliesComment: (parentCommentId: string, offset: number, limit: number) => Promise<IGetCommentFullInfoDto[]>
+    getCommentById: (commentId: string) => Promise<ICommentEntity | null>
     getRepliesCommentCount: (parentCommentId: string) => Promise<number>
     getCommentsByVideoId: (videoId: string, filter: string, offset: number, limit: number) => Promise<IGetCommentFullInfoDto[]>
+    getAttachedCommentByVideoId: (videoId: string) => Promise<ICommentEntity | null>
     getVideoCommentsCount: (videoId: string) => Promise<number>
     createComment: (commentText: string, videoId: string, userId: string) => Promise<CommentEntity | null>
     deleteComment: (commentId: string) => Promise<boolean>
+    attachCommentById: (commentId: string) => Promise<ICommentEntity | null>
+    detachCommentById: (commentId: string) => Promise<ICommentEntity | null>
     updateCommentLikeCount: (commentId: string, action: TCommentActions) => Promise<CommentEntity>
     updateCommentDislikeCount: (commentId: string, action: TCommentActions) => Promise<CommentEntity>
     createReplyComment: (commentText: string, videoId: string, userId: string, parentCommentId: string) => Promise<CommentEntity>

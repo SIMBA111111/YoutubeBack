@@ -1,5 +1,6 @@
 import { TErrorsDto } from "../../../shared/consts/errors"
 import { TIncOrDesc } from "../../../shared/types"
+import { ICommentEntity } from "../../comment/domain/comment.entity"
 import { IStatisticVideoDto } from "../../statistic/domain/statistic.dtos"
 import { VideoStatisticEntity } from "../../statistic/domain/statistic.entity"
 import { TSort, TVideoAgeFilter, TVideoTypeFilter } from "./video.consts"
@@ -30,6 +31,7 @@ export interface IVideoRepository {
     updateVideoLikes: (videoId: string, operation: TIncOrDesc) => Promise<number>
     updateVideoDislikes: (videoId: string, operation: TIncOrDesc) => Promise<number>
     updateVideoCommentCount: (videoId: string) => Promise<number>
+    reduceVideoCommentCount: (videoId: string) => Promise<IVideoEntity>
     updateVideoById: (
         videoId: string,
         hashtags: any[],

@@ -3,7 +3,7 @@ import { INC_OR_DESC, TIncOrDesc } from "../../shared/types";
 import { pool } from "../../shared/utils/pg";
 import { FiltersEnum, SORT, TSort, TVideoAgeFilter, TVideoTypeFilter, VIDEO_TYPE_FILTER } from "./domain/video.consts";
 import { IGetVideosDto, IViewedVideosDto } from "./domain/video.dtos";
-import { FragmentEntity, IFragment, IFragmentEntity, TagEntity, VideoEntity, ViewedVideoEntity } from "./domain/video.entity";
+import { FragmentEntity, IFragment, IFragmentEntity, IVideoEntity, TagEntity, VideoEntity, ViewedVideoEntity } from "./domain/video.entity";
 import { IVideoRepository } from "./domain/video.interface";
 import { GetVideoDtoMap, GetViewedVideoDtoMap } from "./domain/video.map";
 
@@ -543,6 +543,20 @@ export class VideoRepository implements IVideoRepository {
         try {
             const res = await pool.query(
                 `UPDATE videos SET comments_count = comments_count + 1 WHERE id = $1 RETURNING comments_count`,
+                [videoId]
+            );
+
+            return res.rows[0]
+        } catch (error) {
+            throw new Error(`Error updateVideoCommentCount repository: ${error}`);
+        }
+    };
+
+
+    async reduceVideoCommentCount(videoId: string): Promise<IVideoEntity> {
+        try {
+            const res = await pool.query(
+                `UPDATE videos SET comments_count = comments_count - 1 WHERE id = $1 RETURNING comments_count`,
                 [videoId]
             );
 

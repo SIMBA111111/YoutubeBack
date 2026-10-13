@@ -3,6 +3,7 @@ export interface ICommentEntity {
   text: string;
   likeCount: number;
   dislikeCount: number;
+  isAttached: boolean;
   videoId: string;
   channelId: string;
   parentCommentId: string | null;
@@ -16,6 +17,7 @@ export class CommentEntity implements ICommentEntity {
   text: string;
   likeCount: number;
   dislikeCount: number;
+  isAttached: boolean;
   videoId: string;
   channelId: string;
   parentCommentId: string | null;
@@ -28,6 +30,7 @@ export class CommentEntity implements ICommentEntity {
     this.text = data.text || '';
     this.likeCount = data.like_count || 0;
     this.dislikeCount = data.dislike_count || 0;
+    this.isAttached = data.is_attached || false
     this.videoId = data.video_id;
     this.channelId = data.channel_id;
     this.parentCommentId = data.parent_comment_id || null;
@@ -42,6 +45,7 @@ export class CommentEntity implements ICommentEntity {
       text: r.text,
       likeCount: Number(r.like_count ?? 0),
       dislikeCount: Number(r.dislike_count ?? 0),
+      isAttached: Boolean(r.is_attached),
       videoId: r.video_id,
       channelId: r.channel_id,
       parentCommentId: r.parent_comment_id ?? null,
