@@ -51,7 +51,7 @@ export class ChannelEntity implements IChannelEntity {
         this.createdAt = data.created_at;
         this.links = data.links ?? null;
         this.notificationSetting = data.notification_settings ?? null;
-        this.isSaveHistory = data.isSaveHistory;
+        this.isSaveHistory = data.is_save_history;
     }
 
     static fromDbRows(dbRows: any[]): ChannelEntity[] {

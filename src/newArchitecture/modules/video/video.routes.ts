@@ -11,6 +11,7 @@ import { ChannelRepository } from "../channel/channel.repository";
 import { StatisticRepository } from "../statistic/statistic.repository";
 import { SubscriptionRepository } from "../subscription/subscription.repository";
 import { NotifRepository } from "../notif/notif.repository";
+import { ERRORS } from "../../shared/consts/errors";
 
 const router = express.Router();
 
@@ -124,6 +125,10 @@ router.get('/video/:videoId', async (req: Request, res: Response) => {
 
     const result = await videoService.getVideoById(videoId, channelId, isShort)
 
+    if (result === ERRORS.NOT_FOUND) {
+      return res.status(404).json(ApiResponseDTO.error(result))
+    }
+
     return res.status(200).json(ApiResponseDTO.success(result))
   } catch (error: any) {
     return res.status(500).json(ApiResponseDTO.error(error))
@@ -197,6 +202,10 @@ router.get('/view/video/:videoId', async (req: Request, res: Response) => {
     const viewerId = getStringParam(req.query.userId)
 
     const result = await videoService.updateViewVideo(videoId, viewerId) 
+
+    if (result === ERRORS.NOT_FOUND) {
+      return res.status(404).json(ApiResponseDTO.error(result))
+    }
 
     return res.status(200).json(ApiResponseDTO.success(result))
   } catch (error: any) {

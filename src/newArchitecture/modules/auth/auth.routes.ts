@@ -31,7 +31,8 @@ router.post('/login', async (req: Request, res: Response) => {
             name: userData.name,
             username: userData.username,
             avatarUrl: userData.avatarUrl,
-            email: userData.email
+            email: userData.email,
+            isSaveHistory: userData.isSaveHistory
         }), {
             httpOnly: false,
             secure: process.env.NODE_ENV === 'production',
@@ -82,7 +83,8 @@ router.post('/register', async (req: Request, res: Response) => {
             name: userData.name,
             username: userData.username,
             avatarUrl: userData.avatarUrl,
-            email: userData.email
+            email: userData.email,
+            isSaveHistory: userData.isSaveHistory
         }), {
             httpOnly: false,
             secure: process.env.NODE_ENV === 'production',

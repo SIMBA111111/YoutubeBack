@@ -1,3 +1,4 @@
+import { TErrorsDto } from "../../../shared/consts/errors"
 import { TIncOrDesc } from "../../../shared/types"
 import { IStatisticVideoDto } from "../../statistic/domain/statistic.dtos"
 import { VideoStatisticEntity } from "../../statistic/domain/statistic.entity"
@@ -17,8 +18,8 @@ export interface IVideoRepository {
     getVideoListBySubs: (followerId: string, offset: number, limit: number, videoTypeFiler: TVideoTypeFilter) => Promise<IGetVideosDto[]>
     getVideoListByOwnerUsername: (channelUsername: string, filter: TVideoAgeFilter, isShort: boolean, offset: number, limit: number) => Promise<IGetVideosDto[]>
     getFragmentsByVideoId: (videoId: string) => Promise<IFragmentEntity[]>
-    getVideoById: (videoId: string, isShort?: boolean | null) => Promise<VideoEntity>
-    getRecommendedVideos: (videoId: string, offset: number, limit: number) => Promise<VideoEntity[]>
+    getVideoById: (videoId: string, isShort?: boolean | null) => Promise<VideoEntity | TErrorsDto>
+    getRecommendedVideos: (videoId: string, offset: number, limit: number) => Promise<IGetVideosDto[]>
     getLikedVideos(meId: string, isShort: boolean | null, offset: number, limit: number): Promise<IGetVideosDto[]>
     getViewedShortVideosByChannelId: (channelId: string, isShort: boolean, offset: number, limit: number) => Promise<IViewedVideosDto[]>
     getViewedVideosByChannelId: (channelId: string, offset: number, limit: number) => Promise<IViewedVideosDto[]>
@@ -63,9 +64,9 @@ export interface IVideoService {
     getVideos: (tagName: string, channelData: string | null, offset: number, limit: number) => Promise<IGetVideosDto[] | string>
     getVideoListBySubs: (followerId: string, offset: number, limit: number, onlyShorts: boolean, onlyFull: boolean) => Promise<IGetVideosDto[]>
     getVideoById: (videoId: string, followerId: string, isShort: boolean | null) => Promise<IgetVideoByIdServiceDto | string>
-    updateViewVideo: (videoId: string, viewerId: string) => Promise<IUpdateViewVideoDto | string>
+    updateViewVideo: (videoId: string, viewerId: string) => Promise<IUpdateViewVideoDto | TErrorsDto>
     getVideoAnalytics: (videoId: string, dateRange: string) => Promise<IStatisticVideoDto>
-    updateMarkVideo: (videoId: string, userId: string, isLiked: boolean, isDisliked: boolean) => Promise<IUpdateMarkVideoDto>
+    updateMarkVideo: (videoId: string, userId: string, isLiked: boolean, isDisliked: boolean) => Promise<IUpdateMarkVideoDto | string>
     updateVideo: (videoId: string, iconPreview: string, videoName: string, videoDescription: string, hashTags: [], tags: [], playlistIds: []) => Promise<VideoEntity>
     deleteVideoService: (videoId: string) => Promise<boolean>
     getViewedVideos: (channelId: string, isShort: boolean | null, tags: string | null, offset: number, limit: number) => Promise<IViewedVideosDto[] | string>

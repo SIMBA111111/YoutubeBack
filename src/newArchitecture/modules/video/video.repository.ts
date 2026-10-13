@@ -1,3 +1,4 @@
+import { ERRORS, TErrorsDto } from "../../shared/consts/errors";
 import { INC_OR_DESC, TIncOrDesc } from "../../shared/types";
 import { pool } from "../../shared/utils/pg";
 import { FiltersEnum, SORT, TSort, TVideoAgeFilter, TVideoTypeFilter, VIDEO_TYPE_FILTER } from "./domain/video.consts";
@@ -146,7 +147,7 @@ export class VideoRepository implements IVideoRepository {
 
             return res.rows.map((r: any) => GetVideoDtoMap(r));
         } catch (error) {
-            throw new Error(`Error getViewedVideosByChannelId repository: ${error}`);
+            throw new Error(`Error getViewedVideos repository: ${error}`);
         }
     }
 
@@ -248,12 +249,12 @@ export class VideoRepository implements IVideoRepository {
             
             return FragmentEntity.fromDbRows(res.rows)
         } catch (error) {
-            throw new Error(`Error getVideoById repository: ${error}`);
+            throw new Error(`Error getFragmentsByVideoId repository: ${error}`);
         }
     }
 
 
-    async getVideoById(videoId: string, isShort: boolean | null = null): Promise<VideoEntity> {
+    async getVideoById(videoId: string, isShort: boolean | null = null): Promise<VideoEntity | TErrorsDto> {
         try {
             let query
             let params
@@ -273,15 +274,16 @@ export class VideoRepository implements IVideoRepository {
 
             return VideoEntity.fromDbRows(res.rows)[0]
         } catch (error) {
-            throw new Error(`Error getVideoById repository: ${error}`);
+            console.log(`Error getVideoById repository: ${error}`)
+            return ERRORS.NOT_FOUND
         }
     }
 
-    async getRecommendedVideos(videoId: string, offset: number, limit: number): Promise<VideoEntity[]> {
+    async getRecommendedVideos(videoId: string, offset: number, limit: number): Promise<IGetVideosDto[]> {
         try {
             const res = await pool.query(
             `
-                SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl
+                SELECT v.*, ch.id as channelid, ch.username as channelusername, ch.avatar_url as channelavatarurl, ch.name as channelname
                 FROM videos v
                 JOIN channels ch ON ch.id = v.channel_id   
                 WHERE v.id != $3                   
@@ -290,7 +292,7 @@ export class VideoRepository implements IVideoRepository {
             [offset, limit, videoId]
             );
 
-            return VideoEntity.fromDbRows(res.rows)
+            return res.rows.map((r: any) => GetVideoDtoMap(r))
         } catch (error) {
             throw new Error(`Error getRecommendedVideosRepo repository: ${error}`);
         }

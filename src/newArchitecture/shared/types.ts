@@ -5,6 +5,7 @@ export interface ChannelData {
     avatarUrl: string, 
     email: string
     token?: string
+    isSaveHistory: boolean
 }
 
 export enum INC_OR_DESC {

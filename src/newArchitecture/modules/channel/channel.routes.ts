@@ -299,8 +299,22 @@ router.patch('/channel-update-save-history/:channelId', async (req: Request, res
       isSaveHistory
     );
 
+    const newCookie = {
+      ...JSON.parse(req.cookies['channelData']),
+      isSaveHistory: response.isSaveHistory
+    }
+
+    res.cookie(
+      'channelData', 
+      JSON.stringify(newCookie),
+      {
+        maxAge: 3600 * 1000
+      }
+    )
+
     return res.status(200).json(ApiResponseDTO.success(response))
   } catch (error: any) {
+    console.log('Error updateSaveHistory: ', error);
     return res.status(500).json(ApiResponseDTO.error(error));
   }
 });

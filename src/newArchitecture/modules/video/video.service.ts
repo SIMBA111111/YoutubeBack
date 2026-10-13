@@ -20,6 +20,7 @@ import { getAverageColor } from "../../shared/utils/getAverageColor";
 import { convertSrtToVTTAndCreateM3U8, createSrtSubtitleFile, getVideoDuration, sendProgress } from "./domain/video.utils";
 import { INotifRepository } from "../notif/domain/notif.interface";
 import { broadcastNewVideo } from "../notif/notif.service";
+import { ERRORS, TErrorsDto } from "../../shared/consts/errors";
 
 export class VideoService implements IVideoService{
     constructor(
@@ -87,10 +88,10 @@ export class VideoService implements IVideoService{
 
     async getVideoById(videoId: string, followerId: string, isShort: boolean | null): Promise<IgetVideoByIdServiceDto | string> {
         try {
-            const video = await this.videoRepository.getVideoById(videoId, isShort);
+            const video = await this.videoRepository.getVideoById(videoId, isShort)
 
-            if (!video) {
-                return 'Video not found'
+            if (!video || typeof video === 'string') {
+                return ERRORS.NOT_FOUND
             }
         
             const channel = await this.channelRepository.getChannelById(video.channelId);
@@ -170,20 +171,14 @@ export class VideoService implements IVideoService{
     }
 
 
-    async updateViewVideo(videoId: string, viewerId: string): Promise<IUpdateViewVideoDto | string> {
+    async updateViewVideo(videoId: string, viewerId: string): Promise<IUpdateViewVideoDto | TErrorsDto> {
         const video = await this.videoRepository.getVideoById(videoId);
 
-        console.log('videoId: ', videoId);
-        console.log('viewerId: ', viewerId);
-
-        if (!video) {
-            return "Video not found"
+        if (video === ERRORS.NOT_FOUND) {
+            return ERRORS.NOT_FOUND
         }
 
         const isUpdated = await this.videoRepository.updateVideoViewsById(videoId as string);
-
-        console.log('isUpdated: ', isUpdated);
-        
 
         // новая таблица для отслеживания просмотров для статистики 
         await this.videoRepository.updateVideoViewsForAnal( 
@@ -238,7 +233,7 @@ export class VideoService implements IVideoService{
         return result
     }
 
-    async updateMarkVideo(videoId: string, userId: string, isLiked: boolean, isDisliked: boolean): Promise<IUpdateMarkVideoDto> {
+    async updateMarkVideo(videoId: string, userId: string, isLiked: boolean, isDisliked: boolean): Promise<IUpdateMarkVideoDto | string> {
         console.log('updateMarkVideo');
 
         // Проверяем, существует ли запись статистики
@@ -290,6 +285,10 @@ export class VideoService implements IVideoService{
         // Получаем обновленную статистику для ответа
         const updatedStats = await this.statisticRepository.getVideoStatByUser(videoId, userId);
         const videoData = await this.videoRepository.getVideoById(videoId)
+
+        if (!videoData || typeof videoData === 'string') {
+            return ERRORS.NOT_FOUND
+        }
 
         return {
             stats: updatedStats,
@@ -447,14 +446,19 @@ export class VideoService implements IVideoService{
 
         // 2. СОЗДАЕМ master.m3u8 РУКАМИ
         const masterContent = `#EXTM3U
-            #EXT-X-VERSION:3
-            #EXT-X-STREAM-INF:BANDWIDTH=800000,RESOLUTION=854x480
-            480/output_480.m3u8
-            #EXT-X-STREAM-INF:BANDWIDTH=1500000,RESOLUTION=1280x720
-            720/output_720.m3u8
-            #EXT-X-STREAM-INF:BANDWIDTH=3000000,RESOLUTION=1920x1080
-            1080/output_1080.m3u8
-        `;
+#EXT-X-VERSION:3
+
+#EXT-X-STREAM-INF:BANDWIDTH=1500000,RESOLUTION=854x480,CODECS="avc1.64001f,mp4a.40.2"
+480/output_480.m3u8
+
+#EXT-X-STREAM-INF:BANDWIDTH=3000000,RESOLUTION=1280x720,CODECS="avc1.64001f,mp4a.40.2"
+720/output_720.m3u8
+
+#EXT-X-STREAM-INF:BANDWIDTH=6000000,RESOLUTION=1920x1080,CODECS="avc1.64001f,mp4a.40.2"
+1080/output_1080.m3u8
+
+#EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="subs",NAME="Russian",DEFAULT=YES,AUTOSELECT=YES,URI="subs.m3u8"`;
+
         fs.writeFileSync(path.join(playlistDir, "master.m3u8"), masterContent);
         console.log("master.m3u8 создан");
 

@@ -28,7 +28,8 @@ export class AuthService implements IAuthService {
             username: user.username,
             avatarUrl: user.avatarUrl || '',
             email: user.email,
-            token: createdToken
+            token: createdToken,
+            isSaveHistory: user.isSaveHistory
         }
     }
 
