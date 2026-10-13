@@ -324,8 +324,10 @@ export class VideoService implements IVideoService{
         playlistIds: []
     ): Promise<VideoEntity> {
 
-        const base64Data = iconPreview.replace(/^data:image\/\w+;base64,/, '');
-        const filename = `thumb_${Date.now()}.jpg`;
+        const match = iconPreview.match(/^data:image\/([a-zA-Z+]+);base64,/);
+        const ext = match?.[1] === 'jpeg' ? 'jpg' : match?.[1] ?? 'png';
+        const filename = `thumb_${Date.now()}.${ext}`;
+        const base64Data = iconPreview.split(',')[1];
         const currentDir = process.cwd()
         const thumbnailPath = currentDir + '/public' + '/videos/' + videoId + '/thumbnail'
         const thumbnailUrl = 'http://localhost:8080' + '/videos/' + videoId + '/thumbnail/' + filename
