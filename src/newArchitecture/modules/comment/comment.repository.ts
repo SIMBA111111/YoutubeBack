@@ -100,9 +100,9 @@ export class CommentRepository implements ICommentRepository{
         `;
     
         if (filter === COMMENTS_FILTERS.FAMOUS) {
-            query += " ORDER BY c.like_count DESC, c.created_date DESC";
+            query += " ORDER BY c.is_attached DESC NULLS LAST, c.like_count DESC, c.created_date DESC";
         } else {
-            query += " ORDER BY c.created_date DESC";
+            query += " ORDER BY c.is_attached DESC NULLS LAST, c.created_date DESC";
         }
     
         query += " LIMIT $2::int OFFSET $3::int";

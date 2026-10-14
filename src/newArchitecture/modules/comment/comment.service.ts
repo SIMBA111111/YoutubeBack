@@ -132,9 +132,6 @@ export class СommentService implements ICommentService {
                 updatedStatistic = await this.statisticRepository.createCommentStatisticByUserId(videoId, commentId, userId, !!isLiked, !!isDisliked)
             }
 
-            console.log('пизда');
-            
-
             // Обновляем счетчики rjvvtynf
             // Сначала обрабатываем лайки
             if (oldLiked !== isLiked) {
@@ -153,9 +150,6 @@ export class СommentService implements ICommentService {
                     updatedComment = await this.commentRepository.updateCommentDislikeCount(commentId, COMMENTS_ACTIONS.DECREASE)
                 }
             }
-
-            console.log('хуй');
-            
 
             if (!updatedComment || !updatedStatistic) {
                 return null
