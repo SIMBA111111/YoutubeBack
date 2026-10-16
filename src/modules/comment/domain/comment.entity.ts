@@ -55,6 +55,7 @@ export class CommentEntity implements ICommentEntity {
       channel: {
         id: r.channel.id,
         name: r.channel.name ?? null,
+        username: r.channel?.username || '',
         avatarUrl: r.channel?.avatar_url ?? null
       }
     }));

@@ -92,6 +92,7 @@ export class CommentRepository implements ICommentRepository{
                 jsonb_build_object(
                     'id', ch.id,
                     'name', ch.name,
+                    'username', ch.username,
                     'avatar_url', ch.avatar_url
                 ) as channel
             FROM comments c

@@ -117,6 +117,7 @@ export interface IGetCommentFullInfoDto {
 interface ICommentChannelDto {
   id: string;
   name: string;
+  username: string;
   avatarUrl: string | null;
 }
 
