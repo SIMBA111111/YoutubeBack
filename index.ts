@@ -3,14 +3,14 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 
-import routesVideo from './modules/video/video.routes';
-import {router as RouterAuth} from './modules/auth/auth.routes'
-import {router as RouterChannel} from './modules/channel/channel.routes'
-import {router as RouterComments} from './modules/comment/comment.routes'
-import {router as RouterPlaylists} from './modules/playlist/playlist.routes'
-import {router as RouterSearching} from './modules/searching/searching.routes'
-import {router as RouterNotif} from './modules/notif/notif.routes'
-import { authCheck } from './middlewares/middleware';
+import routesVideo from './src/modules/video/video.routes';
+import {router as RouterAuth} from './src/modules/auth/auth.routes'
+import {router as RouterChannel} from './src/modules/channel/channel.routes'
+import {router as RouterComments} from './src/modules/comment/comment.routes'
+import {router as RouterPlaylists} from './src/modules/playlist/playlist.routes'
+import {router as RouterSearching} from './src/modules/searching/searching.routes'
+import {router as RouterNotif} from './src/modules/notif/notif.routes'
+import { authCheck } from './src/middlewares/middleware';
 
 
 const port = 8080;

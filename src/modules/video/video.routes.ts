@@ -62,6 +62,7 @@ router.get('/videos/by-name/:name', async (req: Request, res: Response) => {
     const name = getStringParam(req.params.name)
     const limit = getNumberParam(req.query.limit)
     const offset = getNumberParam(req.query.offset)
+    const isShort = getBooleanParam(req.query.isShort)
     
     const videos = await videoRepository.getVideoListByName(name, offset, limit)
 
