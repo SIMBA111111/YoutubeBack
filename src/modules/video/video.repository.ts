@@ -191,14 +191,11 @@ export class VideoRepository implements IVideoRepository {
                 JOIN channels ch ON ch.id = v.channel_id   
                 JOIN subscriptions s ON s.channel_id = ch.id
                 WHERE s.follower_channel_id = $1
+                AND s.deleted = false
                 ${filterCondition}
                 ORDER BY v.date_publication DESC
                 OFFSET $2 LIMIT $3
             `;
-
-            console.log('query: ', query);
-            console.log('[...params, offset, limit]: ', [...params, offset, limit]);
-            
 
             const res = await pool.query(query, [...params, offset, limit]);
             

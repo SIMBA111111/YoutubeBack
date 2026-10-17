@@ -101,4 +101,23 @@ export class NotifRepository implements INotifRepository {
             throw new Error(`Error getNotifsByUserId repository: ${error}`);
         }
     }
+
+
+    async deleteNotifById(notifId: string): Promise<boolean> {
+        try {
+            const res = await pool.query(
+            `
+                UPDATE notifications
+                SET deleted = true,
+                    updated_date = now()
+                WHERE id = $1
+                RETURNING *;
+            `, [notifId]
+            );
+
+            return res.rows[0].deleted
+        } catch (error) {
+            throw new Error(`Error deleteNotifById repository: ${error}`);
+        }
+    }
 }

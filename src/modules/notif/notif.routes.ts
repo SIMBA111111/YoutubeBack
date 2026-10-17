@@ -51,6 +51,19 @@ router.patch("/update-notif-view/:notifId", async (req: Request, res: Response) 
 });
 
 
+router.delete("/delete-notif/:notifId", async (req: Request, res: Response) => {
+  try {
+    const notifId = getStringParam(req.params.notifId)
+
+    const result = await notifRepository.deleteNotifById(notifId)
+
+    res.status(200).json(ApiResponseDTO.success(result));
+  } catch (error: any) {
+    res.status(400).json(ApiResponseDTO.error(error.message));
+  }
+});
+
+
 router.get('/notif-event/:userId', async (req: Request, res: Response) => {
   console.log('📡 notifEvent called');
   
